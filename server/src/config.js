@@ -47,6 +47,16 @@ function parseUrl(environment, name) {
   }
 }
 
+function parsePositiveInteger(environment, name) {
+  const value = Number(requireSetting(environment, name));
+
+  if (!Number.isInteger(value) || value < 1) {
+    throw new Error(`Invalid setting: ${name} must be a positive integer.`);
+  }
+
+  return value;
+}
+
 function loadBaseConfig(environment = process.env) {
   if (environment === process.env) {
     loadLocalEnvironment();
@@ -67,7 +77,11 @@ export function loadConfig(environment = process.env) {
   return {
     ...config,
     nominatimUserAgent: requireSetting(environment, 'NOMINATIM_USER_AGENT'),
-    nominatimBaseUrl: parseUrl(environment, 'NOMINATIM_BASE_URL')
+    nominatimBaseUrl: parseUrl(environment, 'NOMINATIM_BASE_URL'),
+    supabaseBucket: requireSetting(environment, 'SUPABASE_BUCKET'),
+    signedUrlSeconds: parsePositiveInteger(environment, 'SIGNED_URL_SECONDS'),
+    maxUploadMb: parsePositiveInteger(environment, 'MAX_UPLOAD_MB'),
+    rateLimitReportsPerHour: parsePositiveInteger(environment, 'RATE_LIMIT_REPORTS_PER_HOUR')
   };
 }
 

@@ -18,7 +18,12 @@ function asyncHandler(handler) {
 
 const unavailableGeocoder = { reverse: async () => null };
 
-export function createApp({ db, geocoder = unavailableGeocoder, frontendDist = defaultFrontendDist }) {
+export function createApp({
+  db,
+  geocoder = unavailableGeocoder,
+  reportRouter,
+  frontendDist = defaultFrontendDist
+}) {
   if (
     !db
     || typeof db.checkConnection !== 'function'
@@ -62,6 +67,10 @@ export function createApp({ db, geocoder = unavailableGeocoder, frontendDist = d
     geocoder,
     rateLimit: createLocationRateLimit()
   }));
+
+  if (reportRouter) {
+    app.use('/api', reportRouter);
+  }
 
   app.use('/api', (request, response, next) => {
     next(new ApiError(404, 'NOT_FOUND', 'Route not found.'));

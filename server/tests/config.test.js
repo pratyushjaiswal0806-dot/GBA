@@ -9,7 +9,11 @@ describe('loadConfig', () => {
       SUPABASE_URL: 'https://example.supabase.co',
       SUPABASE_SECRET_KEY: 'secret-for-test',
       NOMINATIM_USER_AGENT: 'gba-test-suite',
-      NOMINATIM_BASE_URL: 'https://nominatim.example.test'
+      NOMINATIM_BASE_URL: 'https://nominatim.example.test',
+      SUPABASE_BUCKET: 'ticket-media',
+      SIGNED_URL_SECONDS: '300',
+      MAX_UPLOAD_MB: '5',
+      RATE_LIMIT_REPORTS_PER_HOUR: '20'
     });
 
     expect(config.port).toBe(3000);
@@ -18,6 +22,8 @@ describe('loadConfig', () => {
     expect(config.supabaseSecretKey).toBe('secret-for-test');
     expect(config.nominatimUserAgent).toBe('gba-test-suite');
     expect(config.nominatimBaseUrl).toBe('https://nominatim.example.test');
+    expect(config.supabaseBucket).toBe('ticket-media');
+    expect(config.maxUploadMb).toBe(5);
     expect(config.frontendDist).toContain('frontend');
   });
 
@@ -34,7 +40,11 @@ describe('loadConfig', () => {
       SUPABASE_URL: 'https://example.supabase.co',
       SUPABASE_SECRET_KEY: 'secret-for-test',
       NOMINATIM_USER_AGENT: 'gba-test-suite',
-      NOMINATIM_BASE_URL: 'https://nominatim.example.test'
+      NOMINATIM_BASE_URL: 'https://nominatim.example.test',
+      SUPABASE_BUCKET: 'ticket-media',
+      SIGNED_URL_SECONDS: '300',
+      MAX_UPLOAD_MB: '5',
+      RATE_LIMIT_REPORTS_PER_HOUR: '20'
     })).toThrow('PORT must be an integer');
   });
 });

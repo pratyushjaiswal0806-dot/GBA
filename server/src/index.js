@@ -4,6 +4,12 @@ import { createApp } from './app.js';
 import { loadConfig } from './config.js';
 import { createDb } from './db.js';
 import { createGeocoder } from './modules/geo/geocoding.js';
+import { createMediaService } from './modules/media/media.service.js';
+import { createReportRateLimit } from './middleware/rateLimit.js';
+import { createPhotoUpload } from './middleware/upload.js';
+import { createReportRouter } from './modules/tickets/report.routes.js';
+import { createReportService } from './modules/tickets/report.service.js';
+import { createSupabaseAdmin } from './supabase.js';
 
 export async function startServer() {
   const config = loadConfig();
@@ -12,7 +18,18 @@ export async function startServer() {
     userAgent: config.nominatimUserAgent,
     baseUrl: config.nominatimBaseUrl
   });
-  const app = createApp({ db, geocoder, frontendDist: config.frontendDist });
+  const supabaseAdmin = createSupabaseAdmin(config);
+  const mediaService = createMediaService({
+    storage: supabaseAdmin.storage,
+    bucket: config.supabaseBucket
+  });
+  const reportService = createReportService({ db, geocoder, mediaService });
+  const reportRouter = createReportRouter({
+    createReport: reportService.create,
+    rateLimit: createReportRateLimit({ maxRequests: config.rateLimitReportsPerHour }),
+    upload: createPhotoUpload({ maxUploadMb: config.maxUploadMb })
+  });
+  const app = createApp({ db, geocoder, reportRouter, frontendDist: config.frontendDist });
 
   try {
     await db.checkConnection();

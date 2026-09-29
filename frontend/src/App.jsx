@@ -179,7 +179,7 @@ function App() {
             )}
           </div>
         </div>
-        <ReportPage />
+        <ReportPage categories={categories} />
       </section>
     </main>
   );
