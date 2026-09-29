@@ -27,7 +27,7 @@ export function createOfficerService({ db }) {
     values.push(ticketsPerPage, offset);
 
     const result = await db.query(
-      `SELECT t.public_code AS "publicCode", c.name AS "categoryName", t.status,
+      `SELECT t.id AS "ticketId", t.public_code AS "publicCode", c.name AS "categoryName", t.status,
               t.created_at AS "createdAt"
        FROM tickets t
        JOIN categories c ON c.id = t.category_id

@@ -15,9 +15,7 @@ function invalidFilterError() {
 export function createOfficerRouter({ requireAuth, requireOfficer, officerService }) {
   const router = Router();
 
-  router.use(requireAuth, requireOfficer);
-
-  router.get('/officer/tickets', async (request, response, next) => {
+  router.get('/officer/tickets', requireAuth, requireOfficer, async (request, response, next) => {
     try {
       const parsed = ticketFilterSchema.safeParse(request.query);
 
@@ -35,7 +33,7 @@ export function createOfficerRouter({ requireAuth, requireOfficer, officerServic
     }
   });
 
-  router.get('/officer/tickets/counts', async (request, response, next) => {
+  router.get('/officer/tickets/counts', requireAuth, requireOfficer, async (request, response, next) => {
     try {
       const counts = await officerService.getCounts({ wardId: request.user.wardId });
       response.json(counts);

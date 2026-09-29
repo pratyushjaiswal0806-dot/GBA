@@ -14,6 +14,8 @@ import { createReportRateLimit } from './middleware/rateLimit.js';
 import { createPhotoUpload } from './middleware/upload.js';
 import { createReportRouter } from './modules/tickets/report.routes.js';
 import { createReportService } from './modules/tickets/report.service.js';
+import { createTicketRouter } from './modules/tickets/ticket.routes.js';
+import { createTicketService } from './modules/tickets/ticket.service.js';
 import { createSupabaseAdmin } from './supabase.js';
 
 export async function startServer() {
@@ -33,7 +35,13 @@ export async function startServer() {
   });
   const mediaService = createMediaService({
     storage: supabaseAdmin.storage,
-    bucket: config.supabaseBucket
+    bucket: config.supabaseBucket,
+    signedUrlSeconds: config.signedUrlSeconds
+  });
+  const ticketRouter = createTicketRouter({
+    requireAuth,
+    requireOfficer: requireRole('OFFICER'),
+    ticketService: createTicketService({ db, mediaService })
   });
   const reportService = createReportService({ db, geocoder, mediaService });
   const reportRouter = createReportRouter({
@@ -47,6 +55,7 @@ export async function startServer() {
     reportRouter,
     authRouter,
     officerRouter,
+    ticketRouter,
     frontendDist: config.frontendDist
   });
 

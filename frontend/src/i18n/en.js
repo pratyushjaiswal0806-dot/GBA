@@ -98,6 +98,7 @@ export const text = {
     loadError: 'Could not load tickets. Refresh and try again.',
     empty: 'No tickets match this filter.',
     code: 'Ticket code',
+    view: 'Open ticket',
     category: 'Category',
     status: 'Status',
     created: 'Created',
@@ -113,6 +114,39 @@ export const text = {
       REOPENED: 'Reopened',
       REJECTED: 'Rejected'
     }
+  },
+  ticket: {
+    loading: 'Loading ticket…',
+    backToTickets: 'Back to tickets',
+    ward: 'Ward',
+    street: 'Street',
+    area: 'Area',
+    notAvailable: 'Not available',
+    originalPhoto: 'Original photo',
+    photoUnavailable: 'No original photo is available for this ticket.',
+    mapLabel: 'Issue location',
+    timeline: 'Status timeline',
+    timelineEmpty: 'No status history is available.',
+    created: 'Report created',
+    by: 'By',
+    startWork: 'Start work',
+    starting: 'Starting work…',
+    startError: 'Could not start work. Try again.'
+  },
+  track: {
+    homeLink: 'Track a report',
+    backHome: 'Back to report',
+    title: 'Track a report',
+    description: 'Enter the ticket code shown after submitting a report.',
+    codeLabel: 'Ticket code',
+    codePlaceholder: 'For example: K7M2QX9A',
+    codeRequired: 'Enter a ticket code.',
+    submit: 'Check status',
+    loading: 'Checking…',
+    notFound: 'Ticket not found.',
+    ward: 'Ward',
+    area: 'Area',
+    created: 'Created'
   },
   map: {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',

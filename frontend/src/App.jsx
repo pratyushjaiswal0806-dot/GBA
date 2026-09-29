@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { ReportPage } from './pages/ReportPage.jsx';
+import { TrackPage } from './pages/TrackPage.jsx';
 import { text } from './i18n/en.js';
 import { navigate } from './routing.js';
 
@@ -65,7 +66,10 @@ function HomePage() {
             <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{text.app.title}</h1>
             <p className="mt-3 max-w-xl text-slate-300">{text.app.description}</p>
           </div>
-          <button className="shrink-0 rounded-lg border border-slate-500 px-3 py-2 text-sm font-semibold hover:bg-slate-800" onClick={() => navigate('/login')} type="button">{text.auth.staffLogin}</button>
+          <div className="flex shrink-0 gap-2">
+            <button className="rounded-lg border border-slate-500 px-3 py-2 text-sm font-semibold hover:bg-slate-800" onClick={() => navigate('/track')} type="button">{text.track.homeLink}</button>
+            <button className="rounded-lg border border-slate-500 px-3 py-2 text-sm font-semibold hover:bg-slate-800" onClick={() => navigate('/login')} type="button">{text.auth.staffLogin}</button>
+          </div>
         </div>
 
         <div className="rounded-2xl bg-white p-5 shadow-xl sm:p-7">
@@ -113,7 +117,8 @@ function AppContent() {
     return () => window.removeEventListener('popstate', updatePath);
   }, []);
 
-  if (['/login', '/officer', '/verifier'].includes(path)) {
+  if (path === '/track') return <TrackPage />;
+  if (path === '/login' || path === '/officer' || path === '/verifier' || /^\/officer\/tickets\/\d+$/.test(path)) {
     return <Suspense fallback={<p className="p-6 text-sm text-slate-600" role="status">{text.auth.loading}</p>}><StaffArea path={path} /></Suspense>;
   }
   return <HomePage />;

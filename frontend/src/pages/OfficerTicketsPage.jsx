@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { requestJson } from '../api/client.js';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { text } from '../i18n/en.js';
+import { navigate } from '../routing.js';
 
 const statusOptions = [
   '',
@@ -136,7 +137,7 @@ export function OfficerTicketsPage() {
                 <tbody className="divide-y divide-slate-100">
                   {tickets.data.map((ticket) => (
                     <tr key={ticket.publicCode}>
-                      <td className="whitespace-nowrap px-4 py-3 font-mono font-semibold text-slate-900">{ticket.publicCode}</td>
+                      <td className="whitespace-nowrap px-4 py-3 font-mono font-semibold text-slate-900"><button className="text-left text-cyan-800 underline hover:text-cyan-950" onClick={() => navigate(`/officer/tickets/${ticket.ticketId}`)} type="button">{ticket.publicCode}<span className="sr-only">: {text.officer.view}</span></button></td>
                       <td className="px-4 py-3 text-slate-700">{ticket.categoryName}</td>
                       <td className="px-4 py-3 text-slate-700">{statusLabel(ticket.status)}</td>
                       <td className="whitespace-nowrap px-4 py-3 text-slate-700">{formatDate(ticket.createdAt)}</td>

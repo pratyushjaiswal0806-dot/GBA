@@ -42,7 +42,7 @@ export async function cleanPhoto(file) {
   }
 }
 
-export function createMediaService({ storage, bucket }) {
+export function createMediaService({ storage, bucket, signedUrlSeconds }) {
   async function uploadOriginal({ ticketId, photo }) {
     const storagePath = `tickets/${ticketId}/${randomUUID()}.jpg`;
     const { error } = await storage
@@ -64,5 +64,17 @@ export function createMediaService({ storage, bucket }) {
     await storage.from(bucket).remove([storagePath]);
   }
 
-  return { clean: cleanPhoto, uploadOriginal, remove };
+  async function createSignedUrl(storagePath) {
+    const { data, error } = await storage
+      .from(bucket)
+      .createSignedUrl(storagePath, signedUrlSeconds);
+
+    if (error || !data?.signedUrl) {
+      throw new Error('Could not create a photo link.');
+    }
+
+    return data.signedUrl;
+  }
+
+  return { clean: cleanPhoto, uploadOriginal, remove, createSignedUrl };
 }

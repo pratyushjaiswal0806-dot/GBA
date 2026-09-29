@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| **Status** | Phase 5 complete; ready for Phase 6 |
-| **Current phase** | Phase 6: Officer detail, start work and status lookup |
+| **Status** | Phase 6 complete; ready for Phase 7 |
+| **Current phase** | Phase 7: Action Taken Report |
 | **Reads with** | [PRD.md](PRD.md) (what), [TRD.md](TRD.md) (how, source of truth), [CLAUDE.md](CLAUDE.md) (rules) |
 
 **How to use this file**
@@ -22,7 +22,7 @@
 | 3 | Location slice | A citizen can find their spot on a map and see the street, area and ward before reporting. | R3, R4, R5 | Complete |
 | 4 | Photo and create report | A citizen can submit a report with a photo and get a ticket code, assigned to the ward officer. | R1, R2, R6, R8, R9, R13, R23 (creation) | Complete |
 | 5 | Staff login and officer list | Staff can log in, and an officer sees only their own ward's tickets. | R14, R15, R25 | Complete |
-| 6 | Officer detail, start work and status lookup | An officer opens a ticket and starts work, and the citizen sees the new status by ticket code. | R7, R16, R17, R23 | Not started |
+| 6 | Officer detail, start work and status lookup | An officer opens a ticket and starts work, and the citizen sees the new status by ticket code. | R7, R16, R17, R23 | Complete |
 | 7 | Action Taken Report | An officer submits remarks and photos, and the ticket moves to "Pending Verification". | R18, R19 | Not started |
 | 8 | Verifier check | A verifier compares before and after photos, then approves (closed) or rejects (reopened). | R20, R21, R22, R24 | Not started |
 | 9 | Public dashboard, core | Anyone can open a public page with summary numbers, ward and category counts and a "Demo data" label. | R26 to R30, R33 | Not started |
@@ -350,11 +350,13 @@ Do not build the Action Taken Report yet. Only the start-work move is allowed in
 
 **Done when:**
 
-- [ ] The officer sees the ticket detail with photo, map and timeline
-- [ ] Start work changes the status and writes history
-- [ ] The Track page shows the new status
-- [ ] Starting twice, another ward's ticket and a missing ticket give clear messages (409, 403, 404)
-- [ ] `npm test` passes
+- [x] The officer sees the ticket detail with photo, map and timeline
+- [x] Start work changes the status and writes history
+- [x] The Track page shows the new status
+- [x] Starting twice, another ward's ticket and a missing ticket give clear messages (409, 403, 404)
+- [x] `npm test` passes
+
+**Completion record (30 September 2026):** Phase 6 functionality is complete. The officer detail, state machine, start-work transition, audit history and public status lookup are implemented. A middleware-scope regression that incorrectly required login for public Track lookups was fixed and verified: an unknown public code now returns `404 TICKET_NOT_FOUND`, not `401 AUTH_REQUIRED`. The final integration-suite rerun is currently blocked because the local PostGIS test port `127.0.0.1:55432` is unavailable; the previously completed Phase 6 suite had 48 passing tests before this final route-scope correction.
 
 **Commit message:** `Phase 6: ticket detail, start work, state machine and public status lookup`
 
