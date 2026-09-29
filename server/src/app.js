@@ -22,6 +22,8 @@ export function createApp({
   db,
   geocoder = unavailableGeocoder,
   reportRouter,
+  authRouter,
+  officerRouter,
   frontendDist = defaultFrontendDist
 }) {
   if (
@@ -70,6 +72,14 @@ export function createApp({
 
   if (reportRouter) {
     app.use('/api', reportRouter);
+  }
+
+  if (authRouter) {
+    app.use('/api', authRouter);
+  }
+
+  if (officerRouter) {
+    app.use('/api', officerRouter);
   }
 
   app.use('/api', (request, response, next) => {

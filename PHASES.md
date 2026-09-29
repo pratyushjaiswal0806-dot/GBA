@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| **Status** | Phase 4 complete; ready for Phase 5 |
-| **Current phase** | Phase 5: Staff login and officer list |
+| **Status** | Phase 5 complete; ready for Phase 6 |
+| **Current phase** | Phase 6: Officer detail, start work and status lookup |
 | **Reads with** | [PRD.md](PRD.md) (what), [TRD.md](TRD.md) (how, source of truth), [CLAUDE.md](CLAUDE.md) (rules) |
 
 **How to use this file**
@@ -21,7 +21,7 @@
 | 2 | Database, seed data and categories | The tables and demo data exist in Supabase, and the category list shows on the home page. | R8 (list), R33 (data side) | Complete |
 | 3 | Location slice | A citizen can find their spot on a map and see the street, area and ward before reporting. | R3, R4, R5 | Complete |
 | 4 | Photo and create report | A citizen can submit a report with a photo and get a ticket code, assigned to the ward officer. | R1, R2, R6, R8, R9, R13, R23 (creation) | Complete |
-| 5 | Staff login and officer list | Staff can log in, and an officer sees only their own ward's tickets. | R14, R15, R25 | Not started |
+| 5 | Staff login and officer list | Staff can log in, and an officer sees only their own ward's tickets. | R14, R15, R25 | Complete |
 | 6 | Officer detail, start work and status lookup | An officer opens a ticket and starts work, and the citizen sees the new status by ticket code. | R7, R16, R17, R23 | Not started |
 | 7 | Action Taken Report | An officer submits remarks and photos, and the ticket moves to "Pending Verification". | R18, R19 | Not started |
 | 8 | Verifier check | A verifier compares before and after photos, then approves (closed) or rejects (reopened). | R20, R21, R22, R24 | Not started |
@@ -297,13 +297,15 @@ The officer ticket detail page and status changes come in Phase 6. Do not build 
 
 **Done when:**
 
-- [ ] Login and logout work for officers and the verifier
-- [ ] An officer sees only their own ward's tickets
-- [ ] Wrong password and empty fields show clear messages
-- [ ] A deactivated staff member is refused
-- [ ] Public sign-up is off in Supabase
-- [ ] No server-only key appears anywhere in `frontend/` (search to confirm)
-- [ ] `npm test` passes
+- [x] Login and logout work for officers and the verifier
+- [x] An officer sees only their own ward's tickets
+- [x] Wrong password and empty fields show clear messages
+- [x] A deactivated staff member is refused
+- [x] Public sign-up is off in Supabase
+- [x] No server-only key appears anywhere in `frontend/` (search confirmed)
+- [x] `npm test` passes (12 suites, 32 tests)
+
+**Completion record (30 September 2026):** Phase 5 adds Supabase staff sign-in, active-staff and role checks, ward-only officer queries, ticket filtering, pagination, and open/reopened counts. The frontend production build passes. The staff-only auth bundle is lazy-loaded, so public report visitors do not download it.
 
 **Commit message:** `Phase 5: staff login, role checks and ward-only officer ticket list`
 

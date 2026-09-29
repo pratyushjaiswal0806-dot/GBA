@@ -5,6 +5,11 @@ import { loadConfig } from './config.js';
 import { createDb } from './db.js';
 import { createGeocoder } from './modules/geo/geocoding.js';
 import { createMediaService } from './modules/media/media.service.js';
+import { createAuthRouter } from './modules/auth/auth.routes.js';
+import { createOfficerRouter } from './modules/officer/officer.routes.js';
+import { createOfficerService } from './modules/officer/officer.service.js';
+import { createRequireAuth } from './middleware/requireAuth.js';
+import { requireRole } from './middleware/requireRole.js';
 import { createReportRateLimit } from './middleware/rateLimit.js';
 import { createPhotoUpload } from './middleware/upload.js';
 import { createReportRouter } from './modules/tickets/report.routes.js';
@@ -19,6 +24,13 @@ export async function startServer() {
     baseUrl: config.nominatimBaseUrl
   });
   const supabaseAdmin = createSupabaseAdmin(config);
+  const requireAuth = createRequireAuth({ auth: supabaseAdmin.auth, db });
+  const authRouter = createAuthRouter({ requireAuth });
+  const officerRouter = createOfficerRouter({
+    requireAuth,
+    requireOfficer: requireRole('OFFICER'),
+    officerService: createOfficerService({ db })
+  });
   const mediaService = createMediaService({
     storage: supabaseAdmin.storage,
     bucket: config.supabaseBucket
@@ -29,7 +41,14 @@ export async function startServer() {
     rateLimit: createReportRateLimit({ maxRequests: config.rateLimitReportsPerHour }),
     upload: createPhotoUpload({ maxUploadMb: config.maxUploadMb })
   });
-  const app = createApp({ db, geocoder, reportRouter, frontendDist: config.frontendDist });
+  const app = createApp({
+    db,
+    geocoder,
+    reportRouter,
+    authRouter,
+    officerRouter,
+    frontendDist: config.frontendDist
+  });
 
   try {
     await db.checkConnection();
