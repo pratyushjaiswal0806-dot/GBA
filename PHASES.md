@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| **Status** | Ready for your review. Answer the questions at the end before Phase 1 starts. |
-| **Current phase** | None yet |
+| **Status** | Phase 2 complete; ready for Phase 3 |
+| **Current phase** | Phase 3: Location slice |
 | **Reads with** | [PRD.md](PRD.md) (what), [TRD.md](TRD.md) (how, source of truth), [CLAUDE.md](CLAUDE.md) (rules) |
 
 **How to use this file**
@@ -17,8 +17,8 @@
 
 | Phase | Name | Goal | Requirements | Status |
 |-------|------|------|--------------|--------|
-| 1 | Skeleton | The project runs: frontend loads, backend answers a health check, database connects. | R35 | Not started |
-| 2 | Database, seed data and categories | The tables and demo data exist in Supabase, and the category list shows on the home page. | R8 (list), R33 (data side) | Not started |
+| 1 | Skeleton | The project runs: frontend loads, backend answers a health check, database connects. | R35 | Complete |
+| 2 | Database, seed data and categories | The tables and demo data exist in Supabase, and the category list shows on the home page. | R8 (list), R33 (data side) | Complete |
 | 3 | Location slice | A citizen can find their spot on a map and see the street, area and ward before reporting. | R3, R4, R5 | Not started |
 | 4 | Photo and create report | A citizen can submit a report with a photo and get a ticket code, assigned to the ward officer. | R1, R2, R6, R8, R9, R13, R23 (creation) | Not started |
 | 5 | Staff login and officer list | Staff can log in, and an officer sees only their own ward's tickets. | R14, R15, R25 | Not started |
@@ -81,13 +81,13 @@ At the end, update the TODO commands in CLAUDE.md and tell me what to test.
 
 **Done when:**
 
-- [ ] `npm run dev` works in `server/` and in `frontend/`, one command each
-- [ ] `/api/health` answers and reports the database status
-- [ ] The frontend page reaches the backend through the `/api` proxy
-- [ ] The built frontend is served by Express on port 3000
-- [ ] `.env` files are git-ignored, and `.env.example` files list names only
-- [ ] `npm test` runs and passes
-- [ ] The TODO commands in `CLAUDE.md` are filled in or still marked TODO on purpose (lint)
+- [x] `npm run dev` works in `server/` and in `frontend/`, one command each
+- [x] `/api/health` answers and reports the database status
+- [x] The frontend page reaches the backend through the `/api` proxy
+- [x] The built frontend is served by Express on port 3000
+- [x] `.env` files are git-ignored, and `.env.example` files list names only
+- [x] `npm test` runs and passes
+- [x] The TODO commands in `CLAUDE.md` are filled in or still marked TODO on purpose (lint)
 
 **Commit message:** `Phase 1: project skeleton with health check and database connection`
 
@@ -137,13 +137,15 @@ If the seed script needs a setting that is not in TRD section 12, ask me before 
 
 **Done when:**
 
-- [ ] Migrations applied in Supabase, tables visible in Table Editor
-- [ ] 3 wards, 3 categories, 4 staff users and demo tickets exist
-- [ ] Running the seed twice does not create duplicates
-- [ ] The public key reads no rows from any table
-- [ ] Home page shows the three categories from the database
-- [ ] `npm test` passes using the local PostGIS container
-- [ ] Seed prints test points (inside each ward, and outside)
+- [x] Migrations applied in Supabase, tables visible in Table Editor
+- [x] 3 wards, 3 categories, 4 staff users and demo tickets exist
+- [x] Running the seed twice does not create duplicates
+- [x] The public key reads no rows from any table
+- [x] Home page shows the three categories from the database
+- [x] `npm test` passes using the local PostGIS container
+- [x] Seed prints test points (inside each ward, and outside)
+
+**Verification note:** The Phase 2 API, database, seed, RLS, build and startup checks passed. Browser automation could not complete the visual category/refresh assertion because Chromium crashes in this environment; the frontend shell and category API were verified instead.
 
 **Commit message:** `Phase 2: database schema, seed data and categories list`
 
