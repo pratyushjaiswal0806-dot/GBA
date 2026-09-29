@@ -38,13 +38,13 @@ If any of these files is missing or unclear, stop and tell me. Do not guess what
 Commands below come from the TRD. Check that each one exists in `package.json` before running it.
 Never invent a command. If one is missing, write TODO.
 
-- Install: TODO (not defined yet)
+- Install: `npm install` in `server/` and `frontend/`
 - Run in development: `npm run dev` in `server/` and in `frontend/`
 - Build frontend: `npm run build` in `frontend/`
 - Start (production): `node server/src/index.js`
 - Apply database migrations: `supabase link`, then `supabase db push`
 - Seed demo data: `npm run seed` in `server/`
-- Test: TODO (Vitest + Supertest are planned, no command defined yet)
+- Test: `npm test` in `server/`
 - Lint: TODO (no linter chosen yet)
 
 ## 5. Coding rules

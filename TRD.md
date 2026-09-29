@@ -438,7 +438,9 @@ Base path: `/api`. Everything is JSON, except uploads (`multipart/form-data`). A
 | `GET` | `/api/dashboard/by-category` | Per category counts | R29 |
 | `GET` | `/api/dashboard/trend?interval=week` | Complaints per week (or `month`) | R32 |
 | `GET` | `/api/dashboard/map` | Points `{lat, lng, status}` for map pins. No names, no photos | R31 |
-| `GET` | `/api/health` | "Is the server up?" check | |
+| `GET` | `/api/health` | Returns the server and database status for the Phase 1 diagnostic page | |
+
+`GET /api/health` returns HTTP 200 with `{ "server": "ok", "database": "ok" }` when the database is reachable. If the server is reachable but the database check fails, it returns `{ "server": "ok", "database": "down" }` so the client can distinguish the two states.
 
 `POST /api/reports` success response (201):
 
@@ -672,6 +674,7 @@ The page re-requests every 10 seconds (R34). `summary` includes `isDemoData: tru
 | `FAR_WARNING_METERS` | Before/after distance warning | `50` |
 | `NOMINATIM_USER_AGENT` | Name sent to the address service | `gba-civic-tracker-pilot` |
 | `RATE_LIMIT_REPORTS_PER_HOUR` | Spam limit per IP | `20` |
+| `SEED_DEMO_PASSWORD` | Password used only when creating the four demo staff logins | (throwaway demo password) |
 
 **Frontend (`frontend/.env`, never committed. Template: `frontend/.env.example`. These end up in the browser, so only public values):**
 
@@ -679,6 +682,9 @@ The page re-requests every 10 seconds (R34). `summary` includes `isDemoData: tru
 |---------|---------|
 | `VITE_SUPABASE_URL` | Your project address |
 | `VITE_SUPABASE_ANON_KEY` | The public *anon* / *publishable* key. Safe in the browser **only because row-level security is on** |
+
+**Test-only setting:** `TEST_DATABASE_URL` points Vitest at a local PostGIS database. It must use
+`localhost`, `127.0.0.1` or `::1`; it is not used by the deployed server.
 
 ---
 

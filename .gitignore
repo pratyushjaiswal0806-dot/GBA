@@ -1,0 +1,13 @@
+# Local environment files
+server/.env
+frontend/.env
+
+# Installed dependencies
+node_modules/
+
+# Frontend build output
+frontend/dist/
+
+# Test and local tooling output
+coverage/
+.vite/

@@ -101,7 +101,7 @@ At the end, update the TODO commands in CLAUDE.md and tell me what to test.
 
 1. Install **Docker Desktop** if it is not there (the tests use a local PostGIS database, TRD section 14). Start it. If you cannot install Docker, tell Claude before the plan (question 2).
 2. In Supabase, open **Settings > API Keys**. Copy the **Project URL** (also shown in the project settings) into `server/.env` as `SUPABASE_URL`. Copy the **secret key** (starts with `sb_secret_`) into `server/.env` as `SUPABASE_SECRET_KEY`. If your project only shows the older keys, use the `service_role` key from the "Legacy" tab. Never paste this key anywhere else.
-3. Choose the demo staff emails and a demo password. You need 4 emails: 3 officers (one per ward) and 1 verifier. Answer question 12 first. Put the demo password in `server/.env` as the setting Claude names in its plan (question 9).
+3. Use the four approved demo emails (`officer.a@demo.example`, `officer.b@demo.example`, `officer.c@demo.example`, and `verifier@demo.example`) and choose a throwaway demo password. Put the password in `server/.env` as `SEED_DEMO_PASSWORD`.
 4. Once Claude has written the migration files: apply them. Claude gives you the exact commands for `supabase link` and `supabase db push` in its plan. If the login or link step fails, use the fallback: in Supabase, open **SQL Editor** in the left sidebar, then paste and run the three files from `supabase/migrations/` one by one, in order (`0001`, `0002`, `0003`).
 5. Run `npm run seed` in `server/` after the migrations are applied.
 
@@ -109,7 +109,7 @@ At the end, update the TODO commands in CLAUDE.md and tell me what to test.
 
 - `supabase/migrations/0001_schema.sql`: PostGIS in the `extensions` schema, and the tables `wards`, `staff`, `categories`, `tickets`, `action_reports`, `media`, `status_history` with the checks from TRD section 5, and row-level security switched on for every table with no policies.
 - `0002_seed_wards.sql` (three sample ward shapes) and `0003_seed_categories.sql` (footpath encroachment, potholes / road damage, garbage dumping).
-- `server/scripts/seed.js`: creates the 3 officers and 1 verifier through Supabase Auth, their `staff` rows, and demo tickets (`is_demo = true`) in all three categories with a mix of statuses, some `CLOSED` with a verifier. Safe to run twice. At the end it prints one test point inside each sample ward and one point outside (used in Phase 3 testing). Ticket photos for demo data: see question 9.
+- `server/scripts/seed.js`: creates the 3 officers and 1 verifier through Supabase Auth, their `staff` rows, and metadata-only demo tickets (`is_demo = true`) in all three categories with a mix of statuses, some `CLOSED` with a verifier. Safe to run twice. At the end it prints one test point inside each sample ward and one point outside (used in Phase 3 testing). Demo photos begin in Phase 4 when Storage is configured.
 - `server/src/config.js` gets the new settings. `supabase.js` (admin client). `npm run seed` script.
 - Route `GET /api/categories` and the home page listing the three categories (from the database, not typed into the page).
 - Test setup in `server/tests/setup/`: local PostGIS container, stand-in `auth.users` table, runs the same SQL files.
@@ -719,7 +719,8 @@ My host is <name of host>. Check that host's current documentation before writin
 | `FAR_WARNING_METERS` | Phase 8 |
 | `DUP_RADIUS_METERS` | Phase 11 |
 | `DUP_WINDOW_DAYS` | Phase 11 |
-| `SEED_DEMO_PASSWORD` (proposed, **not in TRD section 12 yet**, see question 9) | Phase 2 |
+| `SEED_DEMO_PASSWORD` | Phase 2 |
+| `TEST_DATABASE_URL` (local test database only) | Phase 2 |
 
 **Frontend (`frontend/.env`, never committed; template `frontend/.env.example`; public values only):**
 
@@ -736,17 +737,17 @@ The host (Phase 13) needs the same server names as its environment variables, pl
 
 I did not guess these. Where a phase above had to assume something, I say what.
 
-1. **Sample ward areas.** The PRD and TRD say "three sample wards" but not where they are. Are they drawn around a real place (for example real areas of Bengaluru)? Street names from the address lookup are real, so if the ward shapes sit over real streets the demo looks right. Also, you will probably not be standing inside a ward while testing, so Phase 3 tests use the dropped pin and the seed's test points. Is that fine?
-2. **Docker.** The tests need a local PostGIS database (TRD section 14). Can you install Docker Desktop on your computer? If not, the fallback would be a second free Supabase project as a test database, which needs a TRD change.
+1. **Sample ward areas.** **Resolved for Phase 2:** use three adjacent sample polygons around central Bengaluru. Phase 2 prints deterministic interior points and one outside point for later location testing.
+2. **Docker.** **Resolved:** Docker is available for the local PostGIS test database. The test harness uses `TEST_DATABASE_URL` and refuses non-local hosts.
 3. **How to apply migrations.** CLAUDE.md and TRD say `supabase link` then `supabase db push`. I could not confirm the exact login and link steps, so Phase 2 keeps the SQL Editor paste as a fallback. Which do you prefer? Should I add the Supabase CLI as a project tool (`npx supabase`)?
 4. **Health check.** TRD section 7.1 only says `GET /api/health` is an "is the server up?" check. Your rule for Phase 1 needs the database to be tested, so Phase 1 makes it also report the database status. This is a small TRD change. OK?
 5. **Officer's action-photo location.** R18 and the TRD route take `lat` and `lng`, but the TRD does not say how the officer gives it. Phase 7 assumes the same "use my location or drop a pin" picker as the citizen. OK?
 6. **Photo time.** R20 wants time for both photos. Because EXIF data is removed, the time shown will be the **upload time**, not the moment the photo was taken. Is that acceptable?
 7. **Text limits.** Only the description has a limit (300 characters, marked "e.g."). Action Taken Report remarks and the reject reason have none. Suggestion: 500 characters each. What limits do you want?
 8. **Repeated support.** Citizens are anonymous, so one person can press "add my support" many times (only the rate limit slows this down). Acceptable for a pilot?
-9. **Seed data.** (a) The seed needs a demo password for the staff. CLAUDE.md forbids hardcoded secrets, and TRD section 12 has no setting for it. I propose a new setting `SEED_DEMO_PASSWORD` in `server/.env`. Yes? (b) Should demo tickets have placeholder photos? Without photos, staff who open a demo ticket see an empty photo area, and closed demo tickets have no before and after photos. The public dashboard does not need photos.
+9. **Seed data.** **Resolved:** `SEED_DEMO_PASSWORD` is stored in `server/.env`; demo tickets are metadata-only in Phase 2, with photos beginning in Phase 4 when Storage is configured.
 10. **Linter.** CLAUDE.md says Lint is TODO. Do you want one (for example ESLint)? A new library needs your approval.
 11. **Hosting and phone testing.** TRD decision S2 says the host is chosen in the last phase. Phone location needs HTTPS, so phone testing before Phase 13 needs a tunnel tool, and the risk that the host does not work is found late. Do you want to choose the host now and do a small early deploy after Phase 1, or keep it for the end? Which host do you want?
-12. **Demo emails.** TRD section 8 says demo emails like `officer.a@demo.example` are fine only "if Supabase accepts them". I could not confirm this, and I could not confirm whether staff created by the seed need an email confirmation. If Supabase rejects the domain, you will need 4 real email addresses you control. Do you have them?
+12. **Demo emails.** **Resolved:** use the four illustrative `demo.example` addresses with email confirmation enabled by the seed. If the Supabase project rejects them, replace them in the seed script with four addresses you control.
 13. **Install commands.** CLAUDE.md lists Install as TODO, and the TRD has no root `package.json`. Phase 1 assumes two separate installs (`npm install` in `server/` and in `frontend/`). OK?
 14. **Should and Could items.** R25 (badges, Could) is in Phase 5 and R12 (support count, Could) is in Phase 11. If time is short, they can be dropped without breaking the main demo. Do you agree to keep them in?
