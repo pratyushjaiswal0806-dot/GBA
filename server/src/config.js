@@ -37,7 +37,17 @@ function parsePort(environment) {
   return port;
 }
 
-export function loadConfig(environment = process.env) {
+function parseUrl(environment, name) {
+  const value = requireSetting(environment, name);
+
+  try {
+    return new URL(value).toString().replace(/\/$/, '');
+  } catch {
+    throw new Error(`Invalid setting: ${name} must be a valid URL.`);
+  }
+}
+
+function loadBaseConfig(environment = process.env) {
   if (environment === process.env) {
     loadLocalEnvironment();
   }
@@ -51,8 +61,18 @@ export function loadConfig(environment = process.env) {
   };
 }
 
+export function loadConfig(environment = process.env) {
+  const config = loadBaseConfig(environment);
+
+  return {
+    ...config,
+    nominatimUserAgent: requireSetting(environment, 'NOMINATIM_USER_AGENT'),
+    nominatimBaseUrl: parseUrl(environment, 'NOMINATIM_BASE_URL')
+  };
+}
+
 export function loadSeedConfig(environment = process.env) {
-  const config = loadConfig(environment);
+  const config = loadBaseConfig(environment);
 
   return {
     ...config,

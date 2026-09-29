@@ -673,6 +673,7 @@ The page re-requests every 10 seconds (R34). `summary` includes `isDemoData: tru
 | `DUP_WINDOW_DAYS` | Duplicate search time window | `30` |
 | `FAR_WARNING_METERS` | Before/after distance warning | `50` |
 | `NOMINATIM_USER_AGENT` | Name sent to the address service | `gba-civic-tracker-pilot` |
+| `NOMINATIM_BASE_URL` | Address-lookup provider endpoint; keeping it configurable lets the server switch providers without a browser update | `https://nominatim.openstreetmap.org` |
 | `RATE_LIMIT_REPORTS_PER_HOUR` | Spam limit per IP | `20` |
 | `SEED_DEMO_PASSWORD` | Password used only when creating the four demo staff logins | (throwaway demo password) |
 
@@ -682,6 +683,7 @@ The page re-requests every 10 seconds (R34). `summary` includes `isDemoData: tru
 |---------|---------|
 | `VITE_SUPABASE_URL` | Your project address |
 | `VITE_SUPABASE_ANON_KEY` | The public *anon* / *publishable* key. Safe in the browser **only because row-level security is on** |
+| `VITE_MAP_TILE_URL` | Public OpenStreetMap tile template used by the Leaflet map | `https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png` |
 
 **Test-only setting:** `TEST_DATABASE_URL` points Vitest at a local PostGIS database. It must use
 `localhost`, `127.0.0.1` or `::1`; it is not used by the deployed server.

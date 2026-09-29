@@ -47,8 +47,8 @@ async function readMigrations() {
   })));
 }
 
-async function resetDatabase(pool) {
-  const client = await pool.connect();
+async function resetDatabase(acquireClient) {
+  const client = await acquireClient();
 
   try {
     await client.query('DROP EXTENSION IF EXISTS postgis CASCADE');
@@ -70,15 +70,43 @@ async function resetDatabase(pool) {
 
 export async function createTestDatabase() {
   const pool = new Pool({ connectionString: loadTestDatabaseUrl() });
-  await resetDatabase(pool);
+  const connectionReady = new WeakMap();
+
+  pool.on('connect', (client) => {
+    connectionReady.set(client, client.query('SET search_path TO public, extensions'));
+  });
+
+  async function acquireClient() {
+    const client = await pool.connect();
+
+    try {
+      await connectionReady.get(client);
+      return client;
+    } catch (error) {
+      client.release();
+      throw error;
+    }
+  }
+
+  async function query(text, values) {
+    const client = await acquireClient();
+
+    try {
+      return await client.query(text, values);
+    } finally {
+      client.release();
+    }
+  }
+
+  await resetDatabase(acquireClient);
 
   return {
-    query: (text, values) => pool.query(text, values),
+    query,
     checkConnection: async () => {
-      await pool.query('SELECT 1');
+      await query('SELECT 1');
     },
     withTransaction: async (work) => {
-      const client = await pool.connect();
+      const client = await acquireClient();
 
       try {
         await client.query('BEGIN');

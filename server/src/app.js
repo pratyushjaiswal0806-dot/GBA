@@ -4,6 +4,8 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { errorHandler } from './middleware/errorHandler.js';
+import { createLocationRateLimit } from './middleware/rateLimit.js';
+import { createGeoRouter } from './modules/geo/geo.routes.js';
 import { ApiError } from './utils/ApiError.js';
 
 const defaultFrontendDist = fileURLToPath(new URL('../../frontend/dist', import.meta.url));
@@ -14,7 +16,9 @@ function asyncHandler(handler) {
   };
 }
 
-export function createApp({ db, frontendDist = defaultFrontendDist }) {
+const unavailableGeocoder = { reverse: async () => null };
+
+export function createApp({ db, geocoder = unavailableGeocoder, frontendDist = defaultFrontendDist }) {
   if (
     !db
     || typeof db.checkConnection !== 'function'
@@ -51,6 +55,12 @@ export function createApp({ db, frontendDist = defaultFrontendDist }) {
     );
 
     response.json({ categories: result.rows });
+  }));
+
+  app.use('/api', createGeoRouter({
+    db,
+    geocoder,
+    rateLimit: createLocationRateLimit()
   }));
 
   app.use('/api', (request, response, next) => {

@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| **Status** | Phase 2 complete; ready for Phase 3 |
-| **Current phase** | Phase 3: Location slice |
+| **Status** | Phase 3 complete; ready for Phase 4 |
+| **Current phase** | Phase 4: Photo and create report |
 | **Reads with** | [PRD.md](PRD.md) (what), [TRD.md](TRD.md) (how, source of truth), [CLAUDE.md](CLAUDE.md) (rules) |
 
 **How to use this file**
@@ -19,7 +19,7 @@
 |-------|------|------|--------------|--------|
 | 1 | Skeleton | The project runs: frontend loads, backend answers a health check, database connects. | R35 | Complete |
 | 2 | Database, seed data and categories | The tables and demo data exist in Supabase, and the category list shows on the home page. | R8 (list), R33 (data side) | Complete |
-| 3 | Location slice | A citizen can find their spot on a map and see the street, area and ward before reporting. | R3, R4, R5 | Not started |
+| 3 | Location slice | A citizen can find their spot on a map and see the street, area and ward before reporting. | R3, R4, R5 | Complete |
 | 4 | Photo and create report | A citizen can submit a report with a photo and get a ticket code, assigned to the ward officer. | R1, R2, R6, R8, R9, R13, R23 (creation) | Not started |
 | 5 | Staff login and officer list | Staff can log in, and an officer sees only their own ward's tickets. | R14, R15, R25 | Not started |
 | 6 | Officer detail, start work and status lookup | An officer opens a ticket and starts work, and the citizen sees the new status by ticket code. | R7, R16, R17, R23 | Not started |
@@ -157,7 +157,7 @@ If the seed script needs a setting that is not in TRD section 12, ask me before 
 
 **Manual steps (I do these before starting):**
 
-1. In `server/.env`, add `NOMINATIM_USER_AGENT=gba-civic-tracker-pilot` (name sent to the address service; copy the example value from `server/.env.example`).
+1. In `server/.env`, add `NOMINATIM_USER_AGENT=gba-civic-tracker-pilot` (name sent to the address service) and `NOMINATIM_BASE_URL=https://nominatim.openstreetmap.org` (the configurable public address-lookup endpoint). Copy both names from `server/.env.example`.
 2. Have the test points from the Phase 2 seed output ready (inside each ward, and one outside).
 3. Optional, for testing on a phone: phone location only works on HTTPS (TRD section 11). Ask Claude in its plan for the current steps to open your laptop's app through a tunnel (for example a Cloudflare tunnel or ngrok). You may need to create a free account for it. If you skip this, test on the laptop now and on the phone in Phase 13 (question 11).
 
@@ -192,12 +192,14 @@ Check the current Nominatim usage policy before you write the lookup, and tell m
 
 **Done when:**
 
-- [ ] Clicking inside each of the 3 wards shows the right ward name
-- [ ] Street and area show (or a ward-only fallback shows when the lookup fails)
-- [ ] Outside the wards shows a clear message
-- [ ] Blocked location permission falls back to the pin
-- [ ] Bad input gives a 400 in the standard error shape
-- [ ] `npm test` passes
+- [x] Clicking inside each of the 3 wards shows the right ward name
+- [x] Street and area show (or a ward-only fallback shows when the lookup fails)
+- [x] Outside the wards shows a clear message
+- [x] Blocked location permission falls back to the pin
+- [x] Bad input gives a 400 in the standard error shape
+- [x] `npm test` passes
+
+**Verification note:** The automated suite passes with 18 tests. Nominatim is rate-limited, cached, and falls back to ward-only data if its public service is slow or unavailable.
 
 **Commit message:** `Phase 3: location picker, ward lookup and street/area resolve`
 
@@ -714,6 +716,7 @@ My host is <name of host>. Check that host's current documentation before writin
 | `SUPABASE_URL` | Phase 2 |
 | `SUPABASE_SECRET_KEY` | Phase 2 |
 | `NOMINATIM_USER_AGENT` | Phase 3 |
+| `NOMINATIM_BASE_URL` | Phase 3 |
 | `SUPABASE_BUCKET` | Phase 4 |
 | `SIGNED_URL_SECONDS` | Phase 4 |
 | `MAX_UPLOAD_MB` | Phase 4 |
@@ -730,6 +733,7 @@ My host is <name of host>. Check that host's current documentation before writin
 |------|-----------------|
 | `VITE_SUPABASE_URL` | Phase 5 |
 | `VITE_SUPABASE_ANON_KEY` | Phase 5 |
+| `VITE_MAP_TILE_URL` | Phase 3 |
 
 The host (Phase 13) needs the same server names as its environment variables, plus the two `VITE_` names available at build time.
 

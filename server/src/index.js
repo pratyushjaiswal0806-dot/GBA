@@ -3,11 +3,16 @@ import { fileURLToPath } from 'node:url';
 import { createApp } from './app.js';
 import { loadConfig } from './config.js';
 import { createDb } from './db.js';
+import { createGeocoder } from './modules/geo/geocoding.js';
 
 export async function startServer() {
   const config = loadConfig();
   const db = createDb(config);
-  const app = createApp({ db, frontendDist: config.frontendDist });
+  const geocoder = createGeocoder({
+    userAgent: config.nominatimUserAgent,
+    baseUrl: config.nominatimBaseUrl
+  });
+  const app = createApp({ db, geocoder, frontendDist: config.frontendDist });
 
   try {
     await db.checkConnection();
