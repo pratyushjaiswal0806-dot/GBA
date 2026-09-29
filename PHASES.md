@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| **Status** | Phase 3 complete; ready for Phase 4 |
-| **Current phase** | Phase 4: Photo and create report |
+| **Status** | Phase 4 complete; ready for Phase 5 |
+| **Current phase** | Phase 5: Staff login and officer list |
 | **Reads with** | [PRD.md](PRD.md) (what), [TRD.md](TRD.md) (how, source of truth), [CLAUDE.md](CLAUDE.md) (rules) |
 
 **How to use this file**
@@ -20,7 +20,7 @@
 | 1 | Skeleton | The project runs: frontend loads, backend answers a health check, database connects. | R35 | Complete |
 | 2 | Database, seed data and categories | The tables and demo data exist in Supabase, and the category list shows on the home page. | R8 (list), R33 (data side) | Complete |
 | 3 | Location slice | A citizen can find their spot on a map and see the street, area and ward before reporting. | R3, R4, R5 | Complete |
-| 4 | Photo and create report | A citizen can submit a report with a photo and get a ticket code, assigned to the ward officer. | R1, R2, R6, R8, R9, R13, R23 (creation) | Not started |
+| 4 | Photo and create report | A citizen can submit a report with a photo and get a ticket code, assigned to the ward officer. | R1, R2, R6, R8, R9, R13, R23 (creation) | Complete |
 | 5 | Staff login and officer list | Staff can log in, and an officer sees only their own ward's tickets. | R14, R15, R25 | Not started |
 | 6 | Officer detail, start work and status lookup | An officer opens a ticket and starts work, and the citizen sees the new status by ticket code. | R7, R16, R17, R23 | Not started |
 | 7 | Action Taken Report | An officer submits remarks and photos, and the ticket moves to "Pending Verification". | R18, R19 | Not started |
@@ -245,12 +245,14 @@ Do not build the status lookup page or the duplicate check yet. They come in lat
 
 **Done when:**
 
-- [ ] A report in each of the three categories can be submitted from the browser
-- [ ] Ticket, media, history rows and the stored photo exist for each one
-- [ ] Empty description, missing photo, missing category, too-large file and fake image are all refused with clear messages
-- [ ] Reports outside the sample wards are refused
-- [ ] Stored photos have no EXIF data
-- [ ] `npm test` passes
+- [x] A report in each of the three categories can be submitted from the browser
+- [x] Ticket, media, history rows and the stored photo exist for each one
+- [x] Empty description, missing photo, missing category, too-large file and fake image are all refused with clear messages
+- [x] Reports outside the sample wards are refused
+- [x] Stored photos have no EXIF data
+- [x] `npm test` passes (11 suites, 28 tests)
+
+**Completion record (29 September 2026):** Phase 4 automated tests and the frontend production build pass. The private `ticket-media` bucket is available. A live rate-limit check with a temporary one-request limit returned `400` for the first invalid report and `429 RATE_LIMITED` for the second; no ticket or photo was created.
 
 **Commit message:** `Phase 4: create report with photo upload, ward assignment and confirmation`
 
