@@ -53,6 +53,7 @@ export function TicketDetailPage({ ticketId }) {
 
   const data = ticket.data;
   const canStart = ['OPEN', 'REOPENED'].includes(data.status);
+  const lastRejection = data.status === 'REOPENED' ? data.timeline.findLast((entry) => entry.toStatus === 'REOPENED') : null;
   const canSubmitReport = ['OPEN', 'IN_PROGRESS', 'REOPENED'].includes(data.status);
 
   return (
@@ -67,6 +68,14 @@ export function TicketDetailPage({ ticketId }) {
             </div>
             <StatusBadge status={data.status} />
           </div>
+
+          {lastRejection && (
+            <div className="mt-5 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900" role="alert">
+              <p className="font-semibold">{text.ticket.reopenedTitle}</p>
+              <p className="mt-1">{text.ticket.reopenedHelp}</p>
+              {lastRejection.reason && <p className="mt-2 font-semibold">{text.ticket.reason}: {lastRejection.reason}</p>}
+            </div>
+          )}
 
           <p className="mt-5 whitespace-pre-wrap text-slate-700">{data.description}</p>
 
@@ -92,6 +101,7 @@ export function TicketDetailPage({ ticketId }) {
               {data.actionReports.map((report) => (
                 <div className="mt-3 rounded-xl border border-slate-200 p-4" key={report.id}>
                   <p className="whitespace-pre-wrap text-slate-700">{report.remarks}</p>
+                  {report.decision && <p className={`mt-2 text-xs font-semibold ${report.decision === 'REJECTED' ? 'text-rose-700' : 'text-emerald-700'}`}>{report.decision === 'REJECTED' ? text.actionReport.rejectedLabel : text.actionReport.approvedLabel}{report.decisionReason ? `: ${report.decisionReason}` : ''}</p>}
                   <p className="mt-2 text-xs text-slate-500">{text.actionReport.submittedBy} {report.officerName}, {new Date(report.submittedAt).toLocaleString()}</p>
                   <div className="mt-3 grid gap-3 sm:grid-cols-3">
                     {report.photos.map((photo) => <img alt={text.actionReport.photoAlt} className="h-40 w-full rounded-lg object-cover" key={photo.url} src={photo.url} />)}

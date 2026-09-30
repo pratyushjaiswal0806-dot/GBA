@@ -17,6 +17,8 @@ import { createReportRouter } from './modules/tickets/report.routes.js';
 import { createReportService } from './modules/tickets/report.service.js';
 import { createTicketRouter } from './modules/tickets/ticket.routes.js';
 import { createTicketService } from './modules/tickets/ticket.service.js';
+import { createVerifierRouter } from './modules/verifier/verifier.routes.js';
+import { createVerifierService } from './modules/verifier/verifier.service.js';
 import { createSupabaseAdmin } from './supabase.js';
 
 export async function startServer() {
@@ -46,6 +48,15 @@ export async function startServer() {
     actionReportService: createActionReportService({ db, mediaService }),
     photosUpload: createPhotosUpload({ maxUploadMb: config.maxUploadMb })
   });
+  const verifierRouter = createVerifierRouter({
+    requireAuth,
+    requireVerifier: requireRole('VERIFIER'),
+    verifierService: createVerifierService({
+      db,
+      mediaService,
+      farWarningMeters: config.farWarningMeters
+    })
+  });
   const reportService = createReportService({ db, geocoder, mediaService });
   const reportRouter = createReportRouter({
     createReport: reportService.create,
@@ -59,6 +70,7 @@ export async function startServer() {
     authRouter,
     officerRouter,
     ticketRouter,
+    verifierRouter,
     frontendDist: config.frontendDist
   });
 

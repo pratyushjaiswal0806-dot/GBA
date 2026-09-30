@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| **Status** | Phase 7 complete; ready for Phase 8 |
-| **Current phase** | Phase 8: Verifier check |
+| **Status** | Phase 8 complete; ready for Phase 9 |
+| **Current phase** | Phase 9: Public dashboard, core |
 | **Reads with** | [PRD.md](PRD.md) (what), [TRD.md](TRD.md) (how, source of truth), [CLAUDE.md](CLAUDE.md) (rules) |
 
 **How to use this file**
@@ -24,7 +24,7 @@
 | 5 | Staff login and officer list | Staff can log in, and an officer sees only their own ward's tickets. | R14, R15, R25 | Complete |
 | 6 | Officer detail, start work and status lookup | An officer opens a ticket and starts work, and the citizen sees the new status by ticket code. | R7, R16, R17, R23 | Complete |
 | 7 | Action Taken Report | An officer submits remarks and photos, and the ticket moves to "Pending Verification". | R18, R19 | Complete |
-| 8 | Verifier check | A verifier compares before and after photos, then approves (closed) or rejects (reopened). | R20, R21, R22, R24 | Not started |
+| 8 | Verifier check | A verifier compares before and after photos, then approves (closed) or rejects (reopened). | R20, R21, R22, R24 | Complete |
 | 9 | Public dashboard, core | Anyone can open a public page with summary numbers, ward and category counts and a "Demo data" label. | R26 to R30, R33 | Not started |
 | 10 | Dashboard map, trend and live refresh | The dashboard also shows a map, a trend chart, and updates by itself. | R31, R32, R34 | Not started |
 | 11 | Duplicate check | Reporting the same spot twice in the same category is caught, and the citizen can add support instead. | R10, R11, R12 | Not started |
@@ -452,12 +452,14 @@ Approve must be the only path to CLOSED. Do not add any route that sets a status
 
 **Done when:**
 
-- [ ] The queue, side-by-side compare and both buttons work
-- [ ] Approve closes, reject reopens with a visible reason, history is complete
-- [ ] The officer can redo the report after a rejection, and the ticket can then be closed
-- [ ] A far-away action photo shows a warning
-- [ ] Closing without a report or as an officer is refused on the server (409, 403)
-- [ ] `npm test` passes
+- [x] The queue, side-by-side compare and both buttons work
+- [x] Approve closes, reject reopens with a visible reason, history is complete
+- [x] The officer can redo the report after a rejection, and the ticket can then be closed
+- [x] A far-away action photo shows a warning
+- [x] Closing without a report or as an officer is refused on the server (409, 403)
+- [x] `npm test` passes (16 files, 98 tests)
+
+**Completion record (30 September 2026):** Phase 8 is complete. The verifier queue, side-by-side compare, approve and reject are implemented. Approve is the only code path to `CLOSED`, and no route sets a status directly (`PATCH`/`PUT`/`POST` on `/status` and `/close` return 404). Reject reasons are limited to 500 characters and are shown to the officer, not on the public Track page. Photo times are upload times (EXIF is removed). `FAR_WARNING_METERS` is now a required server setting. The full server suite passes and the frontend build passes. Manual tests 1 to 10 were run against the real Supabase project, through the API and headless Chromium, and the restart check and click-through were then done by hand. Not checked: a phone-width layout of the compare page. Test tickets from these runs (descriptions start "Phase 8 manual test") stay in the database until the reset script in Phase 12.
 
 **Commit message:** `Phase 8: verifier queue, side-by-side compare, approve and reject`
 

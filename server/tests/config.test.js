@@ -13,6 +13,7 @@ describe('loadConfig', () => {
       SUPABASE_BUCKET: 'ticket-media',
       SIGNED_URL_SECONDS: '300',
       MAX_UPLOAD_MB: '5',
+      FAR_WARNING_METERS: '50',
       RATE_LIMIT_REPORTS_PER_HOUR: '20'
     });
 
@@ -24,6 +25,7 @@ describe('loadConfig', () => {
     expect(config.nominatimBaseUrl).toBe('https://nominatim.example.test');
     expect(config.supabaseBucket).toBe('ticket-media');
     expect(config.maxUploadMb).toBe(5);
+    expect(config.farWarningMeters).toBe(50);
     expect(config.frontendDist).toContain('frontend');
   });
 
@@ -44,6 +46,7 @@ describe('loadConfig', () => {
       SUPABASE_BUCKET: 'ticket-media',
       SIGNED_URL_SECONDS: '300',
       MAX_UPLOAD_MB: '5',
+      FAR_WARNING_METERS: '50',
       RATE_LIMIT_REPORTS_PER_HOUR: '20'
     })).toThrow('PORT must be an integer');
   });

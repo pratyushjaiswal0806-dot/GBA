@@ -81,6 +81,7 @@ export function loadConfig(environment = process.env) {
     supabaseBucket: requireSetting(environment, 'SUPABASE_BUCKET'),
     signedUrlSeconds: parsePositiveInteger(environment, 'SIGNED_URL_SECONDS'),
     maxUploadMb: parsePositiveInteger(environment, 'MAX_UPLOAD_MB'),
+    farWarningMeters: parsePositiveInteger(environment, 'FAR_WARNING_METERS'),
     rateLimitReportsPerHour: parsePositiveInteger(environment, 'RATE_LIMIT_REPORTS_PER_HOUR')
   };
 }

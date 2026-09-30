@@ -25,6 +25,7 @@ export function createApp({
   authRouter,
   officerRouter,
   ticketRouter,
+  verifierRouter,
   frontendDist = defaultFrontendDist
 }) {
   if (
@@ -85,6 +86,10 @@ export function createApp({
 
   if (ticketRouter) {
     app.use('/api', ticketRouter);
+  }
+
+  if (verifierRouter) {
+    app.use('/api', verifierRouter);
   }
 
   app.use('/api', (request, response, next) => {

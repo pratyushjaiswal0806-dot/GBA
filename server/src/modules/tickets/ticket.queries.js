@@ -36,6 +36,7 @@ export async function findOriginalMedia(db, ticketId) {
 export async function findActionReports(db, ticketId) {
   const result = await db.query(
     `SELECT r.id, r.remarks, r.submitted_at AS "submittedAt", s.full_name AS "officerName",
+            r.decision, r.decision_reason AS "decisionReason",
             COALESCE(
               json_agg(json_build_object('storagePath', m.storage_path) ORDER BY m.id)
                 FILTER (WHERE m.id IS NOT NULL),
@@ -55,7 +56,7 @@ export async function findActionReports(db, ticketId) {
 export async function findStaffTimeline(db, ticketId) {
   const result = await db.query(
     `SELECT h.from_status AS "fromStatus", h.to_status AS "toStatus",
-            h.created_at AS "createdAt", s.full_name AS "changedByName"
+            h.created_at AS "createdAt", h.reason, s.full_name AS "changedByName"
      FROM status_history h
      LEFT JOIN staff s ON s.id = h.changed_by
      WHERE h.ticket_id = $1
@@ -101,6 +102,14 @@ export async function lockTicketForOfficer(client, { ticketId, wardId }) {
   return result.rows[0] ?? null;
 }
 
+export async function lockTicket(client, ticketId) {
+  const result = await client.query(
+    'SELECT id, status FROM tickets WHERE id = $1 FOR UPDATE',
+    [ticketId]
+  );
+  return result.rows[0] ?? null;
+}
+
 export async function setTicketStatus(client, { ticketId, status }) {
   const result = await client.query(
     `UPDATE tickets
@@ -113,10 +122,10 @@ export async function setTicketStatus(client, { ticketId, status }) {
   return result.rows[0];
 }
 
-export async function addStatusHistory(client, { ticketId, fromStatus, toStatus, changedBy }) {
+export async function addStatusHistory(client, { ticketId, fromStatus, toStatus, changedBy, reason = null }) {
   await client.query(
-    `INSERT INTO status_history (ticket_id, from_status, to_status, changed_by)
-     VALUES ($1, $2, $3, $4)`,
-    [ticketId, fromStatus, toStatus, changedBy]
+    `INSERT INTO status_history (ticket_id, from_status, to_status, changed_by, reason)
+     VALUES ($1, $2, $3, $4, $5)`,
+    [ticketId, fromStatus, toStatus, changedBy, reason]
   );
 }
