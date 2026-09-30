@@ -1,4 +1,4 @@
-import express from 'express';
+import defaultExpress from 'express';
 import helmet from 'helmet';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
@@ -45,6 +45,7 @@ function createCorsMiddleware(allowedOrigins = []) {
 }
 
 export function createApp({
+  express = defaultExpress,
   db,
   geocoder = unavailableGeocoder,
   reportRouter,

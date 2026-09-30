@@ -1,3 +1,4 @@
+import express from 'express';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createApp } from './application.js';
@@ -75,6 +76,7 @@ function createConfiguredServer() {
     supportRateLimit: createReportRateLimit({ maxRequests: config.rateLimitReportsPerHour })
   });
   const app = createApp({
+    express,
     db,
     geocoder,
     reportRouter,
