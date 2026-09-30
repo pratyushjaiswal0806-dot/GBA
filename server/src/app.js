@@ -71,7 +71,15 @@ export function createApp({
   if (process.env.VERCEL === '1') {
     app.set('trust proxy', 1);
   }
-  app.use(helmet());
+  app.use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+        'connect-src': ["'self'", 'https://*.supabase.co'],
+        'img-src': ["'self'", 'data:', 'blob:', 'https://*.tile.openstreetmap.org', 'https://*.supabase.co']
+      }
+    }
+  }));
   app.use(createCorsMiddleware(allowedOrigins));
   app.use(express.json());
 
