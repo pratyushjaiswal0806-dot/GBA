@@ -49,7 +49,19 @@ export function TicketDetailPage({ ticketId }) {
   }
 
   if (ticket.state === 'loading') return <p className="p-6 text-sm text-slate-600" role="status">{text.ticket.loading}</p>;
-  if (ticket.state === 'error') return <p className="p-6 text-sm text-rose-700" role="alert">{ticket.error}</p>;
+  if (ticket.state === 'error') {
+    return (
+      <main className="min-h-screen bg-slate-950 px-4 py-8 sm:px-6">
+        <section className="mx-auto max-w-4xl">
+          <button className="text-sm font-semibold text-cyan-200 hover:text-white" onClick={() => navigate('/officer')} type="button">← {text.ticket.backToTickets}</button>
+          <article className="mt-4 rounded-2xl bg-white p-5 shadow-xl sm:p-7">
+            <p className="rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">{ticket.error || text.api.networkError}</p>
+            <button className="mt-5 rounded-lg bg-cyan-700 px-4 py-3 text-sm font-semibold text-white hover:bg-cyan-800" onClick={() => setReloadKey((current) => current + 1)} type="button">{text.ticket.retry}</button>
+          </article>
+        </section>
+      </main>
+    );
+  }
 
   const data = ticket.data;
   const canStart = ['OPEN', 'REOPENED'].includes(data.status);
@@ -73,11 +85,11 @@ export function TicketDetailPage({ ticketId }) {
             <div className="mt-5 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900" role="alert">
               <p className="font-semibold">{text.ticket.reopenedTitle}</p>
               <p className="mt-1">{text.ticket.reopenedHelp}</p>
-              {lastRejection.reason && <p className="mt-2 font-semibold">{text.ticket.reason}: {lastRejection.reason}</p>}
+              {lastRejection.reason && <p className="mt-2 break-words font-semibold">{text.ticket.reason}: {lastRejection.reason}</p>}
             </div>
           )}
 
-          <p className="mt-5 whitespace-pre-wrap text-slate-700">{data.description}</p>
+          <p className="mt-5 break-words whitespace-pre-wrap text-slate-700">{data.description}</p>
 
           <div className="mt-6 grid gap-3 rounded-xl bg-slate-50 p-4 text-sm sm:grid-cols-4">
             <div><p className="font-semibold text-slate-700">{text.ticket.ward}</p><p className="mt-1 text-slate-900">{data.wardName}</p></div>
@@ -96,21 +108,20 @@ export function TicketDetailPage({ ticketId }) {
             <TicketLocationMap lat={data.lat} lng={data.lng} />
           </section>
 
-          {data.actionReports.length > 0 && (
-            <section className="mt-7">
-              <h2 className="text-lg font-semibold text-slate-900">{text.actionReport.sectionTitle}</h2>
-              {data.actionReports.map((report) => (
-                <div className="mt-3 rounded-xl border border-slate-200 p-4" key={report.id}>
-                  <p className="whitespace-pre-wrap text-slate-700">{report.remarks}</p>
-                  {report.decision && <p className={`mt-2 text-xs font-semibold ${report.decision === 'REJECTED' ? 'text-rose-700' : 'text-emerald-700'}`}>{report.decision === 'REJECTED' ? text.actionReport.rejectedLabel : text.actionReport.approvedLabel}{report.decisionReason ? `: ${report.decisionReason}` : ''}</p>}
-                  <p className="mt-2 text-xs text-slate-500">{text.actionReport.submittedBy} {report.officerName}, {new Date(report.submittedAt).toLocaleString()}</p>
-                  <div className="mt-3 grid gap-3 sm:grid-cols-3">
-                    {report.photos.map((photo) => <img alt={text.actionReport.photoAlt} className="h-40 w-full rounded-lg object-cover" key={photo.url} src={photo.url} />)}
-                  </div>
+          <section className="mt-7">
+            <h2 className="text-lg font-semibold text-slate-900">{text.actionReport.sectionTitle}</h2>
+            {data.actionReports.length === 0 && <p className="mt-3 text-sm text-slate-500">{text.actionReport.empty}</p>}
+            {data.actionReports.map((report) => (
+              <div className="mt-3 rounded-xl border border-slate-200 p-4" key={report.id}>
+                <p className="break-words whitespace-pre-wrap text-slate-700">{report.remarks}</p>
+                {report.decision && <p className={`mt-2 break-words text-xs font-semibold ${report.decision === 'REJECTED' ? 'text-rose-700' : 'text-emerald-700'}`}>{report.decision === 'REJECTED' ? text.actionReport.rejectedLabel : text.actionReport.approvedLabel}{report.decisionReason ? `: ${report.decisionReason}` : ''}</p>}
+                <p className="mt-2 text-xs text-slate-500">{text.actionReport.submittedBy} {report.officerName}, {new Date(report.submittedAt).toLocaleString()}</p>
+                <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                  {report.photos.map((photo) => <img alt={text.actionReport.photoAlt} className="h-40 w-full rounded-lg object-cover" key={photo.url} src={photo.url} />)}
                 </div>
-              ))}
-            </section>
-          )}
+              </div>
+            ))}
+          </section>
 
           <section className="mt-7">
             <h2 className="mb-4 text-lg font-semibold text-slate-900">{text.ticket.timeline}</h2>

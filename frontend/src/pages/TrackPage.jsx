@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { requestJson } from '../api/client.js';
 import { StatusBadge } from '../components/StatusBadge.jsx';
 import { TicketTimeline } from '../components/TicketTimeline.jsx';
@@ -14,9 +14,12 @@ export function TrackPage() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const submitLock = useRef(false);
 
   async function submit(event) {
     event.preventDefault();
+
+    if (submitLock.current) return;
 
     if (!code.trim()) {
       setError(text.track.codeRequired);
@@ -25,6 +28,7 @@ export function TrackPage() {
     }
 
     setError(null);
+    submitLock.current = true;
     setLoading(true);
 
     try {
@@ -34,6 +38,7 @@ export function TrackPage() {
       setResult(null);
       setError(requestError.message || text.track.notFound);
     } finally {
+      submitLock.current = false;
       setLoading(false);
     }
   }

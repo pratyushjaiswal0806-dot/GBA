@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { requestJson } from '../api/client.js';
 import { LocationSummary } from '../components/LocationSummary.jsx';
 import { MapPicker } from '../components/MapPicker.jsx';
@@ -25,6 +25,7 @@ export function ActionReportPage({ ticketId }) {
   const [formError, setFormError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSent, setIsSent] = useState(false);
+  const submitLock = useRef(false);
   const picker = useLocationPicker({
     onPositionChange: () => setFieldErrors((current) => ({ ...current, location: null }))
   });
@@ -32,6 +33,8 @@ export function ActionReportPage({ ticketId }) {
 
   async function submit(event) {
     event.preventDefault();
+    if (submitLock.current) return;
+
     const problem = validate({ remarks, files, position: picker.position });
 
     if (problem) {
@@ -48,6 +51,7 @@ export function ActionReportPage({ ticketId }) {
 
     setFieldErrors({});
     setFormError(null);
+    submitLock.current = true;
     setIsSubmitting(true);
 
     try {
@@ -56,6 +60,7 @@ export function ActionReportPage({ ticketId }) {
     } catch (error) {
       setFormError(error.message || text.actionReport.submitError);
     } finally {
+      submitLock.current = false;
       setIsSubmitting(false);
     }
   }

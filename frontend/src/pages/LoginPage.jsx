@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { text } from '../i18n/en.js';
 import { navigate } from '../routing.js';
@@ -9,6 +9,12 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const submitLock = useRef(false);
+  const [sessionMessage] = useState(() => {
+    const message = sessionStorage.getItem('gba-session-message');
+    sessionStorage.removeItem('gba-session-message');
+    return message;
+  });
 
   useEffect(() => {
     if (profile) {
@@ -18,6 +24,8 @@ export function LoginPage() {
 
   async function submit(event) {
     event.preventDefault();
+
+    if (submitLock.current) return;
 
     if (!email.trim()) {
       setError(text.auth.emailRequired);
@@ -30,6 +38,7 @@ export function LoginPage() {
     }
 
     setError(null);
+    submitLock.current = true;
     setSubmitting(true);
 
     try {
@@ -41,6 +50,7 @@ export function LoginPage() {
     } catch {
       setError(text.auth.invalidCredentials);
     } finally {
+      submitLock.current = false;
       setSubmitting(false);
     }
   }
@@ -69,6 +79,7 @@ export function LoginPage() {
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-700">{text.app.eyebrow}</p>
         <h1 className="mt-2 text-2xl font-semibold text-slate-900">{text.auth.title}</h1>
         <p className="mt-2 text-sm text-slate-600">{text.auth.description}</p>
+        {sessionMessage && <p className="mt-4 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">{sessionMessage}</p>}
         <form className="mt-6 space-y-5" onSubmit={submit}>
           <div>
             <label className="block text-sm font-semibold text-slate-800" htmlFor="staff-email">{text.auth.email}</label>

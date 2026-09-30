@@ -1,6 +1,8 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
+import { requestJson } from './api/client.js';
 import { ReportPage } from './pages/ReportPage.jsx';
 import { TrackPage } from './pages/TrackPage.jsx';
+import { NotFoundPage } from './pages/NotFoundPage.jsx';
 import { text } from './i18n/en.js';
 import { navigate } from './routing.js';
 
@@ -27,23 +29,19 @@ function HomePage() {
 
     async function loadHealth() {
       try {
-        const response = await fetch('/api/health', { signal: controller.signal });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.message || 'The server returned an error.');
+        const data = await requestJson('/api/health', { signal: controller.signal });
         setHealth({ state: 'ready', data, error: null });
       } catch (error) {
-        if (error.name !== 'AbortError') setHealth({ state: 'error', data: null, error: error.message });
+        if (error.name !== 'AbortError') setHealth({ state: 'error', data: null, error: error.message || text.health.error });
       }
     }
 
     async function loadCategories() {
       try {
-        const response = await fetch('/api/categories', { signal: controller.signal });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.message || 'The categories request failed.');
+        const data = await requestJson('/api/categories', { signal: controller.signal });
         setCategories({ state: 'ready', data: data.categories, error: null });
       } catch (error) {
-        if (error.name !== 'AbortError') setCategories({ state: 'error', data: [], error: error.message });
+        if (error.name !== 'AbortError') setCategories({ state: 'error', data: [], error: error.message || text.categories.error });
       }
     }
 
@@ -61,13 +59,13 @@ function HomePage() {
   return (
     <main className="min-h-screen bg-slate-950 px-4 py-10 text-slate-900 sm:px-6">
       <section className="mx-auto max-w-2xl">
-        <div className="mb-6 flex items-start justify-between gap-4 text-white">
+        <div className="mb-6 flex flex-col gap-4 text-white sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-cyan-300">{text.app.eyebrow}</p>
             <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{text.app.title}</h1>
             <p className="mt-3 max-w-xl text-slate-300">{text.app.description}</p>
           </div>
-          <div className="flex shrink-0 gap-2">
+          <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:shrink-0">
             <button className="rounded-lg border border-slate-500 px-3 py-2 text-sm font-semibold hover:bg-slate-800" onClick={() => navigate('/track')} type="button">{text.track.homeLink}</button>
             <button className="rounded-lg border border-slate-500 px-3 py-2 text-sm font-semibold hover:bg-slate-800" onClick={() => navigate('/dashboard')} type="button">{text.dashboard.homeLink}</button>
             <button className="rounded-lg border border-slate-500 px-3 py-2 text-sm font-semibold hover:bg-slate-800" onClick={() => navigate('/login')} type="button">{text.auth.staffLogin}</button>
@@ -95,7 +93,7 @@ function HomePage() {
             <h2 className="text-xl font-semibold text-slate-900">{text.categories.title}</h2>
             <p className="mt-1 text-sm text-slate-500">{text.categories.description}</p>
             {categories.state === 'loading' && <p className="mt-4 text-sm text-slate-500">{text.categories.loading}</p>}
-            {categories.state === 'error' && <p className="mt-4 rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">{text.categories.error}</p>}
+            {categories.state === 'error' && <p className="mt-4 rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">{categories.error || text.categories.error}</p>}
             {categories.state === 'ready' && categories.data.length === 0 && <p className="mt-4 text-sm text-slate-500">{text.categories.empty}</p>}
             {categories.state === 'ready' && categories.data.length > 0 && (
               <ul className="mt-4 grid gap-3 sm:grid-cols-3" aria-label={text.categories.label}>
@@ -126,7 +124,8 @@ function AppContent() {
   if (path === '/login' || path === '/officer' || path === '/verifier' || /^\/officer\/tickets\/\d+(?:\/action-report)?$/.test(path) || /^\/verifier\/tickets\/\d+$/.test(path)) {
     return <Suspense fallback={<p className="p-6 text-sm text-slate-600" role="status">{text.auth.loading}</p>}><StaffArea path={path} /></Suspense>;
   }
-  return <HomePage />;
+  if (path === '/') return <HomePage />;
+  return <NotFoundPage />;
 }
 
 function App() {

@@ -14,8 +14,8 @@ export function DuplicatePrompt({ tickets, busyAction, onSupport, onSubmitAnyway
       <ul className="mt-4 space-y-3">
         {tickets.map((ticket) => (
           <li className="rounded-lg bg-white p-4 text-sm text-slate-700" key={ticket.publicCode}>
-            <p className="font-semibold text-slate-900">{ticket.categoryName} · {text.officer.statuses[ticket.status] ?? ticket.status}</p>
-            <p className="mt-1">{[ticket.street, ticket.area, ticket.wardName].filter(Boolean).join(', ')}</p>
+            <p className="break-words font-semibold text-slate-900">{ticket.categoryName} · {text.officer.statuses[ticket.status] ?? ticket.status}</p>
+            <p className="mt-1 break-words">{[ticket.street, ticket.area, ticket.wardName].filter(Boolean).join(', ')}</p>
             <p className="mt-1 text-slate-500">
               {ticket.distanceMeters} {text.map.metersShort} {text.report.duplicateDistance} · {text.report.duplicateReported} {formatDate(ticket.createdAt)} · {text.report.duplicatePeople}: {ticket.supportCount}
             </p>

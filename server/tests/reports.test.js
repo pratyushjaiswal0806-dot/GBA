@@ -111,6 +111,35 @@ describe('POST /api/reports', () => {
     expect(storage.uploads.size).toBeGreaterThan(0);
   });
 
+  it('handles two concurrent report submissions without corrupting either ticket', async () => {
+    const [firstImage, secondImage] = await Promise.all([createJpeg(), createJpeg()]);
+    const submit = (description, image) => request(app)
+      .post('/api/reports')
+      .field('categoryCode', 'FOOTPATH_ENCROACHMENT')
+      .field('description', description)
+      .field('lat', String(wardAPoint.lat))
+      .field('lng', String(wardAPoint.lng))
+      .attach('photo', image, { filename: `${description}.jpg`, contentType: 'image/jpeg' });
+
+    const responses = await Promise.all([
+      submit('Concurrent report one', firstImage),
+      submit('Concurrent report two', secondImage)
+    ]);
+
+    expect(responses.map((response) => response.status)).toEqual([201, 201]);
+    expect(new Set(responses.map((response) => response.body.publicCode)).size).toBe(2);
+    const saved = await db.query(
+      `SELECT t.public_code, t.description, count(m.id)::int AS media_count
+       FROM tickets t
+       JOIN media m ON m.ticket_id = t.id
+       WHERE t.public_code = ANY($1::text[])
+       GROUP BY t.public_code, t.description`,
+      [responses.map((response) => response.body.publicCode)]
+    );
+    expect(saved.rows).toHaveLength(2);
+    expect(saved.rows.every((row) => row.media_count === 1)).toBe(true);
+  });
+
   it('refuses an outside-pilot location without storing a photo', async () => {
     const uploadsBefore = storage.uploads.size;
     const response = await request(app)

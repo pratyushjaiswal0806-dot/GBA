@@ -8,6 +8,7 @@
 | **Date** | 29 September 2026 |
 | **Source** | "GBA Website & Digital Governance Initiative" Minutes of Meeting (MoM). Section numbers below (§) point to that document. |
 | **Status** | Draft for review |
+| **Implementation status** | Phase 12 complete; Phase 13 deployment pending |
 
 ---
 

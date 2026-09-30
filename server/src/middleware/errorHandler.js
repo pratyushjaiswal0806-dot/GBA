@@ -8,17 +8,22 @@ export function errorHandler(error, request, response, next) {
 
   const isApiError = error instanceof ApiError;
   const isMalformedJson = error instanceof SyntaxError && error.status === 400;
-  const status = isApiError ? error.status : isMalformedJson ? 400 : 500;
+  const isPayloadTooLarge = error.type === 'entity.too.large' || error.status === 413;
+  const status = isApiError ? error.status : isMalformedJson ? 400 : isPayloadTooLarge ? 413 : 500;
   const code = isApiError
     ? error.code
     : isMalformedJson
       ? 'INVALID_JSON'
-      : 'INTERNAL_SERVER_ERROR';
+      : isPayloadTooLarge
+        ? 'PAYLOAD_TOO_LARGE'
+        : 'INTERNAL_SERVER_ERROR';
   const message = isApiError
     ? error.message
     : isMalformedJson
       ? 'Request body contains invalid JSON.'
-      : 'Internal server error.';
+      : isPayloadTooLarge
+        ? 'Request body is too large.'
+        : 'Internal server error.';
 
   response.status(status).json({ status, code, message });
 }

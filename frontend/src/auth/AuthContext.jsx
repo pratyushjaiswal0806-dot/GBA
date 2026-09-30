@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { requestJson, setAccessTokenProvider } from '../api/client.js';
+import { requestJson, setAccessTokenProvider, setSessionExpiredHandler } from '../api/client.js';
 import { supabase } from '../api/supabaseClient.js';
+import { text } from '../i18n/en.js';
+import { navigate } from '../routing.js';
 
 const AuthContext = createContext(null);
 
@@ -53,6 +55,11 @@ export function AuthProvider({ children }) {
       const { data } = await supabase.auth.getSession();
       return data.session?.access_token ?? null;
     });
+    const clearSessionExpiredHandler = setSessionExpiredHandler(() => {
+      sessionStorage.setItem('gba-session-message', text.api.sessionExpired);
+      void supabase.auth.signOut().catch(() => {});
+      navigate('/login', { replace: true });
+    });
     let active = true;
 
     async function restoreSession() {
@@ -73,6 +80,7 @@ export function AuthProvider({ children }) {
     return () => {
       active = false;
       subscription.subscription.unsubscribe();
+      clearSessionExpiredHandler();
       clearAccessTokenProvider();
     };
   }, []);

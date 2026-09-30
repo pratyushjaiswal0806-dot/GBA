@@ -12,6 +12,7 @@ export function VerifierQueuePage() {
   const { profile, signOut } = useAuth();
   const [page, setPage] = useState(1);
   const [queue, setQueue] = useState({ state: 'loading', data: [], total: 0, pageSize: 20, error: null });
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -29,7 +30,7 @@ export function VerifierQueuePage() {
 
     loadQueue();
     return () => controller.abort();
-  }, [page]);
+  }, [page, reloadKey]);
 
   const hasPreviousPage = page > 1;
   const hasNextPage = page * queue.pageSize < queue.total;
@@ -49,7 +50,7 @@ export function VerifierQueuePage() {
         <section className="mt-6 rounded-2xl bg-white p-5 shadow-xl sm:p-7">
           <p className="text-sm text-slate-500">{text.verifier.queueDescription}</p>
           {queue.state === 'loading' && <p className="mt-6 text-sm text-slate-500" role="status">{text.verifier.loading}</p>}
-          {queue.state === 'error' && <p className="mt-6 rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">{queue.error || text.verifier.loadError}</p>}
+          {queue.state === 'error' && <div className="mt-6 rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert"><p>{queue.error || text.verifier.loadError}</p><button className="mt-3 rounded-lg bg-cyan-700 px-3 py-2 text-sm font-semibold text-white hover:bg-cyan-800" onClick={() => setReloadKey((current) => current + 1)} type="button">{text.verifier.retry}</button></div>}
           {queue.state === 'ready' && queue.data.length === 0 && <p className="mt-6 text-sm text-slate-500">{text.verifier.empty}</p>}
           {queue.state === 'ready' && queue.data.length > 0 && (
             <div className="mt-6 overflow-x-auto rounded-xl border border-slate-200">

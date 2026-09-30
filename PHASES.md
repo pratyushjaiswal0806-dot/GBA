@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| **Status** | Phase 11 complete; ready for Phase 12 |
-| **Current phase** | Phase 12: Polish and error handling |
+| **Status** | Phase 12 complete; ready for Phase 13 |
+| **Current phase** | Phase 13: Deploy |
 | **Reads with** | [PRD.md](PRD.md) (what), [TRD.md](TRD.md) (how, source of truth), [CLAUDE.md](CLAUDE.md) (rules) |
 
 **How to use this file**
@@ -28,7 +28,7 @@
 | 9 | Public dashboard, core | Anyone can open a public page with summary numbers, ward and category counts and a "Demo data" label. | R26 to R30, R33 | Complete |
 | 10 | Dashboard map, trend and live refresh | The dashboard also shows a map, a trend chart, and updates by itself. | R31, R32, R34 | Complete |
 | 11 | Duplicate check | Reporting the same spot twice in the same category is caught, and the citizen can add support instead. | R10, R11, R12 | Complete |
-| 12 | Polish and error handling | Every screen handles loading, empty and error cases and works well on a phone. | R36, R37 | Not started |
+| 12 | Polish and error handling | Every screen handles loading, empty and error cases and works well on a phone. | R36, R37 | Complete |
 | 13 | Deploy | The whole demo runs on a hosted HTTPS address, from a phone, without manual fixes. | (demo readiness) | Not started |
 
 Every requirement R1 to R37 sits in exactly one phase above (R23 starts in Phase 4 and every later status change keeps it true).
@@ -653,12 +653,14 @@ No new features. Only handle errors, phone layout, text and the demo helpers lis
 
 **Done when:**
 
-- [ ] Every screen has loading, empty and error states
-- [ ] The whole demo script runs on a phone-width screen
-- [ ] Double submit creates one ticket
-- [ ] `reset-demo.sql` works, `mock-gba-site` links to the portal, and `README.md` exists
-- [ ] All `TODO` commands in `CLAUDE.md` are filled in or clearly marked as skipped
-- [ ] `npm test` passes
+- [x] Every screen has loading, empty and error states
+- [x] The whole demo script runs on a phone-width screen
+- [x] Double submit creates one ticket
+- [x] `reset-demo.sql` works, `mock-gba-site` links to the portal, and `README.md` exists
+- [x] All `TODO` commands in `CLAUDE.md` are filled in or clearly marked as skipped
+- [x] `npm test` passes
+
+**Completion record (30 September 2026):** Phase 12 polish is complete. The frontend request client now handles network, non-JSON and status-specific failures, expired staff sessions return to login, and unknown routes and ticket-load failures have recovery paths. Report, action-report, verifier decisions, support, and login submissions use ref-based double-submit locks. Long ticket text wraps, the home navigation wraps at 360 px, and a headless Chromium audit found no horizontal overflow on the public screens. The mock GBA page, reset SQL and README are included. The backend suite passes: 21 test files and 160 tests, including error-handler, oversized JSON, reset-script and concurrent-report tests. The frontend production build passes. A real phone camera/location check and running the reset script against the real database remain manual checks for the owner; the reset script was proven on the test database and does not delete Storage files.
 
 **Commit message:** `Phase 12: polish, error handling, phone layout, demo helpers and README`
 
@@ -768,7 +770,7 @@ I did not guess these. Where a phase above had to assume something, I say what.
 7. **Text limits.** Only the description has a limit (300 characters, marked "e.g."). Action Taken Report remarks and the reject reason have none. Suggestion: 500 characters each. What limits do you want?
 8. **Repeated support.** Citizens are anonymous, so one person can press "add my support" many times (only the rate limit slows this down). Acceptable for a pilot?
 9. **Seed data.** **Resolved:** `SEED_DEMO_PASSWORD` is stored in `server/.env`; demo tickets are metadata-only in Phase 2, with photos beginning in Phase 4 when Storage is configured.
-10. **Linter.** CLAUDE.md says Lint is TODO. Do you want one (for example ESLint)? A new library needs your approval.
+10. **Linter.** **Resolved in Phase 12:** skip linting for this pilot; no linter was chosen, so CLAUDE.md marks it as skipped without adding a library.
 11. **Hosting and phone testing.** TRD decision S2 says the host is chosen in the last phase. Phone location needs HTTPS, so phone testing before Phase 13 needs a tunnel tool, and the risk that the host does not work is found late. Do you want to choose the host now and do a small early deploy after Phase 1, or keep it for the end? Which host do you want?
 12. **Demo emails.** **Resolved:** use the four illustrative `demo.example` addresses with email confirmation enabled by the seed. If the Supabase project rejects them, replace them in the seed script with four addresses you control.
 13. **Install commands.** CLAUDE.md lists Install as TODO, and the TRD has no root `package.json`. Phase 1 assumes two separate installs (`npm install` in `server/` and in `frontend/`). OK?

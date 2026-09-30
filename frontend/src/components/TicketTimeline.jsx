@@ -21,7 +21,7 @@ export function TicketTimeline({ entries, showStaffNames = false }) {
             {entry.fromStatus ? `${statusName(entry.fromStatus)} → ${statusName(entry.toStatus)}` : text.ticket.created}
           </p>
           <p className="mt-1 text-sm text-slate-600">{formatDate(entry.createdAt)}</p>
-          {showStaffNames && entry.reason && <p className="mt-1 text-sm text-rose-700">{text.ticket.reason}: {entry.reason}</p>}
+          {showStaffNames && entry.reason && <p className="mt-1 break-words text-sm text-rose-700">{text.ticket.reason}: {entry.reason}</p>}
           {showStaffNames && entry.changedByName && <p className="mt-1 text-sm text-slate-600">{text.ticket.by} {entry.changedByName}</p>}
         </li>
       ))}

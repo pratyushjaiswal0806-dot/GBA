@@ -33,7 +33,7 @@ export function PhotoPicker({ file, onChange }) {
       {file && (
         <div className="mt-3 rounded-xl border border-slate-200 p-3">
           <p className="text-sm font-medium text-slate-800">{text.report.photoSelected}: {file.name}</p>
-          {previewUrl && <img alt="Selected issue preview" className="mt-3 max-h-64 w-full rounded-lg object-cover" src={previewUrl} />}
+          {previewUrl && <img alt={text.report.photoPreviewAlt} className="mt-3 max-h-64 w-full rounded-lg object-cover" src={previewUrl} />}
         </div>
       )}
     </div>

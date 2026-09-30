@@ -19,6 +19,30 @@ export const text = {
     notReachable: 'NOT REACHABLE',
     error: 'Server not reachable. Start the backend and refresh this page.'
   },
+  api: {
+    networkError: "Can't reach the server. Check your connection and try again.",
+    requestFailed: 'Request failed.',
+    sessionExpired: 'Your session has ended. Please sign in again.',
+    statusFallback: {
+      401: 'Please sign in again.',
+      403: 'You do not have permission to do that.',
+      404: 'That page or record was not found.',
+      409: 'This action conflicts with the ticket’s current state.',
+      413: 'The uploaded request is too large.',
+      415: 'That file type is not supported.',
+      422: 'Some information is invalid. Check the form and try again.',
+      429: 'Too many requests. Please wait a moment and try again.',
+      500: 'The server could not complete that request.',
+      502: 'The server is temporarily unavailable. Try again shortly.',
+      503: 'The server is temporarily unavailable. Try again shortly.',
+      504: 'The server took too long to respond. Try again shortly.'
+    }
+  },
+  notFound: {
+    title: 'Page not found',
+    description: 'That address does not lead to a page in the GBA pilot.',
+    backHome: 'Back to home'
+  },
   categories: {
     title: 'Reportable categories',
     description: 'These choices come from the database and will be used by the report form.',
@@ -29,7 +53,7 @@ export const text = {
   },
   report: {
     title: 'Choose the issue location',
-    description: 'Use your browser location or place a pin on the map. Nothing is submitted in this step.',
+    description: 'Use your browser location or place a pin on the map so we can find the right ward.',
     useMyLocation: 'Use my location',
     locating: 'Finding your location…',
     mapLabel: 'Location picker',
@@ -54,6 +78,7 @@ export const text = {
     photoLabel: 'Photo of the issue',
     photoHelp: 'Use a clear photo of the public issue. Avoid faces and number plates.',
     photoSelected: 'Selected photo',
+    photoPreviewAlt: 'Selected issue preview',
     photoMissing: 'Add one photo before submitting your report.',
     categoryMissing: 'Choose an issue category.',
     descriptionMissing: 'Add a short description.',
@@ -128,6 +153,7 @@ export const text = {
   },
   ticket: {
     loading: 'Loading ticket…',
+    retry: 'Try again',
     backToTickets: 'Back to tickets',
     ward: 'Ward',
     street: 'Street',
@@ -171,6 +197,7 @@ export const text = {
     sentDescription: 'The ticket is now waiting for verification.',
     backToTicket: 'Back to ticket',
     sectionTitle: 'Action Taken Reports',
+    empty: 'No Action Taken Reports have been submitted yet.',
     submittedBy: 'Submitted by',
     photoAlt: 'Action photo',
     rejectedLabel: 'Rejected',
@@ -192,6 +219,7 @@ export const text = {
     next: 'Next',
     backToQueue: 'Back to queue',
     compareLoading: 'Loading photos…',
+    retry: 'Try again',
     compareTitle: 'Compare before and after',
     before: 'Before (citizen photo)',
     after: 'After (officer photos)',

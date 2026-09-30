@@ -7,6 +7,7 @@
 | **Version** | 0.3 (proposal, for review) |
 | **Date** | 29 September 2026 |
 | **Status** | Draft. Every choice has a "why" so you can push back on anything unclear. |
+| **Implementation status** | Phase 12 complete; Phase 13 deployment pending |
 
 ### What changed from v0.2
 

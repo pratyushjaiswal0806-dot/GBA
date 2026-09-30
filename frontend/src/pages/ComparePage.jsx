@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { requestJson } from '../api/client.js';
 import { SideBySide } from '../components/SideBySide.jsx';
 import { text } from '../i18n/en.js';
@@ -12,6 +12,8 @@ export function ComparePage({ ticketId }) {
   const [reason, setReason] = useState('');
   const [busyAction, setBusyAction] = useState(null);
   const [actionError, setActionError] = useState(null);
+  const decisionLock = useRef(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -29,9 +31,12 @@ export function ComparePage({ ticketId }) {
 
     loadCompare();
     return () => controller.abort();
-  }, [ticketId]);
+  }, [ticketId, reloadKey]);
 
   async function decide(action, options = {}) {
+    if (decisionLock.current) return;
+
+    decisionLock.current = true;
     setActionError(null);
     setBusyAction(action);
 
@@ -41,6 +46,8 @@ export function ComparePage({ ticketId }) {
     } catch (error) {
       setActionError(error.message || text.verifier.actionError);
       setBusyAction(null);
+    } finally {
+      decisionLock.current = false;
     }
   }
 
@@ -61,7 +68,7 @@ export function ComparePage({ ticketId }) {
   const backButton = <button className="text-sm font-semibold text-cyan-200 hover:text-white" onClick={() => navigate('/verifier')} type="button">← {text.verifier.backToQueue}</button>;
 
   if (compare.state === 'loading') return <p className="p-6 text-sm text-slate-600" role="status">{text.verifier.compareLoading}</p>;
-  if (compare.state === 'error') return <main className="min-h-screen bg-slate-950 px-4 py-8 sm:px-6"><section className="mx-auto max-w-5xl">{backButton}<p className="mt-4 rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">{compare.error}</p></section></main>;
+  if (compare.state === 'error') return <main className="min-h-screen bg-slate-950 px-4 py-8 sm:px-6"><section className="mx-auto max-w-5xl">{backButton}<div className="mt-4 rounded-2xl bg-white p-5 shadow-xl sm:p-7"><p className="rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">{compare.error || text.api.networkError}</p><button className="mt-5 rounded-lg bg-cyan-700 px-4 py-3 text-sm font-semibold text-white hover:bg-cyan-800" onClick={() => setReloadKey((current) => current + 1)} type="button">{text.verifier.retry}</button></div></section></main>;
 
   const { original, action, distanceMeters, farWarning } = compare.data;
   const isBusy = busyAction !== null;
@@ -82,7 +89,7 @@ export function ComparePage({ ticketId }) {
 
           <section className="mt-5">
             <h2 className="text-sm font-semibold text-slate-700">{text.verifier.remarks}</h2>
-            <p className="mt-1 whitespace-pre-wrap text-slate-800">{action.remarks}</p>
+            <p className="mt-1 break-words whitespace-pre-wrap text-slate-800">{action.remarks}</p>
           </section>
 
           {isRejecting ? (

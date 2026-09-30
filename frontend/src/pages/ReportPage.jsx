@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { requestJson } from '../api/client.js';
 import { DuplicatePrompt } from '../components/DuplicatePrompt.jsx';
 import { LocationSummary } from '../components/LocationSummary.jsx';
@@ -28,6 +28,7 @@ export function ReportPage({ categories }) {
   const [duplicates, setDuplicates] = useState(null);
   const [confirmation, setConfirmation] = useState(null);
   const [supportConfirmation, setSupportConfirmation] = useState(null);
+  const actionLock = useRef(false);
   const picker = useLocationPicker({
     onPositionChange: () => {
       setFieldErrors((current) => ({ ...current, location: null }));
@@ -39,13 +40,8 @@ export function ReportPage({ categories }) {
 
   async function findNearbyReports() {
     const query = new URLSearchParams({ lat: String(position.lat), lng: String(position.lng), category: categoryCode });
-
-    try {
-      const result = await requestJson(`/api/reports/nearby?${query}`);
-      return result.tickets;
-    } catch {
-      return [];
-    }
+    const result = await requestJson(`/api/reports/nearby?${query}`);
+    return result.tickets;
   }
 
   async function createReport() {
@@ -60,6 +56,9 @@ export function ReportPage({ categories }) {
   }
 
   async function runAction(action, work) {
+    if (actionLock.current) return;
+
+    actionLock.current = true;
     setFormError(null);
     setFieldErrors({});
     setBusyAction(action);
@@ -69,6 +68,7 @@ export function ReportPage({ categories }) {
     } catch (requestError) {
       setFormError(requestError.message);
     } finally {
+      actionLock.current = false;
       setBusyAction(null);
     }
   }

@@ -29,6 +29,7 @@ export function OfficerTicketsPage() {
   const [page, setPage] = useState(1);
   const [tickets, setTickets] = useState({ state: 'loading', data: [], total: 0, pageSize: 20, error: null });
   const [counts, setCounts] = useState({ state: 'loading', data: null, error: null });
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -55,7 +56,7 @@ export function OfficerTicketsPage() {
 
     loadTickets();
     return () => controller.abort();
-  }, [page, status]);
+  }, [page, status, reloadKey]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -75,7 +76,7 @@ export function OfficerTicketsPage() {
 
     loadCounts();
     return () => controller.abort();
-  }, []);
+  }, [reloadKey]);
 
   const attentionCount = counts.data ? counts.data.open + counts.data.reopened : 0;
   const hasPreviousPage = page > 1;
@@ -105,6 +106,7 @@ export function OfficerTicketsPage() {
               <p className="font-semibold">{text.officer.attentionLabel}</p>
               <p className="mt-1 text-2xl font-bold">{counts.state === 'ready' ? attentionCount : '—'}</p>
               {counts.state === 'ready' && <p className="mt-1 text-xs">{counts.data.open} {text.officer.open}, {counts.data.reopened} {text.officer.reopened}</p>}
+              {counts.state === 'error' && <p className="mt-1 text-xs text-rose-700" role="alert">{counts.error || text.officer.loadError}</p>}
             </div>
           </div>
 
@@ -121,7 +123,7 @@ export function OfficerTicketsPage() {
           </div>
 
           {tickets.state === 'loading' && <p className="mt-6 text-sm text-slate-500" role="status">{text.officer.loading}</p>}
-          {tickets.state === 'error' && <p className="mt-6 rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">{tickets.error || text.officer.loadError}</p>}
+          {tickets.state === 'error' && <div className="mt-6 rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert"><p>{tickets.error || text.officer.loadError}</p><button className="mt-3 rounded-lg bg-cyan-700 px-3 py-2 text-sm font-semibold text-white hover:bg-cyan-800" onClick={() => setReloadKey((current) => current + 1)} type="button">{text.ticket.retry}</button></div>}
           {tickets.state === 'ready' && tickets.data.length === 0 && <p className="mt-6 text-sm text-slate-500">{text.officer.empty}</p>}
           {tickets.state === 'ready' && tickets.data.length > 0 && (
             <div className="mt-6 overflow-x-auto rounded-xl border border-slate-200">

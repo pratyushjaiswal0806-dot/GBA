@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+> Implementation status: Phase 12 complete; Phase 13 deployment pending.
+
 Rules for working on this project. Read this at the start of every session.
 
 ## 1. Project
@@ -45,7 +47,7 @@ Never invent a command. If one is missing, write TODO.
 - Apply database migrations: `supabase link`, then `supabase db push`
 - Seed demo data: `npm run seed` in `server/`
 - Test: `npm test` in `server/`
-- Lint: TODO (no linter chosen yet)
+- Lint: skipped for the pilot (no linter chosen)
 
 ## 5. Coding rules
 
