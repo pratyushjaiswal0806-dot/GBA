@@ -5,6 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { errorHandler } from './middleware/errorHandler.js';
 import { createLocationRateLimit } from './middleware/rateLimit.js';
+import { createDashboardRouter } from './modules/dashboard/dashboard.routes.js';
 import { createGeoRouter } from './modules/geo/geo.routes.js';
 import { ApiError } from './utils/ApiError.js';
 
@@ -65,6 +66,8 @@ export function createApp({
 
     response.json({ categories: result.rows });
   }));
+
+  app.use('/api', createDashboardRouter({ db }));
 
   app.use('/api', createGeoRouter({
     db,

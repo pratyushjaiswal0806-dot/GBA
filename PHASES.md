@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| **Status** | Phase 8 complete; ready for Phase 9 |
-| **Current phase** | Phase 9: Public dashboard, core |
+| **Status** | Phase 9 complete; ready for Phase 10 |
+| **Current phase** | Phase 10: Dashboard map, trend and live refresh |
 | **Reads with** | [PRD.md](PRD.md) (what), [TRD.md](TRD.md) (how, source of truth), [CLAUDE.md](CLAUDE.md) (rules) |
 
 **How to use this file**
@@ -25,7 +25,7 @@
 | 6 | Officer detail, start work and status lookup | An officer opens a ticket and starts work, and the citizen sees the new status by ticket code. | R7, R16, R17, R23 | Complete |
 | 7 | Action Taken Report | An officer submits remarks and photos, and the ticket moves to "Pending Verification". | R18, R19 | Complete |
 | 8 | Verifier check | A verifier compares before and after photos, then approves (closed) or rejects (reopened). | R20, R21, R22, R24 | Complete |
-| 9 | Public dashboard, core | Anyone can open a public page with summary numbers, ward and category counts and a "Demo data" label. | R26 to R30, R33 | Not started |
+| 9 | Public dashboard, core | Anyone can open a public page with summary numbers, ward and category counts and a "Demo data" label. | R26 to R30, R33 | Complete |
 | 10 | Dashboard map, trend and live refresh | The dashboard also shows a map, a trend chart, and updates by itself. | R31, R32, R34 | Not started |
 | 11 | Duplicate check | Reporting the same spot twice in the same category is caught, and the citizen can add support instead. | R10, R11, R12 | Not started |
 | 12 | Polish and error handling | Every screen handles loading, empty and error cases and works well on a phone. | R36, R37 | Not started |
@@ -501,11 +501,13 @@ Do not build the map, the trend chart or the auto refresh yet. They come in Phas
 
 **Done when:**
 
-- [ ] The dashboard works without login and shows the "Demo data" label
-- [ ] Summary, ward and category numbers match the database
-- [ ] Numbers change after a ticket is created or closed (after reload)
-- [ ] A server error shows a friendly message
-- [ ] `npm test` passes
+- [x] The dashboard works without login and shows the "Demo data" label
+- [x] Summary, ward and category numbers match the database
+- [x] Numbers change after a ticket is created or closed (after reload)
+- [x] A server error shows a friendly message
+- [x] `npm test` passes (17 files, 109 tests)
+
+**Completion record (30 September 2026):** Phase 9 is complete. `GET /api/dashboard/summary`, `/by-ward` and `/by-category` are public and return only counts and ward and category names. "Open" means not `CLOSED` and not `REJECTED`, "resolved" means `CLOSED`, and the resolution rate is a percentage with one decimal (0 when there are no tickets). Wards and reportable categories with no tickets show 0. The `/dashboard` page shows the "Demo data" banner, summary cards, a ward chart with table and a category chart (Recharts, lazy-loaded). The numbers were checked against separate SQL on the real database, and the error state, reload stability and 360 px width were checked in headless Chromium. Recharts was added to `frontend/`. The routes have no rate limit yet; revisit in Phase 10 when polling starts. Test tickets from earlier phases stay in the database until the Phase 12 reset script.
 
 **Commit message:** `Phase 9: public dashboard with summary, ward and category numbers`
 

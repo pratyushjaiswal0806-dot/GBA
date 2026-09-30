@@ -7,6 +7,7 @@ import { navigate } from './routing.js';
 const initialHealth = { state: 'loading', data: null, error: null };
 const initialCategories = { state: 'loading', data: [], error: null };
 const StaffArea = lazy(() => import('./StaffArea.jsx'));
+const DashboardPage = lazy(() => import('./pages/DashboardPage.jsx'));
 
 function StatusLine({ label, value, tone }) {
   return (
@@ -68,6 +69,7 @@ function HomePage() {
           </div>
           <div className="flex shrink-0 gap-2">
             <button className="rounded-lg border border-slate-500 px-3 py-2 text-sm font-semibold hover:bg-slate-800" onClick={() => navigate('/track')} type="button">{text.track.homeLink}</button>
+            <button className="rounded-lg border border-slate-500 px-3 py-2 text-sm font-semibold hover:bg-slate-800" onClick={() => navigate('/dashboard')} type="button">{text.dashboard.homeLink}</button>
             <button className="rounded-lg border border-slate-500 px-3 py-2 text-sm font-semibold hover:bg-slate-800" onClick={() => navigate('/login')} type="button">{text.auth.staffLogin}</button>
           </div>
         </div>
@@ -118,6 +120,9 @@ function AppContent() {
   }, []);
 
   if (path === '/track') return <TrackPage />;
+  if (path === '/dashboard') {
+    return <Suspense fallback={<p className="p-6 text-sm text-slate-600" role="status">{text.dashboard.loading}</p>}><DashboardPage /></Suspense>;
+  }
   if (path === '/login' || path === '/officer' || path === '/verifier' || /^\/officer\/tickets\/\d+(?:\/action-report)?$/.test(path) || /^\/verifier\/tickets\/\d+$/.test(path)) {
     return <Suspense fallback={<p className="p-6 text-sm text-slate-600" role="status">{text.auth.loading}</p>}><StaffArea path={path} /></Suspense>;
   }

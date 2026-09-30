@@ -218,6 +218,30 @@ export const text = {
     area: 'Area',
     created: 'Created'
   },
+  dashboard: {
+    title: 'Public dashboard',
+    description: 'How civic issues are being reported and resolved across the pilot wards.',
+    demoBanner: 'Demo data: these numbers are for the pilot demonstration and are not real GBA figures.',
+    loading: 'Loading the numbers…',
+    loadError: 'Could not load the numbers. Please try again in a moment.',
+    retry: 'Try again',
+    empty: 'No complaints have been reported yet.',
+    backHome: 'Back to home',
+    homeLink: 'Public dashboard',
+    total: 'Total complaints',
+    totalShort: 'Total',
+    open: 'Open',
+    resolved: 'Resolved',
+    resolutionRate: 'Resolution rate',
+    wardTitle: 'Complaints by ward',
+    wardDescription: 'Resolved and still pending complaints in each ward.',
+    wardChartLabel: 'Bar chart of resolved and pending complaints for each ward',
+    wardColumn: 'Ward',
+    pending: 'Pending',
+    categoryTitle: 'Complaints by category',
+    categoryDescription: 'All complaints for each issue type.',
+    categoryChartLabel: 'Bar chart of total complaints for each category'
+  },
   map: {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     configurationMissing: 'Map configuration is missing.'
