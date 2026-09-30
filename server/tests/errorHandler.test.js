@@ -1,7 +1,7 @@
 import express from 'express';
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
-import { createApp } from '../src/app.js';
+import { createApp } from '../src/application.js';
 import { ApiError } from '../src/utils/ApiError.js';
 
 function createErrorApp() {

@@ -1,6 +1,6 @@
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
-import { createApp } from '../src/app.js';
+import { createApp } from '../src/application.js';
 import { createReportRateLimit } from '../src/middleware/rateLimit.js';
 import { createPhotoUpload } from '../src/middleware/upload.js';
 import { createReportRouter } from '../src/modules/tickets/report.routes.js';

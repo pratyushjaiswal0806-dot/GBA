@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createApp } from '../src/app.js';
+import { createApp } from '../src/application.js';
 import { createTestDatabase } from './setup/testDatabase.js';
 
 const isNumber = (value) => typeof value === 'number';

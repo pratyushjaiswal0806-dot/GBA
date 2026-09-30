@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createApp } from './app.js';
+import { createApp } from './application.js';
 import { loadConfig } from './config.js';
 import { createDb } from './db.js';
 import { createGeocoder } from './modules/geo/geocoding.js';

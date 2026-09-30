@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import request from 'supertest';
 import sharp from 'sharp';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createApp } from '../src/app.js';
+import { createApp } from '../src/application.js';
 import { createReportRateLimit } from '../src/middleware/rateLimit.js';
 import { createPhotoUpload } from '../src/middleware/upload.js';
 import { createMediaService } from '../src/modules/media/media.service.js';

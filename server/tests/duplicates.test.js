@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { createApp } from '../src/app.js';
+import { createApp } from '../src/application.js';
 import { createRequireAuth } from '../src/middleware/requireAuth.js';
 import { createLocationRateLimit, createReportRateLimit } from '../src/middleware/rateLimit.js';
 import { requireRole } from '../src/middleware/requireRole.js';
