@@ -64,7 +64,7 @@ export function createReportService({ db, geocoder, mediaService }) {
     const address = await geocoder.reverse({ lat, lng });
     const ticketId = await reserveTicketId(db);
     const photo = await mediaService.clean(file);
-    const uploadedPhoto = await mediaService.uploadOriginal({ ticketId, photo });
+    const uploadedPhoto = await mediaService.uploadPhoto({ ticketId, photo });
     const status = officer ? 'OPEN' : 'SUBMITTED';
     const publicCode = createPublicCode();
 

@@ -1,55 +1,12 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { requestJson } from '../api/client.js';
+import { LocationSummary } from '../components/LocationSummary.jsx';
 import { MapPicker } from '../components/MapPicker.jsx';
 import { PhotoPicker } from '../components/PhotoPicker.jsx';
+import { useLocationPicker } from '../hooks/useLocationPicker.js';
 import { text } from '../i18n/en.js';
 
 const descriptionLimit = 300;
-
-function formatValue(value) {
-  return value || text.report.notAvailable;
-}
-
-function LocationSummary({ location, loading }) {
-  if (loading) {
-    return <p className="mt-4 text-sm text-slate-500" role="status">{text.report.locationLoading}</p>;
-  }
-
-  if (!location) {
-    return null;
-  }
-
-  if (!location.inPilotArea) {
-    return (
-      <div className="mt-4 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">
-        <p className="font-semibold">{text.report.outsideTitle}</p>
-        <p className="mt-1">{text.report.outsideDescription}</p>
-      </div>
-    );
-  }
-
-  const hasAddress = location.street || location.area;
-
-  return (
-    <div className="mt-4 rounded-lg border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-950" role="status">
-      <dl className="grid gap-2 sm:grid-cols-3">
-        <div>
-          <dt className="font-medium text-emerald-800">{text.report.ward}</dt>
-          <dd>{location.ward.name}</dd>
-        </div>
-        <div>
-          <dt className="font-medium text-emerald-800">{text.report.street}</dt>
-          <dd>{formatValue(location.street)}</dd>
-        </div>
-        <div>
-          <dt className="font-medium text-emerald-800">{text.report.area}</dt>
-          <dd>{formatValue(location.area)}</dd>
-        </div>
-      </dl>
-      {!hasAddress && <p className="mt-3">{text.report.wardOnly}</p>}
-    </div>
-  );
-}
 
 function validateReport({ categoryCode, description, file, location, position }) {
   if (!categoryCode) return { field: 'category', message: text.report.categoryMissing };
@@ -61,10 +18,6 @@ function validateReport({ categoryCode, description, file, location, position })
 }
 
 export function ReportPage({ categories }) {
-  const [position, setPosition] = useState(null);
-  const [location, setLocation] = useState(null);
-  const [isResolving, setIsResolving] = useState(false);
-  const [isLocating, setIsLocating] = useState(false);
   const [categoryCode, setCategoryCode] = useState('');
   const [description, setDescription] = useState('');
   const [file, setFile] = useState(null);
@@ -72,61 +25,13 @@ export function ReportPage({ categories }) {
   const [formError, setFormError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmation, setConfirmation] = useState(null);
-  const controllerRef = useRef(null);
-
-  async function resolvePosition(nextPosition) {
-    controllerRef.current?.abort();
-    const controller = new AbortController();
-    controllerRef.current = controller;
-
-    setPosition(nextPosition);
-    setLocation(null);
-    setFieldErrors((current) => ({ ...current, location: null }));
-    setFormError(null);
-    setIsResolving(true);
-
-    try {
-      const result = await requestJson('/api/locations/resolve', {
-        method: 'POST',
-        signal: controller.signal,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(nextPosition)
-      });
-
-      if (!controller.signal.aborted) {
-        setLocation(result);
-      }
-    } catch (requestError) {
-      if (requestError.name !== 'AbortError') {
-        setFormError(requestError.message || text.report.locationRequestFailed);
-      }
-    } finally {
-      if (!controller.signal.aborted) {
-        setIsResolving(false);
-      }
+  const picker = useLocationPicker({
+    onPositionChange: () => {
+      setFieldErrors((current) => ({ ...current, location: null }));
+      setFormError(null);
     }
-  }
-
-  function useMyLocation() {
-    if (!navigator.geolocation) {
-      setFormError(text.report.unsupported);
-      return;
-    }
-
-    setFormError(null);
-    setIsLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      ({ coords }) => {
-        setIsLocating(false);
-        resolvePosition({ lat: coords.latitude, lng: coords.longitude });
-      },
-      () => {
-        setIsLocating(false);
-        setFormError(text.report.permissionDenied);
-      },
-      { enableHighAccuracy: true, timeout: 10_000 }
-    );
-  }
+  });
+  const { position, location } = picker;
 
   async function submitReport(event) {
     event.preventDefault();
@@ -160,8 +65,7 @@ export function ReportPage({ categories }) {
   }
 
   function resetReport() {
-    setPosition(null);
-    setLocation(null);
+    picker.reset();
     setCategoryCode('');
     setDescription('');
     setFile(null);
@@ -218,14 +122,14 @@ export function ReportPage({ categories }) {
           {fieldErrors.photo && <p className="mt-2 text-sm text-rose-700" role="alert">{fieldErrors.photo}</p>}
         </div>
         <div>
-          <button className="rounded-lg bg-cyan-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-cyan-800 disabled:cursor-wait disabled:opacity-70" disabled={isLocating} onClick={useMyLocation} type="button">
-            {isLocating ? text.report.locating : text.report.useMyLocation}
+          <button className="rounded-lg bg-cyan-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-cyan-800 disabled:cursor-wait disabled:opacity-70" disabled={picker.isLocating} onClick={picker.useMyLocation} type="button">
+            {picker.isLocating ? text.report.locating : text.report.useMyLocation}
           </button>
-          <div className="mt-5"><MapPicker onPositionChange={resolvePosition} position={position} /></div>
-          <LocationSummary loading={isResolving} location={location} />
+          <div className="mt-5"><MapPicker onPositionChange={picker.resolvePosition} position={position} /></div>
+          <LocationSummary loading={picker.isResolving} location={location} />
           {fieldErrors.location && <p className="mt-3 text-sm text-rose-700" role="alert">{fieldErrors.location}</p>}
         </div>
-        {formError && <p className="rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">{formError}</p>}
+        {(formError || picker.error) && <p className="rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">{formError || picker.error}</p>}
         <button className="w-full rounded-lg bg-cyan-700 px-4 py-3 text-sm font-semibold text-white hover:bg-cyan-800 disabled:cursor-wait disabled:opacity-70" disabled={isSubmitting || categories.state !== 'ready'} type="submit">
           {isSubmitting ? text.report.submitting : text.report.submit}
         </button>

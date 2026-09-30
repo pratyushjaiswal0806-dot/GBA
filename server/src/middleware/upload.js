@@ -25,3 +25,28 @@ export function createPhotoUpload({ maxUploadMb }) {
     });
   };
 }
+
+export const maxActionPhotos = 3;
+
+export function createPhotosUpload({ maxUploadMb }) {
+  const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: maxUploadMb * bytesPerMegabyte, files: maxActionPhotos }
+  }).array('photos', maxActionPhotos);
+
+  return (request, response, next) => {
+    upload(request, response, (error) => {
+      if (error instanceof multer.MulterError && error.code === 'LIMIT_FILE_SIZE') {
+        next(new ApiError(413, 'PHOTO_TOO_LARGE', `Each photo must be ${maxUploadMb} MB or smaller.`));
+        return;
+      }
+
+      if (error instanceof multer.MulterError) {
+        next(new ApiError(400, 'INVALID_UPLOAD', `Submit 1 to ${maxActionPhotos} photos using the photos field.`));
+        return;
+      }
+
+      next(error);
+    });
+  };
+}

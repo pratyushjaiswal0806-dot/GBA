@@ -43,7 +43,7 @@ export async function cleanPhoto(file) {
 }
 
 export function createMediaService({ storage, bucket, signedUrlSeconds }) {
-  async function uploadOriginal({ ticketId, photo }) {
+  async function uploadPhoto({ ticketId, photo }) {
     const storagePath = `tickets/${ticketId}/${randomUUID()}.jpg`;
     const { error } = await storage
       .from(bucket)
@@ -76,5 +76,5 @@ export function createMediaService({ storage, bucket, signedUrlSeconds }) {
     return data.signedUrl;
   }
 
-  return { clean: cleanPhoto, uploadOriginal, remove, createSignedUrl };
+  return { clean: cleanPhoto, uploadPhoto, remove, createSignedUrl };
 }

@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| **Status** | Phase 6 complete; ready for Phase 7 |
-| **Current phase** | Phase 7: Action Taken Report |
+| **Status** | Phase 7 complete; ready for Phase 8 |
+| **Current phase** | Phase 8: Verifier check |
 | **Reads with** | [PRD.md](PRD.md) (what), [TRD.md](TRD.md) (how, source of truth), [CLAUDE.md](CLAUDE.md) (rules) |
 
 **How to use this file**
@@ -23,7 +23,7 @@
 | 4 | Photo and create report | A citizen can submit a report with a photo and get a ticket code, assigned to the ward officer. | R1, R2, R6, R8, R9, R13, R23 (creation) | Complete |
 | 5 | Staff login and officer list | Staff can log in, and an officer sees only their own ward's tickets. | R14, R15, R25 | Complete |
 | 6 | Officer detail, start work and status lookup | An officer opens a ticket and starts work, and the citizen sees the new status by ticket code. | R7, R16, R17, R23 | Complete |
-| 7 | Action Taken Report | An officer submits remarks and photos, and the ticket moves to "Pending Verification". | R18, R19 | Not started |
+| 7 | Action Taken Report | An officer submits remarks and photos, and the ticket moves to "Pending Verification". | R18, R19 | Complete |
 | 8 | Verifier check | A verifier compares before and after photos, then approves (closed) or rejects (reopened). | R20, R21, R22, R24 | Not started |
 | 9 | Public dashboard, core | Anyone can open a public page with summary numbers, ward and category counts and a "Demo data" label. | R26 to R30, R33 | Not started |
 | 10 | Dashboard map, trend and live refresh | The dashboard also shows a map, a trend chart, and updates by itself. | R31, R32, R34 | Not started |
@@ -399,11 +399,13 @@ Do not build the verifier screens yet. Closing a ticket is not possible in this 
 
 **Done when:**
 
-- [ ] An officer can submit an Action Taken Report with 1 to 3 photos
-- [ ] The ticket moves to Pending Verification, and history and rows are saved
-- [ ] No photo, too many photos, empty remarks and wrong status are refused with clear messages
-- [ ] Still no way to close a ticket
-- [ ] `npm test` passes
+- [x] An officer can submit an Action Taken Report with 1 to 3 photos
+- [x] The ticket moves to Pending Verification, and history and rows are saved
+- [x] No photo, too many photos, empty remarks and wrong status are refused with clear messages
+- [x] Still no way to close a ticket
+- [x] `npm test` passes
+
+**Completion record (30 September 2026):** Phase 7 functionality and verification are complete. The Ward A happy path was verified from `IN_PROGRESS` and `OPEN` tickets, including location, action photos, pending-verification status, audit history and Storage objects. Empty remarks, missing photos, four-photo uploads, oversized uploads, long remarks, wrong status and Ward B access were verified. The citizen report flow was also rechecked. The full server suite passes: 15 test files and 66 tests.
 
 **Commit message:** `Phase 7: Action Taken Report with photos and pending verification status`
 

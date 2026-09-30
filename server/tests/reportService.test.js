@@ -26,7 +26,7 @@ describe('report storage cleanup', () => {
     };
     const mediaService = {
       clean: async () => ({ buffer: Buffer.from('clean'), contentType: 'image/jpeg', sizeBytes: 5 }),
-      uploadOriginal: async () => ({
+      uploadPhoto: async () => ({
         storagePath: 'tickets/99/clean.jpg',
         contentType: 'image/jpeg',
         sizeBytes: 5

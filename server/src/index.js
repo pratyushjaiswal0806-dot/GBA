@@ -11,7 +11,8 @@ import { createOfficerService } from './modules/officer/officer.service.js';
 import { createRequireAuth } from './middleware/requireAuth.js';
 import { requireRole } from './middleware/requireRole.js';
 import { createReportRateLimit } from './middleware/rateLimit.js';
-import { createPhotoUpload } from './middleware/upload.js';
+import { createActionReportService } from './modules/actionReports/actionReport.service.js';
+import { createPhotoUpload, createPhotosUpload } from './middleware/upload.js';
 import { createReportRouter } from './modules/tickets/report.routes.js';
 import { createReportService } from './modules/tickets/report.service.js';
 import { createTicketRouter } from './modules/tickets/ticket.routes.js';
@@ -41,7 +42,9 @@ export async function startServer() {
   const ticketRouter = createTicketRouter({
     requireAuth,
     requireOfficer: requireRole('OFFICER'),
-    ticketService: createTicketService({ db, mediaService })
+    ticketService: createTicketService({ db, mediaService }),
+    actionReportService: createActionReportService({ db, mediaService }),
+    photosUpload: createPhotosUpload({ maxUploadMb: config.maxUploadMb })
   });
   const reportService = createReportService({ db, geocoder, mediaService });
   const reportRouter = createReportRouter({

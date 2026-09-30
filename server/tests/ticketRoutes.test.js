@@ -89,7 +89,9 @@ describe('ticket detail, start work, and public status', () => {
       ticketRouter: createTicketRouter({
         requireAuth,
         requireOfficer: requireRole('OFFICER'),
-        ticketService
+        ticketService,
+        actionReportService: { submit: async () => ({}) },
+        photosUpload: (request, response, next) => next()
       }),
       frontendDist: '/tmp/gba-civic-tracker-no-build'
     });

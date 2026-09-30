@@ -53,6 +53,7 @@ export function TicketDetailPage({ ticketId }) {
 
   const data = ticket.data;
   const canStart = ['OPEN', 'REOPENED'].includes(data.status);
+  const canSubmitReport = ['OPEN', 'IN_PROGRESS', 'REOPENED'].includes(data.status);
 
   return (
     <main className="min-h-screen bg-slate-950 px-4 py-8 text-slate-900 sm:px-6">
@@ -85,12 +86,28 @@ export function TicketDetailPage({ ticketId }) {
             <TicketLocationMap lat={data.lat} lng={data.lng} />
           </section>
 
+          {data.actionReports.length > 0 && (
+            <section className="mt-7">
+              <h2 className="text-lg font-semibold text-slate-900">{text.actionReport.sectionTitle}</h2>
+              {data.actionReports.map((report) => (
+                <div className="mt-3 rounded-xl border border-slate-200 p-4" key={report.id}>
+                  <p className="whitespace-pre-wrap text-slate-700">{report.remarks}</p>
+                  <p className="mt-2 text-xs text-slate-500">{text.actionReport.submittedBy} {report.officerName}, {new Date(report.submittedAt).toLocaleString()}</p>
+                  <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                    {report.photos.map((photo) => <img alt={text.actionReport.photoAlt} className="h-40 w-full rounded-lg object-cover" key={photo.url} src={photo.url} />)}
+                  </div>
+                </div>
+              ))}
+            </section>
+          )}
+
           <section className="mt-7">
             <h2 className="mb-4 text-lg font-semibold text-slate-900">{text.ticket.timeline}</h2>
             <TicketTimeline entries={data.timeline} showStaffNames />
           </section>
 
           {canStart && <button className="mt-7 rounded-lg bg-cyan-700 px-4 py-3 text-sm font-semibold text-white hover:bg-cyan-800 disabled:cursor-wait disabled:opacity-70" disabled={isStarting} onClick={startWork} type="button">{isStarting ? text.ticket.starting : text.ticket.startWork}</button>}
+          {canSubmitReport && <button className="mt-7 ml-0 rounded-lg border border-cyan-700 px-4 py-3 text-sm font-semibold text-cyan-800 hover:bg-cyan-50 sm:ml-3" onClick={() => navigate(`/officer/tickets/${ticketId}/action-report`)} type="button">{text.ticket.submitActionReport}</button>}
           {actionError && <p className="mt-4 rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">{actionError}</p>}
         </article>
       </section>

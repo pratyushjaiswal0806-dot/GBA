@@ -2,6 +2,7 @@ import { ApiError } from '../../utils/ApiError.js';
 import { assertCanMove } from './ticket.stateMachine.js';
 import {
   addStatusHistory,
+  findActionReports,
   findOriginalMedia,
   findPublicTicket,
   findPublicTimeline,
@@ -37,10 +38,17 @@ export function createTicketService({ db, mediaService }) {
       throw otherWardError();
     }
 
-    const [media, timeline] = await Promise.all([
+    const [media, timeline, reports] = await Promise.all([
       findOriginalMedia(db, ticketId),
-      findStaffTimeline(db, ticketId)
+      findStaffTimeline(db, ticketId),
+      findActionReports(db, ticketId)
     ]);
+    const actionReports = await Promise.all(reports.map(async (report) => ({
+      ...report,
+      photos: await Promise.all(report.photos.map(async (photo) => ({
+        url: await mediaService.createSignedUrl(photo.storagePath)
+      })))
+    })));
     const original = media
       ? {
           url: await mediaService.createSignedUrl(media.storagePath),
@@ -50,7 +58,7 @@ export function createTicketService({ db, mediaService }) {
         }
       : null;
 
-    return { ...ticket, original, timeline };
+    return { ...ticket, original, timeline, actionReports };
   }
 
   async function startWork({ ticketId, officer }) {

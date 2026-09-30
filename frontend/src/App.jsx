@@ -118,7 +118,7 @@ function AppContent() {
   }, []);
 
   if (path === '/track') return <TrackPage />;
-  if (path === '/login' || path === '/officer' || path === '/verifier' || /^\/officer\/tickets\/\d+$/.test(path)) {
+  if (path === '/login' || path === '/officer' || path === '/verifier' || /^\/officer\/tickets\/\d+(?:\/action-report)?$/.test(path)) {
     return <Suspense fallback={<p className="p-6 text-sm text-slate-600" role="status">{text.auth.loading}</p>}><StaffArea path={path} /></Suspense>;
   }
   return <HomePage />;

@@ -33,6 +33,25 @@ export async function findOriginalMedia(db, ticketId) {
   return result.rows[0] ?? null;
 }
 
+export async function findActionReports(db, ticketId) {
+  const result = await db.query(
+    `SELECT r.id, r.remarks, r.submitted_at AS "submittedAt", s.full_name AS "officerName",
+            COALESCE(
+              json_agg(json_build_object('storagePath', m.storage_path) ORDER BY m.id)
+                FILTER (WHERE m.id IS NOT NULL),
+              '[]'
+            ) AS photos
+     FROM action_reports r
+     JOIN staff s ON s.id = r.officer_id
+     LEFT JOIN media m ON m.action_report_id = r.id
+     WHERE r.ticket_id = $1
+     GROUP BY r.id, s.full_name
+     ORDER BY r.submitted_at, r.id`,
+    [ticketId]
+  );
+  return result.rows;
+}
+
 export async function findStaffTimeline(db, ticketId) {
   const result = await db.query(
     `SELECT h.from_status AS "fromStatus", h.to_status AS "toStatus",
