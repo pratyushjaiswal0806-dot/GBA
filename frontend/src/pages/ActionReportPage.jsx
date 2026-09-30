@@ -6,6 +6,7 @@ import { MultiPhotoPicker } from '../components/MultiPhotoPicker.jsx';
 import { useLocationPicker } from '../hooks/useLocationPicker.js';
 import { text } from '../i18n/en.js';
 import { navigate } from '../routing.js';
+import { prepareImageForUpload } from '../utils/imageUpload.js';
 
 const remarksLimit = 500;
 const maxPhotos = 3;
@@ -43,19 +44,19 @@ export function ActionReportPage({ ticketId }) {
       return;
     }
 
-    const formData = new FormData();
-    formData.append('remarks', remarks.trim());
-    formData.append('lat', String(picker.position.lat));
-    formData.append('lng', String(picker.position.lng));
-    files.forEach((file) => formData.append('photos', file));
-
     setFieldErrors({});
     setFormError(null);
     submitLock.current = true;
     setIsSubmitting(true);
 
     try {
-      await requestJson(`/api/tickets/${ticketId}/action-report`, { method: 'POST', body: formData });
+      const preparedFiles = await Promise.all(files.map((file) => prepareImageForUpload(file)));
+      const preparedFormData = new FormData();
+      preparedFormData.append('remarks', remarks.trim());
+      preparedFormData.append('lat', String(picker.position.lat));
+      preparedFormData.append('lng', String(picker.position.lng));
+      preparedFiles.forEach((file) => preparedFormData.append('photos', file));
+      await requestJson(`/api/tickets/${ticketId}/action-report`, { method: 'POST', body: preparedFormData });
       setIsSent(true);
     } catch (error) {
       setFormError(error.message || text.actionReport.submitError);

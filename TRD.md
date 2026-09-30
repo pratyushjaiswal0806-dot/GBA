@@ -38,18 +38,24 @@ Rule I followed: **pick the simplest thing that fully covers the PRD.** Where th
 ```
   Phone / laptop browser
      │            │
-     │ page + /api│ sign-in only (email + password)
+     │ Vercel web │ sign-in only (email + password)
      ▼            ▼
-┌──────────────────────┐            ┌─────────────────────────────────┐
-│  Express (Node)      │  SQL       │  Supabase                       │
-│  - serves React app  │ ─────────► │   • Postgres + PostGIS (tables) │
-│  - ticket rules      │            │   • Auth (staff logins)         │
-│  - photo handling    │ ─────────► │   • Storage (photos, private)   │
-│  - dashboard numbers │  server    └─────────────────────────────────┘
-└─────────┬────────────┘  key
-          │  street / area lookup
-          ▼
-    Nominatim (OpenStreetMap)
+┌──────────────────────┐  HTTPS/API   ┌─────────────────────────────────┐
+│  Vercel Vite site    │ ───────────► │  Vercel Express Function        │
+│  - React screens     │              │  - ticket rules                  │
+│  - maps and charts   │              │  - photo handling                 │
+└──────────────────────┘              │  - dashboard numbers              │
+                                      └──────────────┬──────────────────┘
+                                                     │ SQL + server key
+                                                     ▼
+                                      ┌─────────────────────────────────┐
+                                      │  Supabase                       │
+                                      │   • Postgres + PostGIS (tables) │
+                                      │   • Auth (staff logins)         │
+                                      │   • Storage (photos, private)   │
+                                      └─────────────────────────────────┘
+
+                                      Street / area lookup → Nominatim
 ```
 
 Three parts you build: **frontend** (React), **backend** (Express), **database setup** (SQL files). Supabase gives you the database, the login system and the photo storage. Two outside services come from OpenStreetMap: **map tiles** and **address lookup**.
@@ -80,7 +86,7 @@ Three parts you build: **frontend** (React), **backend** (Express), **database s
 | **Street/area from coordinates** | **Nominatim**, called from Express | Free, no key. Express caches results. | Google Geocoding (paid). |
 | **Charts** | **Recharts** | Simple bar, pie and line charts in React. | Chart.js. |
 | **Live dashboard (R34)** | **Page asks again every 10 seconds** | Easiest thing that works. | Server-Sent Events later. |
-| **Hosting** | **One Node service** that serves `/api` **and** the built React files | One thing to deploy. Same address for app and API, so no CORS setup. The host gives HTTPS (needed for phone location). | Frontend on Netlify/Vercel/Cloudflare Pages and API elsewhere. More moving parts. |
+| **Hosting** | **Two Vercel projects** from this repository: a static Vite frontend and an Express API Function | Vercel serves the Vite build from its CDN and runs the API through its supported Express Function entrypoint. The frontend uses a configured API origin and the API allows only configured frontend origins. Both projects provide HTTPS. | A persistent Node host can be used later if the pilot outgrows Function limits. |
 | **Tests** | **Vitest + Supertest**, against a local PostGIS container | Tests run real map queries. | |
 
 ### What Supabase does for us, and what it doesn't
@@ -575,7 +581,7 @@ Every error uses the same shape (`errorHandler.js`), so the frontend handles all
 | **Server key stays on the server** | Express uses the Supabase **server key** (called the *service role* or *secret* key in the dashboard). It can do anything, so it is never sent to the browser and never committed. The browser only gets the public **anon** key, which can only do sign-in because the tables have no open policies. |
 | **Email as the username** | Supabase Auth logs in with email. The login screen says "Email". Demo emails like `officer.a@demo.example` are fine if Supabase accepts them. If it rejects the domain, use an address you own. (I haven't tested this part.) |
 | **Token kept by `supabase-js` in the browser** | Simple. Downside: script injection on the page could read it, so the React app must never show untrusted HTML. |
-| **No CORS setup in production** | Express serves the app and the API from the same address. In development, Vite's proxy does the same job. |
+| **CORS is narrow and explicit** | Vercel hosts the frontend and API as separate projects. The frontend reads `VITE_API_BASE_URL`; Express allows only the comma-separated `FRONTEND_ORIGINS` values. In development, Vite's proxy keeps both apps on the local flow. |
 | **Rate limiting on public routes** | `express-rate-limit` limits requests per IP (for example 20 reports per hour, adjustable). This is the pilot's simple answer to spam (§12 of the MoM). Set `app.set('trust proxy', 1)` behind a host's proxy, or every visitor looks like the same IP. |
 | **Secrets in environment variables** | Put in `.env`, never committed. |
 | **Demo passwords** | Seeded staff use simple passwords listed in the README, for the demo only. Change them before any real use. |
@@ -671,6 +677,7 @@ The page re-requests every 10 seconds (R34). `summary` includes `isDemoData: tru
 | `DATABASE_URL` | Supabase database connection string (from the project's Connect page). Use the **session pooler** string by default (Decision S2) | `postgresql://...` |
 | `SUPABASE_URL` | Your project address | `https://<project>.supabase.co` |
 | `SUPABASE_SECRET_KEY` | Server-only key (*service role* / *secret* key). **Never in the browser** | (long secret) |
+| `FRONTEND_ORIGINS` | Comma-separated HTTPS origins allowed to call the API | `https://<web-project>.vercel.app` |
 | `SUPABASE_BUCKET` | Photo bucket name | `ticket-media` |
 | `SIGNED_URL_SECONDS` | Life of a photo link | `300` |
 | `MAX_UPLOAD_MB` | Photo size limit | `5` |
@@ -689,6 +696,8 @@ The page re-requests every 10 seconds (R34). `summary` includes `isDemoData: tru
 | `VITE_SUPABASE_URL` | Your project address |
 | `VITE_SUPABASE_ANON_KEY` | The public *anon* / *publishable* key. Safe in the browser **only because row-level security is on** |
 | `VITE_MAP_TILE_URL` | Public OpenStreetMap tile template used by the Leaflet map | `https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png` |
+| `VITE_API_BASE_URL` | Public origin of the deployed Express API project | `https://<api-project>.vercel.app` |
+| `VITE_MAX_UPLOAD_MB` | Client-side source-file limit, matching `MAX_UPLOAD_MB` | `5` |
 
 **Test-only setting:** `TEST_DATABASE_URL` points Vitest at a local PostGIS database. It must use
 `localhost`, `127.0.0.1` or `::1`; it is not used by the deployed server.
@@ -701,7 +710,7 @@ The page re-requests every 10 seconds (R34). `summary` includes `isDemoData: tru
 |-------|-----|
 | **One-time Supabase setup** | Create a project. Apply the SQL files (`supabase link`, then `supabase db push`, or paste them into the SQL editor). Create a **private** bucket named `ticket-media` with a 5 MB limit. Then run `npm run seed` in `server/`. |
 | **Development** | `npm run dev` in `server/` (Express on port 3000) and `npm run dev` in `frontend/` (Vite forwards `/api` to Express). |
-| **Demo hosting** | Any Node host (for example Render, Railway or Fly.io). The host is picked in the last phase, before the demo (Decision S2). Build command: build the frontend, then install the server. Start command: `node server/src/index.js`. The host provides HTTPS. Add the settings from section 12 as environment variables there. |
+| **Demo hosting** | Two Vercel projects connected to this repository. Set the frontend project's root directory to `frontend` (build `npm run build`, output `dist`) and the API project's root directory to `server` (Express entrypoint `src/index.js`). Add the public `VITE_` settings to the frontend project and the server settings, including `FRONTEND_ORIGINS`, to the API project. |
 | **Reset between rehearsals** | Run `server/scripts/reset-demo.sql` (deletes tickets where `is_demo = false`, and their photo records, history and reports). Delete the matching files from the bucket too, or ignore them. |
 | **Backup plan** | A screen recording of the full demo, as the PRD says. |
 
@@ -710,7 +719,7 @@ The page re-requests every 10 seconds (R34). `summary` includes `isDemoData: tru
 | Risk | What to do |
 |------|------------|
 | **Supabase pauses free projects after 1 week of low activity.** (Docs: you get a warning email about a week before, and can restore from the dashboard within 1 year.) | Open the app or run a query every few days. **Check the project the day before the demo.** If paused, click *Resume project* in the dashboard. |
-| **Some free Node hosts put the app to sleep when nobody uses it.** The first request is then slow. | Open the app a few minutes before you present. |
+| **Vercel Functions can receive at most 4.5 MB per request body.** | The browser resizes accepted images before upload so one report or three action photos stay below the platform limit. The original-file check still rejects files over the configured 5 MB limit. |
 | **Direct database connections use IPv6.** Some hosts only support IPv4. | **Decision S2: use the session pooler connection string by default.** It works on IPv4 hosts. Use the direct string only if you know your host supports IPv6. (Docs recommend a direct connection for long-running servers and the session pooler as the IPv4 fallback. Avoid the *transaction* pooler because we use `SET search_path`.) |
 | **Nominatim slow or blocking** | Results are cached and failures fall back to ward-only. Do a few lookups before the demo so common spots are cached. |
 | **Demo email rejected by Supabase Auth** | Use an email address you own. |
@@ -787,7 +796,7 @@ Every question from earlier versions is now decided. These are defaults chosen t
 | # | Question | Decision |
 |---|----------|----------|
 | S1 | Supabase Auth or your own login? | **Supabase Auth** for staff. |
-| S2 | Hosting and database connection? | **Session pooler** connection string by default (works on IPv4-only hosts). Direct string only if the host supports IPv6. The host is picked in the last phase, before the demo. |
+| S2 | Hosting and database connection? | **Vercel** with separate frontend and Express API projects. Use the **session pooler** connection string by default (works on IPv4-only hosts); direct string only if the host supports IPv6. |
 | S3 | JavaScript or TypeScript? | **Plain JavaScript** for server and frontend. |
 | S4 | Role checks per group or per route? | **Per route.** Each route checks its own role (section 8). |
 | T2 | Report outside the sample wards? | **Refused** with 422 and a clear message. |

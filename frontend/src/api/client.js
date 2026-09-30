@@ -2,6 +2,15 @@ import { text } from '../i18n/en.js';
 
 let accessTokenProvider = async () => null;
 let sessionExpiredHandler = null;
+const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '').trim().replace(/\/+$/, '');
+
+function resolveRequestUrl(path) {
+  if (/^https?:\/\//i.test(path) || !apiBaseUrl) {
+    return path;
+  }
+
+  return `${apiBaseUrl}${path.startsWith('/') ? path : `/${path}`}`;
+}
 
 export function setAccessTokenProvider(provider) {
   accessTokenProvider = provider;
@@ -40,7 +49,7 @@ export async function requestJson(path, { accessToken, ...options } = {}) {
   let response;
 
   try {
-    response = await fetch(path, {
+    response = await fetch(resolveRequestUrl(path), {
       ...options,
       headers: {
         Accept: 'application/json',

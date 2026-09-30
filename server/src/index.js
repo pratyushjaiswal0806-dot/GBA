@@ -23,7 +23,7 @@ import { createVerifierRouter } from './modules/verifier/verifier.routes.js';
 import { createVerifierService } from './modules/verifier/verifier.service.js';
 import { createSupabaseAdmin } from './supabase.js';
 
-export async function startServer() {
+function createConfiguredServer() {
   const config = loadConfig();
   const db = createDb(config);
   const geocoder = createGeocoder({
@@ -83,8 +83,20 @@ export async function startServer() {
     ticketRouter,
     verifierRouter,
     duplicateRouter,
-    frontendDist: config.frontendDist
+    frontendDist: config.frontendDist,
+    allowedOrigins: config.frontendOrigins,
+    serveFrontend: process.env.VERCEL !== '1'
   });
+
+  return { app, config, db };
+}
+
+export const configuredServer = createConfiguredServer();
+export const app = configuredServer.app;
+export default app;
+
+export async function startServer() {
+  const { app: configuredApp, config, db } = configuredServer;
 
   try {
     await db.checkConnection();
@@ -97,7 +109,7 @@ export async function startServer() {
 
   try {
     server = await new Promise((resolve, reject) => {
-      const listener = app.listen(config.port);
+      const listener = configuredApp.listen(config.port);
       const onListening = () => {
         listener.removeListener('error', onError);
         console.log(`Server listening on port ${config.port}.`);

@@ -19,6 +19,31 @@ function asyncHandler(handler) {
 
 const unavailableGeocoder = { reverse: async () => null };
 
+function createCorsMiddleware(allowedOrigins = []) {
+  const origins = new Set(allowedOrigins);
+
+  return (request, response, next) => {
+    const requestOrigin = request.headers.origin;
+
+    if (!requestOrigin || !origins.has(requestOrigin)) {
+      next();
+      return;
+    }
+
+    response.setHeader('Access-Control-Allow-Origin', requestOrigin);
+    response.setHeader('Access-Control-Allow-Headers', 'Accept, Authorization, Content-Type');
+    response.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    response.vary('Origin');
+
+    if (request.method === 'OPTIONS') {
+      response.sendStatus(204);
+      return;
+    }
+
+    next();
+  };
+}
+
 export function createApp({
   db,
   geocoder = unavailableGeocoder,
@@ -28,7 +53,9 @@ export function createApp({
   ticketRouter,
   verifierRouter,
   duplicateRouter,
-  frontendDist = defaultFrontendDist
+  frontendDist = defaultFrontendDist,
+  allowedOrigins = [],
+  serveFrontend = true
 }) {
   if (
     !db
@@ -41,7 +68,11 @@ export function createApp({
   const app = express();
 
   app.disable('x-powered-by');
+  if (process.env.VERCEL === '1') {
+    app.set('trust proxy', 1);
+  }
   app.use(helmet());
+  app.use(createCorsMiddleware(allowedOrigins));
   app.use(express.json());
 
   app.get('/api/health', asyncHandler(async (request, response) => {
@@ -104,18 +135,24 @@ export function createApp({
     next(new ApiError(404, 'NOT_FOUND', 'Route not found.'));
   });
 
-  app.use(express.static(frontendDist));
+  if (serveFrontend) {
+    app.use(express.static(frontendDist));
 
-  app.get('*', (request, response, next) => {
-    const indexPath = path.join(frontendDist, 'index.html');
+    app.get('*', (request, response, next) => {
+      const indexPath = path.join(frontendDist, 'index.html');
 
-    if (!request.path.startsWith('/api') && existsSync(indexPath)) {
-      response.sendFile(indexPath);
-      return;
-    }
+      if (!request.path.startsWith('/api') && existsSync(indexPath)) {
+        response.sendFile(indexPath);
+        return;
+      }
 
-    next(new ApiError(404, 'NOT_FOUND', 'Page not found.'));
-  });
+      next(new ApiError(404, 'NOT_FOUND', 'Page not found.'));
+    });
+  } else {
+    app.get('*', (request, response, next) => {
+      next(new ApiError(404, 'NOT_FOUND', 'Route not found.'));
+    });
+  }
 
   app.use(errorHandler);
 

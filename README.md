@@ -31,6 +31,44 @@ npm run dev
 
 The Vite page is normally at `http://localhost:5173/`; the Express server is at `http://localhost:3000/`.
 
+## Deploy on Vercel
+
+The Vercel deployment uses two projects from this repository:
+
+- `frontend/` is the Vite project. Its build command is `npm run build` and its output directory is `dist`.
+- `server/` is the Express API project. Vercel loads `src/index.js` as the API Function; leave its build command and output directory blank.
+
+Set the frontend project's public build variables:
+
+```text
+VITE_SUPABASE_URL
+VITE_SUPABASE_ANON_KEY
+VITE_MAP_TILE_URL
+VITE_API_BASE_URL=https://<your-api-project>.vercel.app
+VITE_MAX_UPLOAD_MB=5
+```
+
+Set the API project's server variables from `server/.env.example`, including:
+
+```text
+FRONTEND_ORIGINS=https://<your-web-project>.vercel.app
+DATABASE_URL=<Supabase session-pooler URL>
+SUPABASE_URL=<Supabase project URL>
+SUPABASE_SECRET_KEY=<server-only Supabase secret key>
+```
+
+On the first setup, deploy the API once to get its URL, put that URL in the frontend project's `VITE_API_BASE_URL`, deploy the frontend, then put the frontend URL in the API project's `FRONTEND_ORIGINS` and redeploy the API.
+
+Keep `SUPABASE_SECRET_KEY`, `DATABASE_URL`, and `SEED_DEMO_PASSWORD` out of the frontend project. Vercel Preview and Production variables are separate, so configure both before deploying each environment. A changed variable takes effect on a new deployment.
+
+Push to the branch connected to Vercel to redeploy, or choose **Redeploy** for an existing deployment in the Vercel dashboard. Vercel Functions do not need a manual wake-up step; check that Supabase is active before a rehearsal.
+
+The browser resizes accepted images before upload so ordinary phone photos stay below Vercel's 4.5 MB Function request limit. The original file-size check still refuses files over the configured 5 MB limit. See [Vercel Function limits](https://vercel.com/docs/functions/limitations).
+
+After the first deployment, set the Supabase Auth Site URL to the production web URL and add the local and Vercel preview redirect patterns. Keep the `ticket-media` bucket private.
+
+Use a Preview deployment for the health, report, officer, verifier, dashboard and phone checks before deploying Production. The `frontend/vercel.json` file provides the SPA fallback needed when a React route is refreshed.
+
 ## Database and tests
 
 Apply the migrations with the Supabase CLI (`supabase link`, then `supabase db push`) and seed the demo users and tickets:

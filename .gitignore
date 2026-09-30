@@ -11,3 +11,6 @@ frontend/dist/
 # Test and local tooling output
 coverage/
 .vite/
+
+# Vercel project metadata
+.vercel/

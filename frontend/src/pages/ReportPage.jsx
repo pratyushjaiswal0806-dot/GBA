@@ -6,6 +6,7 @@ import { MapPicker } from '../components/MapPicker.jsx';
 import { PhotoPicker } from '../components/PhotoPicker.jsx';
 import { useLocationPicker } from '../hooks/useLocationPicker.js';
 import { text } from '../i18n/en.js';
+import { prepareImageForUpload } from '../utils/imageUpload.js';
 
 const descriptionLimit = 300;
 
@@ -45,12 +46,13 @@ export function ReportPage({ categories }) {
   }
 
   async function createReport() {
+    const preparedFile = await prepareImageForUpload(file);
     const formData = new FormData();
     formData.append('categoryCode', categoryCode);
     formData.append('description', description.trim());
     formData.append('lat', String(position.lat));
     formData.append('lng', String(position.lng));
-    formData.append('photo', file);
+    formData.append('photo', preparedFile);
 
     setConfirmation(await requestJson('/api/reports', { method: 'POST', body: formData }));
   }

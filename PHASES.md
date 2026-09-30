@@ -672,16 +672,17 @@ No new features. Only handle errors, phone layout, text and the demo helpers lis
 
 **Manual steps (I do these before starting):**
 
-1. Pick the host (question 11). Create an account on it. Tell Claude which one before the plan. Claude checks that host's current documentation and gives you the exact click steps in its plan (host dashboards change, so this file does not guess them).
-2. In the host's dashboard, add the server settings from `server/.env` as its environment variables: `PORT` (if the host wants to set it, leave it to the host), `DATABASE_URL` (the **session pooler** string), `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `SUPABASE_BUCKET`, `SIGNED_URL_SECONDS`, `MAX_UPLOAD_MB`, `DUP_RADIUS_METERS`, `DUP_WINDOW_DAYS`, `FAR_WARNING_METERS`, `NOMINATIM_USER_AGENT`, `RATE_LIMIT_REPORTS_PER_HOUR`. Add the two `VITE_` settings so they are available when the frontend is built (they end up in the browser, so only public values).
-3. Connect the host to your Git repository (push the project to a private repository first), or follow the host's own upload method. Claude gives the exact steps.
+1. Create or sign in to Vercel and connect the Git repository. Create two Vercel projects from it: one with root directory `frontend`, and one with root directory `server`.
+2. In the frontend project's Preview and Production environments, add `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_MAP_TILE_URL`, `VITE_API_BASE_URL` (the API project's HTTPS origin), and `VITE_MAX_UPLOAD_MB=5`.
+3. In the API project's Preview and Production environments, add `PORT` (for local-compatible startup), `DATABASE_URL` (the **session pooler** string), `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `FRONTEND_ORIGINS`, `SUPABASE_BUCKET`, `SIGNED_URL_SECONDS`, `MAX_UPLOAD_MB`, `DUP_RADIUS_METERS`, `DUP_WINDOW_DAYS`, `FAR_WARNING_METERS`, `NOMINATIM_USER_AGENT`, and `RATE_LIMIT_REPORTS_PER_HOUR`. The secret key stays only in the API project.
 4. In Supabase, check the project is not paused (the project page shows "Paused" if it is; if so, click the restore button).
 5. Run `npm run seed` against the project if you cleaned the data with `reset-demo.sql` and also removed staff (normally not needed).
 
 **What Claude builds:**
 
-- The build and start commands for the chosen host (build the frontend and install the server; start with `node server/src/index.js`), any host config file it needs, and the changes for the port and for serving the built frontend.
-- A short "deploy notes" section in `README.md` (how to redeploy, how to reset, the wake-up warning for free hosts).
+- Vercel project configuration for the Vite SPA and the Express Function entrypoint, while keeping local `npm run dev` and `node server/src/index.js` working.
+- Browser-side image resizing so ordinary reports and 1-to-3-photo action reports stay below Vercel's Function request limit while original files over 5 MB are still refused.
+- A short "deploy notes" section in `README.md` (how to redeploy, how to reset, and the Supabase pause check).
 - Checks of the live site: health check, HTTPS, environment variables loaded, a real photo upload on the live address.
 - Nothing else. No new features.
 
@@ -690,7 +691,7 @@ No new features. Only handle errors, phone layout, text and the demo helpers lis
 ```
 Read CLAUDE.md, PRD.md, TRD.md and PHASES.md fully. We are on Phase 13: Deploy.
 Do only this phase. Make a plan first and wait for my approval before writing any code.
-My host is <name of host>. Check that host's current documentation before writing the steps.
+My host is Vercel. Check Vercel's current documentation before writing the steps.
 ```
 
 **Manual testing (I do these):**
@@ -701,7 +702,7 @@ My host is <name of host>. Check that host's current documentation before writin
 4. Bad input: on the live address, report with a fake image (text file renamed) and a pin outside the wards. Expected: 415 and 422 messages, no ticket created.
 5. Log in as the officer and the verifier on the live address. Run the full loop: start work, Action Taken Report, approve. Expected: same behaviour as on your laptop.
 6. Open the public dashboard on another device. Expected: numbers change within about 10 seconds when you close a ticket.
-7. Restart check: restart the service from the host dashboard (or redeploy) and reload. Expected: the site comes back and the data is still there. Note how long the first request takes if the host sleeps.
+7. Restart check: redeploy from the Vercel dashboard and reload. Expected: the site comes back and the data is still there. Note any cold-start delay.
 8. Security check: do the public-key check from Phase 2 again on the live project. Expected: no rows are returned. Also check that no secret key appears in the page source or in the browser's network tab.
 9. Run `reset-demo.sql`, then rehearse the full demo script (PRD section 10) twice on a phone on the live address. Expected: no manual fixes needed either time.
 10. Record a screen video of one full run (backup plan). Prepare the roadmap slide (made outside the code) for voice input, AI vehicle-camera analysis and the field-staff app.
@@ -744,6 +745,7 @@ My host is <name of host>. Check that host's current documentation before writin
 | `DUP_WINDOW_DAYS` | Phase 11 |
 | `SEED_DEMO_PASSWORD` | Phase 2 |
 | `TEST_DATABASE_URL` (local test database only) | Phase 2 |
+| `FRONTEND_ORIGINS` | Phase 13 |
 
 **Frontend (`frontend/.env`, never committed; template `frontend/.env.example`; public values only):**
 
@@ -752,8 +754,10 @@ My host is <name of host>. Check that host's current documentation before writin
 | `VITE_SUPABASE_URL` | Phase 5 |
 | `VITE_SUPABASE_ANON_KEY` | Phase 5 |
 | `VITE_MAP_TILE_URL` | Phase 3 |
+| `VITE_API_BASE_URL` | Phase 13 |
+| `VITE_MAX_UPLOAD_MB` | Phase 13 |
 
-The host (Phase 13) needs the same server names as its environment variables, plus the two `VITE_` names available at build time.
+The host (Phase 13) needs the same server names as its environment variables, plus the `VITE_` names available at build time.
 
 ---
 

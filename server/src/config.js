@@ -57,6 +57,16 @@ function parsePositiveInteger(environment, name) {
   return value;
 }
 
+function parseFrontendOrigins(environment) {
+  const rawValue = environment.FRONTEND_ORIGINS?.trim();
+
+  if (!rawValue) {
+    return [];
+  }
+
+  return [...new Set(rawValue.split(',').map((origin) => origin.trim()).filter(Boolean))];
+}
+
 function loadBaseConfig(environment = process.env) {
   if (environment === process.env) {
     loadLocalEnvironment();
@@ -78,6 +88,7 @@ export function loadConfig(environment = process.env) {
     ...config,
     nominatimUserAgent: requireSetting(environment, 'NOMINATIM_USER_AGENT'),
     nominatimBaseUrl: parseUrl(environment, 'NOMINATIM_BASE_URL'),
+    frontendOrigins: parseFrontendOrigins(environment),
     supabaseBucket: requireSetting(environment, 'SUPABASE_BUCKET'),
     signedUrlSeconds: parsePositiveInteger(environment, 'SIGNED_URL_SECONDS'),
     maxUploadMb: parsePositiveInteger(environment, 'MAX_UPLOAD_MB'),

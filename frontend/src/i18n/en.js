@@ -6,7 +6,7 @@ export const text = {
   },
   health: {
     title: 'System status',
-    description: 'This page checks the backend through the Vite /api proxy.',
+    description: 'This page checks the backend connection.',
     server: 'Server',
     database: 'Database',
     ready: 'Ready',
@@ -37,6 +37,11 @@ export const text = {
       503: 'The server is temporarily unavailable. Try again shortly.',
       504: 'The server took too long to respond. Try again shortly.'
     }
+  },
+  upload: {
+    photoTooLarge: 'Each photo must be 5 MB or smaller.',
+    invalidPhoto: 'Photo must be a real JPG or PNG image.',
+    prepareFailed: 'Could not prepare that photo. Choose another image.'
   },
   notFound: {
     title: 'Page not found',
