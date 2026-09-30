@@ -10,9 +10,11 @@ import { createOfficerRouter } from './modules/officer/officer.routes.js';
 import { createOfficerService } from './modules/officer/officer.service.js';
 import { createRequireAuth } from './middleware/requireAuth.js';
 import { requireRole } from './middleware/requireRole.js';
-import { createReportRateLimit } from './middleware/rateLimit.js';
+import { createLocationRateLimit, createReportRateLimit } from './middleware/rateLimit.js';
 import { createActionReportService } from './modules/actionReports/actionReport.service.js';
 import { createPhotoUpload, createPhotosUpload } from './middleware/upload.js';
+import { createDuplicateRouter } from './modules/tickets/duplicate.routes.js';
+import { createDuplicateService } from './modules/tickets/duplicate.service.js';
 import { createReportRouter } from './modules/tickets/report.routes.js';
 import { createReportService } from './modules/tickets/report.service.js';
 import { createTicketRouter } from './modules/tickets/ticket.routes.js';
@@ -63,6 +65,15 @@ export async function startServer() {
     rateLimit: createReportRateLimit({ maxRequests: config.rateLimitReportsPerHour }),
     upload: createPhotoUpload({ maxUploadMb: config.maxUploadMb })
   });
+  const duplicateRouter = createDuplicateRouter({
+    duplicateService: createDuplicateService({
+      db,
+      radiusMeters: config.dupRadiusMeters,
+      windowDays: config.dupWindowDays
+    }),
+    nearbyRateLimit: createLocationRateLimit(),
+    supportRateLimit: createReportRateLimit({ maxRequests: config.rateLimitReportsPerHour })
+  });
   const app = createApp({
     db,
     geocoder,
@@ -71,6 +82,7 @@ export async function startServer() {
     officerRouter,
     ticketRouter,
     verifierRouter,
+    duplicateRouter,
     frontendDist: config.frontendDist
   });
 

@@ -440,6 +440,10 @@ Base path: `/api`. Everything is JSON, except uploads (`multipart/form-data`). A
 | `GET` | `/api/dashboard/map` | Points `{lat, lng, status}` for map pins. No names, no photos | R31 |
 | `GET` | `/api/health` | Returns the server and database status for the Phase 1 diagnostic page | |
 
+`GET /api/reports/nearby` returns `{ "tickets": [...] }` with up to 3 tickets, nearest first. Each one has `publicCode`, `categoryName`, `status`, `street`, `area`, `wardName`, `createdAt`, `supportCount` and `distanceMeters`. It has no photo, description or names. A missing or invalid `lat`, `lng` or `category` gives 400 (`INVALID_NEARBY_QUERY`).
+
+`POST /api/reports/:publicCode/support` returns `{ "publicCode": "K7M2QX9A", "supportCount": 2 }`. An unknown code gives 404, and a `CLOSED` or `REJECTED` ticket gives 409 (`TICKET_NOT_OPEN`). The nearby route uses the location rate limit and the support route uses the report rate limit, so no new settings are needed.
+
 `GET /api/health` returns HTTP 200 with `{ "server": "ok", "database": "ok" }` when the database is reachable. If the server is reachable but the database check fails, it returns `{ "server": "ok", "database": "down" }` so the client can distinguish the two states.
 
 `POST /api/reports` success response (201):

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { requestJson } from '../api/client.js';
+import { DuplicatePrompt } from '../components/DuplicatePrompt.jsx';
 import { LocationSummary } from '../components/LocationSummary.jsx';
 import { MapPicker } from '../components/MapPicker.jsx';
 import { PhotoPicker } from '../components/PhotoPicker.jsx';
@@ -23,15 +24,54 @@ export function ReportPage({ categories }) {
   const [file, setFile] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
   const [formError, setFormError] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [busyAction, setBusyAction] = useState(null);
+  const [duplicates, setDuplicates] = useState(null);
   const [confirmation, setConfirmation] = useState(null);
+  const [supportConfirmation, setSupportConfirmation] = useState(null);
   const picker = useLocationPicker({
     onPositionChange: () => {
       setFieldErrors((current) => ({ ...current, location: null }));
       setFormError(null);
+      setDuplicates(null);
     }
   });
   const { position, location } = picker;
+
+  async function findNearbyReports() {
+    const query = new URLSearchParams({ lat: String(position.lat), lng: String(position.lng), category: categoryCode });
+
+    try {
+      const result = await requestJson(`/api/reports/nearby?${query}`);
+      return result.tickets;
+    } catch {
+      return [];
+    }
+  }
+
+  async function createReport() {
+    const formData = new FormData();
+    formData.append('categoryCode', categoryCode);
+    formData.append('description', description.trim());
+    formData.append('lat', String(position.lat));
+    formData.append('lng', String(position.lng));
+    formData.append('photo', file);
+
+    setConfirmation(await requestJson('/api/reports', { method: 'POST', body: formData }));
+  }
+
+  async function runAction(action, work) {
+    setFormError(null);
+    setFieldErrors({});
+    setBusyAction(action);
+
+    try {
+      await work();
+    } catch (requestError) {
+      setFormError(requestError.message);
+    } finally {
+      setBusyAction(null);
+    }
+  }
 
   async function submitReport(event) {
     event.preventDefault();
@@ -43,25 +83,26 @@ export function ReportPage({ categories }) {
       return;
     }
 
-    const formData = new FormData();
-    formData.append('categoryCode', categoryCode);
-    formData.append('description', description.trim());
-    formData.append('lat', String(position.lat));
-    formData.append('lng', String(position.lng));
-    formData.append('photo', file);
+    await runAction('check', async () => {
+      const nearby = await findNearbyReports();
 
-    setFormError(null);
-    setFieldErrors({});
-    setIsSubmitting(true);
+      if (nearby.length > 0) {
+        setDuplicates(nearby);
+        return;
+      }
 
-    try {
-      const report = await requestJson('/api/reports', { method: 'POST', body: formData });
-      setConfirmation(report);
-    } catch (requestError) {
-      setFormError(requestError.message);
-    } finally {
-      setIsSubmitting(false);
-    }
+      await createReport();
+    });
+  }
+
+  function addSupport(publicCode) {
+    return runAction(`support:${publicCode}`, async () => {
+      setSupportConfirmation(await requestJson(`/api/reports/${encodeURIComponent(publicCode)}/support`, { method: 'POST' }));
+    });
+  }
+
+  function submitAnyway() {
+    return runAction('create', createReport);
   }
 
   function resetReport() {
@@ -72,6 +113,23 @@ export function ReportPage({ categories }) {
     setFieldErrors({});
     setFormError(null);
     setConfirmation(null);
+    setSupportConfirmation(null);
+    setDuplicates(null);
+  }
+
+  if (supportConfirmation) {
+    return (
+      <section className="mt-6 rounded-2xl bg-white p-5 shadow-xl sm:p-7" aria-live="polite">
+        <h2 className="text-xl font-semibold text-slate-900">{text.report.supportTitle}</h2>
+        <p className="mt-2 text-sm text-slate-600">{text.report.supportDescription}</p>
+        <p className="mt-5 text-sm font-medium text-slate-700">{text.report.ticketCode}</p>
+        <p className="mt-1 break-all rounded-lg bg-cyan-50 px-4 py-3 font-mono text-xl font-bold text-cyan-950">{supportConfirmation.publicCode}</p>
+        <p className="mt-4 text-sm text-slate-700">{text.report.supportCountLabel}: <span className="font-semibold">{supportConfirmation.supportCount}</span></p>
+        <button className="mt-5 rounded-lg border border-cyan-700 px-4 py-2.5 text-sm font-semibold text-cyan-800 hover:bg-cyan-50" onClick={resetReport} type="button">
+          {text.report.startAnother}
+        </button>
+      </section>
+    );
   }
 
   if (confirmation) {
@@ -97,6 +155,7 @@ export function ReportPage({ categories }) {
           <label className="block text-sm font-semibold text-slate-800" htmlFor="report-category">{text.report.categoryLabel}</label>
           <select className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900" id="report-category" onChange={(event) => {
             setCategoryCode(event.target.value);
+            setDuplicates(null);
             setFieldErrors((current) => ({ ...current, category: null }));
           }} value={categoryCode}>
             <option value="">{text.report.categoryPlaceholder}</option>
@@ -130,9 +189,12 @@ export function ReportPage({ categories }) {
           {fieldErrors.location && <p className="mt-3 text-sm text-rose-700" role="alert">{fieldErrors.location}</p>}
         </div>
         {(formError || picker.error) && <p className="rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">{formError || picker.error}</p>}
-        <button className="w-full rounded-lg bg-cyan-700 px-4 py-3 text-sm font-semibold text-white hover:bg-cyan-800 disabled:cursor-wait disabled:opacity-70" disabled={isSubmitting || categories.state !== 'ready'} type="submit">
-          {isSubmitting ? text.report.submitting : text.report.submit}
-        </button>
+        {duplicates && <DuplicatePrompt busyAction={busyAction} onSubmitAnyway={submitAnyway} onSupport={addSupport} tickets={duplicates} />}
+        {!duplicates && (
+          <button className="w-full rounded-lg bg-cyan-700 px-4 py-3 text-sm font-semibold text-white hover:bg-cyan-800 disabled:cursor-wait disabled:opacity-70" disabled={busyAction !== null || categories.state !== 'ready'} type="submit">
+            {busyAction === 'check' ? text.report.checking : text.report.submit}
+          </button>
+        )}
       </form>
     </section>
   );

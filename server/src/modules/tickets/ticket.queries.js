@@ -9,7 +9,7 @@ export async function findTicketDetail(db, { ticketId, wardId }) {
   const result = await db.query(
     `SELECT t.id AS "ticketId", t.public_code AS "publicCode", t.description, t.status,
             t.lat, t.lng, t.street, t.area, t.created_at AS "createdAt",
-            c.name AS "categoryName", w.id AS "wardId", w.name AS "wardName"
+            t.support_count AS "supportCount", c.name AS "categoryName", w.id AS "wardId", w.name AS "wardName"
      FROM tickets t
      JOIN categories c ON c.id = t.category_id
      JOIN wards w ON w.id = t.ward_id
@@ -69,7 +69,7 @@ export async function findStaffTimeline(db, ticketId) {
 export async function findPublicTicket(db, publicCode) {
   const result = await db.query(
     `SELECT t.public_code AS "publicCode", t.status, t.area,
-            t.created_at AS "createdAt", c.name AS "categoryName", w.name AS "wardName"
+            t.created_at AS "createdAt", t.support_count AS "supportCount", c.name AS "categoryName", w.name AS "wardName"
      FROM tickets t
      JOIN categories c ON c.id = t.category_id
      LEFT JOIN wards w ON w.id = t.ward_id

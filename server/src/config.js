@@ -82,6 +82,8 @@ export function loadConfig(environment = process.env) {
     signedUrlSeconds: parsePositiveInteger(environment, 'SIGNED_URL_SECONDS'),
     maxUploadMb: parsePositiveInteger(environment, 'MAX_UPLOAD_MB'),
     farWarningMeters: parsePositiveInteger(environment, 'FAR_WARNING_METERS'),
+    dupRadiusMeters: parsePositiveInteger(environment, 'DUP_RADIUS_METERS'),
+    dupWindowDays: parsePositiveInteger(environment, 'DUP_WINDOW_DAYS'),
     rateLimitReportsPerHour: parsePositiveInteger(environment, 'RATE_LIMIT_REPORTS_PER_HOUR')
   };
 }

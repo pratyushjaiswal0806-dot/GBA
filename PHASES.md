@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| **Status** | Phase 10 complete; ready for Phase 11 |
-| **Current phase** | Phase 11: Duplicate check |
+| **Status** | Phase 11 complete; ready for Phase 12 |
+| **Current phase** | Phase 12: Polish and error handling |
 | **Reads with** | [PRD.md](PRD.md) (what), [TRD.md](TRD.md) (how, source of truth), [CLAUDE.md](CLAUDE.md) (rules) |
 
 **How to use this file**
@@ -27,7 +27,7 @@
 | 8 | Verifier check | A verifier compares before and after photos, then approves (closed) or rejects (reopened). | R20, R21, R22, R24 | Complete |
 | 9 | Public dashboard, core | Anyone can open a public page with summary numbers, ward and category counts and a "Demo data" label. | R26 to R30, R33 | Complete |
 | 10 | Dashboard map, trend and live refresh | The dashboard also shows a map, a trend chart, and updates by itself. | R31, R32, R34 | Complete |
-| 11 | Duplicate check | Reporting the same spot twice in the same category is caught, and the citizen can add support instead. | R10, R11, R12 | Not started |
+| 11 | Duplicate check | Reporting the same spot twice in the same category is caught, and the citizen can add support instead. | R10, R11, R12 | Complete |
 | 12 | Polish and error handling | Every screen handles loading, empty and error cases and works well on a phone. | R36, R37 | Not started |
 | 13 | Deploy | The whole demo runs on a hosted HTTPS address, from a phone, without manual fixes. | (demo readiness) | Not started |
 
@@ -595,11 +595,13 @@ Do only this phase. Make a plan first and wait for my approval before writing an
 
 **Done when:**
 
-- [ ] A same-category report within 50 m of an open ticket is caught
-- [ ] Different category, far away, older and closed tickets are not shown as duplicates
-- [ ] Add-support raises the count without creating a ticket
-- [ ] Submit-anyway creates a new ticket
-- [ ] `npm test` passes
+- [x] A same-category report within 50 m of an open ticket is caught
+- [x] Different category, far away, older and closed tickets are not shown as duplicates
+- [x] Add-support raises the count without creating a ticket
+- [x] Submit-anyway creates a new ticket
+- [x] `npm test` passes
+
+**Completion record (30 September 2026):** Phase 11 duplicate detection and add-support flow are complete. The nearby-ticket and support routes, same-category/radius/time-window filtering, submit-anyway path and frontend duplicate prompt are implemented. The full server suite passes: 19 test files and 146 tests. The frontend production build passes.
 
 **Commit message:** `Phase 11: duplicate check with add-my-support option`
 

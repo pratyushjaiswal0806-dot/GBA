@@ -64,7 +64,20 @@ export const text = {
     confirmationTitle: 'Report submitted',
     confirmationDescription: 'Keep this ticket code to check the report status later.',
     ticketCode: 'Ticket code',
-    startAnother: 'Submit another report'
+    startAnother: 'Submit another report',
+    checking: 'Checking for similar reports…',
+    duplicateTitle: 'A similar report already exists nearby',
+    duplicateDescription: 'Is this the same issue? Adding your support helps the officer see how many people are affected.',
+    duplicateDistance: 'away',
+    duplicateReported: 'Reported',
+    duplicatePeople: 'People who reported this',
+    addSupport: 'Same issue, add my support',
+    addingSupport: 'Adding your support…',
+    submitAnyway: 'This is different, submit anyway',
+    supportTitle: 'Thank you, your support was added',
+    supportDescription: 'No new ticket was created. You can follow the original report with this code.',
+    supportCountLabel: 'People who reported this issue',
+    supportError: 'Could not add your support. Try again.'
   },
   auth: {
     staffLogin: 'Staff login',
@@ -133,7 +146,8 @@ export const text = {
     submitActionReport: 'Submit Action Taken Report',
     reopenedTitle: 'Reopened by the verifier',
     reopenedHelp: 'The last Action Taken Report was rejected. Fix the issue and submit a new report.',
-    reason: 'Reason'
+    reason: 'Reason',
+    supportCount: 'People who reported this'
   },
   actionReport: {
     title: 'Action Taken Report',
@@ -216,7 +230,8 @@ export const text = {
     notFound: 'Ticket not found.',
     ward: 'Ward',
     area: 'Area',
-    created: 'Created'
+    created: 'Created',
+    supportCount: 'People who reported this'
   },
   dashboard: {
     title: 'Public dashboard',
@@ -261,6 +276,7 @@ export const text = {
   },
   map: {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    configurationMissing: 'Map configuration is missing.'
+    configurationMissing: 'Map configuration is missing.',
+    metersShort: 'm'
   }
 };

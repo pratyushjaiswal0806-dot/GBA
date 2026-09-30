@@ -79,10 +79,11 @@ export function TicketDetailPage({ ticketId }) {
 
           <p className="mt-5 whitespace-pre-wrap text-slate-700">{data.description}</p>
 
-          <div className="mt-6 grid gap-3 rounded-xl bg-slate-50 p-4 text-sm sm:grid-cols-3">
+          <div className="mt-6 grid gap-3 rounded-xl bg-slate-50 p-4 text-sm sm:grid-cols-4">
             <div><p className="font-semibold text-slate-700">{text.ticket.ward}</p><p className="mt-1 text-slate-900">{data.wardName}</p></div>
             <div><p className="font-semibold text-slate-700">{text.ticket.street}</p><p className="mt-1 text-slate-900">{formatValue(data.street)}</p></div>
             <div><p className="font-semibold text-slate-700">{text.ticket.area}</p><p className="mt-1 text-slate-900">{formatValue(data.area)}</p></div>
+            <div><p className="font-semibold text-slate-700">{text.ticket.supportCount}</p><p className="mt-1 text-slate-900">{data.supportCount}</p></div>
           </div>
 
           <section className="mt-7">

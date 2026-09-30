@@ -60,10 +60,11 @@ export function TrackPage() {
                 </div>
                 <StatusBadge status={result.status} />
               </div>
-              <dl className="mt-5 grid gap-3 rounded-xl bg-slate-50 p-4 text-sm sm:grid-cols-3">
+              <dl className="mt-5 grid gap-3 rounded-xl bg-slate-50 p-4 text-sm sm:grid-cols-4">
                 <div><dt className="font-semibold text-slate-700">{text.track.ward}</dt><dd className="mt-1 text-slate-900">{result.wardName || text.ticket.notAvailable}</dd></div>
                 <div><dt className="font-semibold text-slate-700">{text.track.area}</dt><dd className="mt-1 text-slate-900">{result.area || text.ticket.notAvailable}</dd></div>
                 <div><dt className="font-semibold text-slate-700">{text.track.created}</dt><dd className="mt-1 text-slate-900">{formatDate(result.createdAt)}</dd></div>
+                <div><dt className="font-semibold text-slate-700">{text.track.supportCount}</dt><dd className="mt-1 text-slate-900">{result.supportCount}</dd></div>
               </dl>
               <h3 className="mt-7 mb-4 text-lg font-semibold text-slate-900">{text.ticket.timeline}</h3>
               <TicketTimeline entries={result.timeline} />

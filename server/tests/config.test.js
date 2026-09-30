@@ -14,6 +14,8 @@ describe('loadConfig', () => {
       SIGNED_URL_SECONDS: '300',
       MAX_UPLOAD_MB: '5',
       FAR_WARNING_METERS: '50',
+      DUP_RADIUS_METERS: '50',
+      DUP_WINDOW_DAYS: '30',
       RATE_LIMIT_REPORTS_PER_HOUR: '20'
     });
 
@@ -26,6 +28,8 @@ describe('loadConfig', () => {
     expect(config.supabaseBucket).toBe('ticket-media');
     expect(config.maxUploadMb).toBe(5);
     expect(config.farWarningMeters).toBe(50);
+    expect(config.dupRadiusMeters).toBe(50);
+    expect(config.dupWindowDays).toBe(30);
     expect(config.frontendDist).toContain('frontend');
   });
 
@@ -47,6 +51,8 @@ describe('loadConfig', () => {
       SIGNED_URL_SECONDS: '300',
       MAX_UPLOAD_MB: '5',
       FAR_WARNING_METERS: '50',
+      DUP_RADIUS_METERS: '50',
+      DUP_WINDOW_DAYS: '30',
       RATE_LIMIT_REPORTS_PER_HOUR: '20'
     })).toThrow('PORT must be an integer');
   });
