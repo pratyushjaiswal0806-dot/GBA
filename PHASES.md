@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| **Status** | Phase 9 complete; ready for Phase 10 |
-| **Current phase** | Phase 10: Dashboard map, trend and live refresh |
+| **Status** | Phase 10 complete; ready for Phase 11 |
+| **Current phase** | Phase 11: Duplicate check |
 | **Reads with** | [PRD.md](PRD.md) (what), [TRD.md](TRD.md) (how, source of truth), [CLAUDE.md](CLAUDE.md) (rules) |
 
 **How to use this file**
@@ -26,7 +26,7 @@
 | 7 | Action Taken Report | An officer submits remarks and photos, and the ticket moves to "Pending Verification". | R18, R19 | Complete |
 | 8 | Verifier check | A verifier compares before and after photos, then approves (closed) or rejects (reopened). | R20, R21, R22, R24 | Complete |
 | 9 | Public dashboard, core | Anyone can open a public page with summary numbers, ward and category counts and a "Demo data" label. | R26 to R30, R33 | Complete |
-| 10 | Dashboard map, trend and live refresh | The dashboard also shows a map, a trend chart, and updates by itself. | R31, R32, R34 | Not started |
+| 10 | Dashboard map, trend and live refresh | The dashboard also shows a map, a trend chart, and updates by itself. | R31, R32, R34 | Complete |
 | 11 | Duplicate check | Reporting the same spot twice in the same category is caught, and the citizen can add support instead. | R10, R11, R12 | Not started |
 | 12 | Polish and error handling | Every screen handles loading, empty and error cases and works well on a phone. | R36, R37 | Not started |
 | 13 | Deploy | The whole demo runs on a hosted HTTPS address, from a phone, without manual fixes. | (demo readiness) | Not started |
@@ -547,11 +547,13 @@ Do only this phase. Make a plan first and wait for my approval before writing an
 
 **Done when:**
 
-- [ ] Map shows pins coloured by status and no private data
-- [ ] Trend chart works for week and month, and a wrong value gives 400
-- [ ] Dashboard updates within about 10 seconds after a ticket is created or closed
-- [ ] The page recovers after the server was down
-- [ ] `npm test` passes
+- [x] Map shows pins coloured by status and no private data
+- [x] Trend chart works for week and month, and a wrong value gives 400
+- [x] Dashboard updates within about 10 seconds after a ticket is created or closed
+- [x] The page recovers after the server was down
+- [x] `npm test` passes (18 files, 119 tests)
+
+**Completion record (30 September 2026):** Phase 10 is complete. `GET /api/dashboard/map` returns one point per ticket with only `lat`, `lng` and `status`. `GET /api/dashboard/trend?interval=week|month` defaults to week, uses UTC weeks starting on Monday, fills empty periods with 0, and returns 400 `INVALID_INTERVAL` for anything else. The dashboard now has a Leaflet map (pins coloured by status, legend with counts, popup showing the status only) and a Recharts trend line with a Week/Month switch. All five dashboard routes are re-requested every 10 seconds, one round at a time, and polling pauses in a hidden tab. If the server is down, the page keeps the last numbers, shows a notice, and recovers by itself. Live updates were timed against the real project (new report shown after 7.8 s, closing a ticket after 6.9 s), pins matched the ticket count, and the 360 px width was checked. Known limit: the dashboard routes have no rate limit (one open tab makes about 30 requests a minute); adding one needs a new setting and a TRD change. Test tickets from earlier phases stay in the database until the Phase 12 reset script.
 
 **Commit message:** `Phase 10: dashboard map, trend chart and 10-second refresh`
 

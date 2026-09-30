@@ -1,7 +1,22 @@
 import { Router } from 'express';
-import { findByCategory, findByWard, findSummary } from './dashboard.queries.js';
+import { z } from 'zod';
+import { ApiError } from '../../utils/ApiError.js';
+import { findByCategory, findByWard, findMapPoints, findSummary, findTrend } from './dashboard.queries.js';
 
 const percentDecimals = 10;
+const trendQuerySchema = z.object({
+  interval: z.enum(['week', 'month']).default('week')
+});
+
+function parseTrendQuery(query) {
+  const parsed = trendQuerySchema.safeParse(query);
+
+  if (!parsed.success) {
+    throw new ApiError(400, 'INVALID_INTERVAL', 'Choose interval=week or interval=month.');
+  }
+
+  return parsed.data;
+}
 
 function resolutionRate({ total, resolved }) {
   return total === 0 ? 0 : Math.round((resolved / total) * 100 * percentDecimals) / percentDecimals;
@@ -30,6 +45,23 @@ export function createDashboardRouter({ db }) {
   router.get('/dashboard/by-category', async (request, response, next) => {
     try {
       response.json({ categories: await findByCategory(db) });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.get('/dashboard/map', async (request, response, next) => {
+    try {
+      response.json({ points: await findMapPoints(db) });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.get('/dashboard/trend', async (request, response, next) => {
+    try {
+      const { interval } = parseTrendQuery(request.query);
+      response.json({ interval, points: await findTrend(db, interval) });
     } catch (error) {
       next(error);
     }
