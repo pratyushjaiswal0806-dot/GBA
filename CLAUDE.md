@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-> Implementation status: Phase 12 complete; Phase 13 deployment pending.
+> Implementation status: Phase 13 complete (deployed on Vercel).
 
 Rules for working on this project. Read this at the start of every session.
 

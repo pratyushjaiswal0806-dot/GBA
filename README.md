@@ -2,7 +2,7 @@
 
 Small pilot portal for reporting civic issues, assigning them to ward officers, and verifying an Action Taken Report. The data and accounts are demo-only.
 
-**Implementation status:** Phase 12 complete; Phase 13 deployment pending.
+**Implementation status:** Phase 13 complete (deployed on Vercel).
 
 ## Install
 
@@ -106,4 +106,4 @@ All four use the password in `server/.env` as `SEED_DEMO_PASSWORD`. Do not commi
 4. Sign in as the verifier, compare the before and after photos, then approve to close or reject with a reason to reopen it.
 5. Open the public dashboard and show the demo-data label, summary, charts, map and trend.
 
-For the Phase 12 mock external page, open `mock-gba-site/index.html` from disk and click **GBA Portal**. Its local link points to `http://localhost:3000/` until the Phase 13 deployment.
+For the Phase 12 mock external page, open `mock-gba-site/index.html` from disk and click **GBA Portal**. Its link points to the live portal at `https://frontend-drab-tau-zggj3o49bd.vercel.app/`.

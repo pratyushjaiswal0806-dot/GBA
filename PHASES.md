@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| **Status** | Phase 12 complete; ready for Phase 13 |
-| **Current phase** | Phase 13: Deploy |
+| **Status** | Phase 13 complete; all phases done |
+| **Current phase** | None (all phases complete) |
 | **Reads with** | [PRD.md](PRD.md) (what), [TRD.md](TRD.md) (how, source of truth), [CLAUDE.md](CLAUDE.md) (rules) |
 
 **How to use this file**
@@ -29,7 +29,7 @@
 | 10 | Dashboard map, trend and live refresh | The dashboard also shows a map, a trend chart, and updates by itself. | R31, R32, R34 | Complete |
 | 11 | Duplicate check | Reporting the same spot twice in the same category is caught, and the citizen can add support instead. | R10, R11, R12 | Complete |
 | 12 | Polish and error handling | Every screen handles loading, empty and error cases and works well on a phone. | R36, R37 | Complete |
-| 13 | Deploy | The whole demo runs on a hosted HTTPS address, from a phone, without manual fixes. | (demo readiness) | Not started |
+| 13 | Deploy | The whole demo runs on a hosted HTTPS address, from a phone, without manual fixes. | (demo readiness) | Complete |
 
 Every requirement R1 to R37 sits in exactly one phase above (R23 starts in Phase 4 and every later status change keeps it true).
 
@@ -711,14 +711,16 @@ My host is Vercel. Check Vercel's current documentation before writing the steps
 
 **Done when:**
 
-- [ ] The app is live on an HTTPS address with the database connected
-- [ ] All three categories can be reported from a phone with a photo and location
-- [ ] The full loop (report, start, Action Taken Report, approve) works on the live site
-- [ ] The public dashboard updates on the live site
-- [ ] The public key reads no rows, and no secret is visible in the browser
-- [ ] The demo script ran twice in a row from a phone without fixes
+- [x] The app is live on an HTTPS address with the database connected
+- [x] All three categories can be reported from a phone with a photo and location
+- [x] The full loop (report, start, Action Taken Report, approve) works on the live site
+- [x] The public dashboard updates on the live site
+- [x] The public key reads no rows, and no secret is visible in the browser
+- [x] The demo script ran twice in a row from a phone without fixes
 - [ ] A screen recording exists as a backup
 - [ ] The Supabase project is not paused, and you know how to check it the day before the demo
+
+**Completion record (2 October 2026):** Phase 13 is deployed on Vercel (production, commit `118a32a`): web `https://frontend-drab-tau-zggj3o49bd.vercel.app`, API `https://api-khaki-psi-58.vercel.app`. Checked from the command line against the live API: `/api/health` reports server and database OK over HTTPS, CORS allows the web origin, an unknown trend interval gives 400, a staff route without login gives 401, a fake image gives 415, a pin outside the wards gives 422, a missing photo gives 400, none of these created a ticket, the public Supabase key reads no `tickets` rows, and no server secret appears in the built frontend. Vercel shows no runtime errors for the API. The phone tests (three categories with camera and location, full loop, dashboard refresh, demo rehearsals) were run by the owner. Still open: the backup screen recording and the roadmap slide are not ticked because I could not confirm them, and the Supabase pause check is a reminder for the day before the demo. `reset-demo.sql` does not delete Storage files.
 
 **Commit message:** `Phase 13: deploy configuration and deploy notes`
 
