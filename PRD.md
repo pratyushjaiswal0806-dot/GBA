@@ -4,11 +4,11 @@
 |---|---|
 | **Product** | Verified Civic Issue Tracker, a pilot of the GBA "digital governance platform" |
 | **Use cases** | Footpath encroachment, potholes / road damage, garbage dumping (one shared flow) |
-| **Version** | 0.2 (draft) |
-| **Date** | 29 September 2026 |
+| **Version** | 0.3 (draft) |
+| **Date** | 2 October 2026 |
 | **Source** | "GBA Website & Digital Governance Initiative" Minutes of Meeting (MoM). Section numbers below (§) point to that document. |
 | **Status** | Draft for review |
-| **Implementation status** | Phase 12 complete; Phase 13 deployment pending |
+| **Implementation status** | Phase 13 complete (deployed). Phases 14 to 19 approved, not started. |
 
 ---
 
@@ -32,6 +32,8 @@ Two supporting ideas are shown lightly:
 - A **separate portal** that can be linked from the GBA website (§16, §17).
 
 Everything else in the MoM is shown as **later phases on a roadmap slide**, not built.
+
+**Extension (Phases 14 to 19):** after the pilot was deployed, the scope was widened to cover the backend items in MoM §6 that the pilot left out: an **Admin role** (staff, categories, assignment), **in-app notifications**, **staff analytics with CSV export**, an **audit log**, and, last and optional, **video evidence**. See requirements R38 to R49 and decisions Q15 to Q21.
 
 **Note on scope:** the MoM suggests one or two prioritized use cases (§16). Adding potholes and garbage makes three issue types. This was a deliberate choice because they need no new screens or rules, only a category label. See the risks table (section 12).
 
@@ -67,11 +69,14 @@ From the MoM:
 - Voice input, speech-to-text and local-language complaints (§11)
 - AI analysis of photos, or vehicle-mounted camera video (§4)
 - Field-staff mobile app with attendance and inspections (§7)
-- Volunteer registration and notifications (§2, §10)
+- Volunteer registration and volunteer notifications (§2, §10)
+- Email, SMS or push notifications (in-app notifications are built, R44 and R45)
 - Real GBA data, real officers, real citizens
 - Integration with the live GBA website (only a link is shown; technical integration is a later step, §17)
 - Categories beyond the three in the pilot, such as pollution, lakes, traffic, hanging wires and basement misuse (listed as future use cases, §4, §13)
 - Different departments or officer teams per category (one officer per ward handles all three types)
+
+**Moved into scope in Phases 14 to 19** (no longer out of scope): admin controls (R38 to R43, R48), in-app notifications (R44, R45), staff analytics and CSV export (R46, R47) and, as an optional last step, video evidence (R49).
 
 ---
 
@@ -81,10 +86,11 @@ From the MoM:
 |------|---------------------------|
 | **Citizen** | Reports an issue (footpath encroachment, potholes / road damage, or garbage dumping) with a photo and a short description. No account needed. Can look up the status of their report. |
 | **Ward Officer** | Logs in, sees tickets for their ward (all three issue types), attends to the issue, uploads the Action Taken Report with a photo. |
-| **Verifier** (supervisor or admin) | Compares the original photo with the action photo and approves closure, or sends the ticket back. A separate role, not the citizen (Decision Q1). |
+| **Verifier** (supervisor) | Compares the original photo with the action photo and approves closure, or sends the ticket back. Sees all wards. A separate role, not the citizen (Decision Q1). |
+| **Admin** | Manages staff accounts and categories, assigns and reassigns tickets, sees all wards and the staff analytics. **Cannot close tickets and cannot approve or reject Action Taken Reports** (Decision Q15). |
 | **Public visitor** | Views the dashboard. No login needed. |
 
-The MoM names role-based access as a backend need (§6). The pilot keeps it to these roles only.
+The MoM names role-based access as a backend need (§6). The system keeps it to these roles only.
 
 ---
 
@@ -103,7 +109,7 @@ This is the MoM workflow (§5): *Issue Identification → Ticket Creation → Of
 
 | Status | Meaning |
 |--------|---------|
-| Submitted | Report received, but no officer is assigned yet (for example, no active officer for that ward) |
+| Submitted | Report received, but no officer is assigned yet (for example, no active officer for that ward). An admin can assign one, which moves it to Open (Decision Q16) |
 | Open | Ticket created and assigned to the ward officer |
 | In Progress | Officer has started work |
 | Action Taken, Pending Verification | Officer uploaded the ATR; waiting for the check |
@@ -197,18 +203,42 @@ Uses **dummy data** (a seed dataset) plus any tickets created live during the de
 
 ### 6.6 Roadmap Slide (§4, §7, §11 and others)
 
-Not built. Shown as slides only:
+Items marked "Not built" are shown as slides only:
 
 | Phase | What is added | MoM section |
 |-------|---------------|-------------|
 | **Pilot (this PRD)** | Report → ticket → ATR → verified closure → public dashboard, for three issue types | §3, §5, §8, §9, §13 |
-| **Next** | Field-staff mobile app (login, attendance, inspections, photo upload) | §7 |
-| **Next** | Volunteer registration and notifications | §2, §10 |
+| **Backend extension (Phases 14 to 19)** | Admin role, staff and category management, assignment, overdue flag, in-app notifications, staff analytics, CSV export, audit log, optional video evidence (section 6.7) | §3, §6, §9, §10, §12 |
+| **Next** | Field-staff mobile app (login, attendance, inspections, photo upload). Not built | §7 |
+| **Next** | Volunteer registration and volunteer notifications. Not built. Staff notifications are now in-app (R44, R45); email, SMS and push are not built | §2, §10 |
 | **Next** | Voice input, speech-to-text, local languages | §11 |
 | **Later** | AI photo analysis to classify issues and compare before/after | §4, §5 |
 | **Later** | Vehicle-mounted camera video analysis | §4 |
 | **Later** | More use cases (lakes, pollution, traffic, hanging wires, basement misuse) | §4, §13 |
 | **Later** | Real GBA data and integration with the GBA website | §17 |
+
+### 6.7 Admin, Notifications, Analytics and Video (Phases 14 to 19) (§3, §6, §9, §10, §12)
+
+Added after the pilot was deployed (Decisions Q15 to Q21).
+
+| ID | Requirement | Priority |
+|----|-------------|----------|
+| R38 | A new **Admin** role. Admin logs in like other staff, sees all wards, and manages the system. Admin **cannot** approve, reject or close tickets, and cannot submit Action Taken Reports. Enforced on the server | Must |
+| R39 | **Staff management:** admin lists staff, creates officers and verifiers (login created through the login service), changes name or ward, and activates or deactivates. Staff are never deleted. Deactivating an officer (or moving them to another ward) who still has unfinished tickets needs a replacement officer from the same ward, who takes over those tickets. An admin cannot deactivate themselves, and the last active admin cannot be deactivated | Must |
+| R40 | **Category management:** admin lists, creates, renames and enables or disables categories. A disabled category disappears from the citizen report form, but old tickets keep it and still show on the public dashboard. A category can have an optional SLA in days | Must |
+| R41 | **Admin ticket list:** all wards, with filters (ward, category, status, officer, unassigned, overdue, date range), sorting and pages | Must |
+| R42 | **Assign and reassign:** admin assigns an unassigned (Submitted) ticket to an active officer of that ward, which moves it to Open. Admin can reassign an Open, In Progress or Reopened ticket to another active officer of the same ward, which does not change the status. Pending Verification and Closed tickets cannot be reassigned. Each change records who, when and why | Must |
+| R43 | **Overdue flag:** a ticket is overdue when its due date has passed and it is not Closed. Worked out when the list is read; no background jobs. Shown as a badge and a filter | Should |
+| R44 | **In-app notifications are created** for: ticket assigned or reassigned (officer), new ticket in the ward (officer), Action Taken Report submitted (verifiers), ticket reopened (officer), ticket closed (assigned officer), new unassigned ticket (admins) | Should |
+| R45 | **Notification inbox:** each staff member sees only their own notifications, with an unread count in the header, and can mark one or all as read. The page checks for new ones at a set interval. No email, SMS or push | Should |
+| R46 | **Staff analytics** (separate from the public dashboard): resolution time (average and median) by ward and category, reopen rate, verifier rejection rate, officer workload, overdue count, open tickets by age. Optional ward and date filters. Admin and verifier see all wards; an officer sees only their own ward | Should |
+| R47 | **CSV export** of the admin ticket list, with protection against spreadsheet formula injection | Could |
+| R48 | **Audit log:** every admin change (staff, categories, assignment) is saved with who, when, what and the before and after values, in the same transaction as the change | Must |
+| R49 | **Video evidence (optional, last):** a short video can be added to a report or an Action Taken Report, with limits on type, size and length. A photo is still required | Could |
+
+**Notes**
+- Assignment of a Submitted ticket and the overdue flag change how the PRD section 5 flow reads, but closing is unchanged: only a verifier can close, only from Pending Verification.
+- R49 reopens Decision Q6 (photo only). It is built last and only if the owner says yes.
 
 ---
 
@@ -216,11 +246,13 @@ Not built. Shown as slides only:
 
 | Entity | Main fields |
 |--------|-------------|
-| **Staff** | id, name, role (officer / verifier), ward (for officers), active flag. Email and password login is handled by the login service. Citizens have no account (Decision Q2) |
+| **Staff** | id, name, role (officer / verifier / admin), ward (for officers), active flag. Email and password login is handled by the login service. Citizens have no account (Decision Q2) |
 | **Ward** | id, name, boundary (map polygon) |
-| **Category** | id, code, name, reportable flag. Three rows in the pilot |
-| **Ticket** | id, category, description, latitude, longitude, street, area, ward, status, created time, assigned officer, support count |
-| **Media** | id, ticket id, type (original / action), file path, capture time, latitude, longitude |
+| **Category** | id, code, name, reportable flag (shown on the report form), optional SLA days. Three rows to start; admin can add more |
+| **Ticket** | id, category, description, latitude, longitude, street, area, ward, status, created time, due date, assigned officer, support count |
+| **Media** | id, ticket id, type (original / action), kind (photo / video, video only if R49 is built), file path, capture time, latitude, longitude |
+| **Notification** | id, recipient (staff), ticket (optional), type, message, created time, read time |
+| **Audit Log** | id, actor (staff), action, entity type, entity id, before and after values, time |
 | **Action Taken Report** | id, ticket id, officer, remarks, submitted time |
 | **Status History** | ticket id, old status, new status, changed by, time, reason (if rejected) |
 
@@ -230,8 +262,8 @@ Not built. Shown as slides only:
 
 | Area | Requirement |
 |------|-------------|
-| **Security** | Passwords stored hashed. Officer and verifier screens need login. Role checks done on the server. Uploads are checked for type and size. (MoM §6 stresses security and role-based access.) |
-| **Privacy** | Photos of public places can accidentally show faces or vehicle number plates. Show a short notice at upload. Blurring is a later improvement. |
+| **Security** | Passwords stored hashed. Officer, verifier and admin screens need login. Role checks done on the server. Uploads are checked for type and size. Every admin change is written to the audit log. (MoM §6 stresses security and role-based access.) |
+| **Privacy** | Photos of public places can accidentally show faces or vehicle number plates. Show a short notice at upload. Blurring is a later improvement. If video is built (R49), the notice also says that videos are stored as uploaded and hidden data is not removed. |
 | **Performance** | Report submit and page loads should feel quick on a normal mobile connection. Images are compressed on upload. |
 | **Accessibility** | Simple wording, large tap targets, readable colours. English only in the pilot, but text is kept separate so other languages can be added later (§11). |
 | **Reliability** | Demo must work with a **prepared seed dataset** and a **backup plan** (screen recording) if the network or location fails. |
@@ -311,18 +343,26 @@ Every open question now has a decision. These are defaults chosen to keep the pi
 
 | # | Question | Decision | Effect |
 |---|----------|----------|--------|
-| Q1 | Who does the final verification before closing? | A separate **Verifier** role (supervisor or admin). Not the citizen. | Verifier login and screens exist (MoM §5 does not say who, so this is our choice) |
+| Q1 | Who does the final verification before closing? | A separate **Verifier** role (supervisor). Not the citizen, and not the Admin (Q15). | Verifier login and screens exist (MoM §5 does not say who, so this is our choice) |
 | Q2 | Should a citizen register or log in to report? | **No.** Citizens report anonymously, with spam limits. | No citizen accounts |
 | Q3 | Should the dashboard dummy data include other categories? | **No.** The dashboard shows the three real categories only. | Simple category chart |
 | Q4 | Sample wards or real boundaries? | **Sample wards** (three, drawn as map polygons). Real boundaries later. | Small data-prep job |
 | Q5 | Where does a rejected ATR go? | **Back to the same ward officer** (status Reopened), with the reason. | Simple reopen flow |
-| Q6 | Video upload in the pilot? | **Photo only.** | Smaller uploads, simpler storage |
+| Q6 | Video upload in the pilot? | **Photo only.** Reopened for Phase 17 by Q20. | Smaller uploads, simpler storage |
 | Q7 | Which language? | **English only.** Screen text is kept in one place for later languages. | Less text work |
 | Q8 | What does *Submitted* mean? | Report received but **no officer assigned yet**. *Open* means assigned. | Matches the TRD |
 | Q9 | What about *Rejected / Duplicate*? | *Rejected* is **reserved and unused**. No "mark as invalid" action. Duplicates add support to the original ticket. | Fewer moving parts |
 | Q10 | Username or email for login? | **Email and password.** | Matches the login service |
 | Q11 | Which issue types, and how many officers? | **Three types** (footpath encroachment, potholes / road damage, garbage dumping). **One officer per ward** handles all three. | Category label only, no new flow |
 | Q12 | What if the location is outside the sample wards? | The report is **refused with a clear message.** | No unassigned reports from far away |
+| Q15 | Can an Admin close tickets? | **No.** Admin manages staff, categories and assignment only. Only a Verifier approves or rejects. | Keeps the "no closing without a check" rule (R22) |
+| Q16 | What happens when an Admin assigns a *Submitted* ticket? | It moves to **Open**. This is the only way a Submitted ticket moves. | One new transition, admin path only |
+| Q17 | What does reassignment change? | **Only the assigned officer.** The status stays the same. The new officer must be active and in the ticket's ward. Pending Verification and Closed tickets cannot be reassigned. | Reassignment is not a status change |
+| Q18 | How are staff notified? | **In-app only.** The page checks for new ones at an interval. No email, SMS or push. Volunteer notifications stay on the roadmap. | No mail service, no realtime |
+| Q19 | How is *overdue* worked out? | **On read:** due date has passed and status is not Closed. Due date is set at creation from the category's SLA days, or a default. No background jobs. | Nothing to schedule or host |
+| Q20 | Video upload? | **Optional, last (Phase 17), only if the owner says yes.** Proposed limits: MP4, MOV or WebM; 20 MB; 20 seconds; one video per report and per Action Taken Report; a photo is still required. To be confirmed before Phase 17. Reopens Q6. | Reopens Q6 for video only |
+| Q21 | Does this change the PRD §6 note "no notifications or admin panel beyond basics"? | **Yes.** Admin controls and in-app notifications are now built (R38 to R48). | Updates sections 3, 6.6, 6.7 and 14 |
+| Q22 | How are category switch-off and staff accounts handled? | A disabled category uses the existing **reportable** flag (no new column). Staff are **never deleted**, only deactivated. Admin creates officers and verifiers only; admin accounts come from the seed or the login service dashboard. | Less data change, no privilege escalation |
 
 ---
 
@@ -331,17 +371,17 @@ Every open question now has a decision. These are defaults chosen to keep the pi
 | MoM section | Covered in the pilot? | Where |
 |-------------|-----------------------|-------|
 | §1 Objective | Yes | Summary, Goals |
-| §2 Volunteer registration | No, roadmap | 6.6 |
-| §3 Citizen grievance reporting | Yes (photo, text, location; no video, no voice) | 6.1 |
-| §4 AI image and video analysis | No, roadmap | 6.6 |
+| §2 Volunteer registration | No, roadmap (a staff Admin role now exists, but not volunteers) | 6.6 |
+| §3 Citizen grievance reporting | Yes (photo, text, location; no voice). Video is optional in Phase 17 (R49) | 6.1, 6.7 |
+| §4 AI image and video analysis | No, roadmap (plain video evidence upload is separate, R49) | 6.6 |
 | §5 Ticketing and Action Taken Report | Yes, main part | 6.3 |
-| §6 Officer login and backend | Partly (login, roles, ticket assignment, storage, status tracking; no notifications or admin panel beyond basics) | 6.3, 8 |
+| §6 Officer login and backend | Yes after Phases 14 to 19 (login, roles, admin role, staff and category management, assignment and reassignment, in-app notifications, audit log, storage, status tracking). Not built: email, SMS or push notifications | 6.3, 6.7, 8 |
 | §7 Field-staff mobile app | No, roadmap | 6.6 |
 | §8 Location and GPS capture | Yes | 6.1 |
-| §9 Analytics and public dashboard | Yes (with dummy data) | 6.4 |
-| §10 Volunteer notifications | No, roadmap | 6.6 |
+| §9 Analytics and public dashboard | Yes (public dashboard with dummy data, plus staff analytics and CSV export) | 6.4, 6.7 |
+| §10 Volunteer notifications | Staff in-app notifications: yes (R44, R45). Volunteer notifications: no, roadmap | 6.6, 6.7 |
 | §11 Voice and local language | No, roadmap | 6.6 |
-| §12 Moderation and controls | Partly (duplicate check and upload checks) | 6.2, 6.1 R9 |
+| §12 Moderation and controls | Partly (duplicate check, upload checks, admin controls and audit log) | 6.2, 6.1 R9, 6.7 |
 | §13 Problems and use cases | Three issue types chosen (footpath encroachment, potholes / road damage, garbage dumping) | Goals, 6.1, 6.6 |
 | §16 Project phasing | Yes, pilot first. Three issue types on one shared flow (slightly beyond "one or two use cases") | Summary, 12 |
 | §17 Website integration | Shown as a mock link | 6.5 |

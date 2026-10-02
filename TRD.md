@@ -3,13 +3,28 @@
 | | |
 |---|---|
 | **Product** | Verified Civic Issue Tracker (pilot of the GBA digital governance platform) |
-| **Builds on** | `PRD.md` v0.2. Requirement IDs (R1 to R37) and decisions (Q1 to Q12) point to that file. |
-| **Version** | 0.3 (proposal, for review) |
-| **Date** | 29 September 2026 |
+| **Builds on** | `PRD.md` v0.3. Requirement IDs (R1 to R49) and decisions (Q1 to Q22) point to that file. |
+| **Version** | 0.4 (proposal, for review) |
+| **Date** | 2 October 2026 |
 | **Status** | Draft. Every choice has a "why" so you can push back on anything unclear. |
-| **Implementation status** | Phase 12 complete; Phase 13 deployment pending |
+| **Implementation status** | Phase 13 complete (deployed). Phases 14 to 19 approved, not started. |
 
-### What changed from v0.2
+### What changed from v0.3 to v0.4 (Phases 14 to 19)
+
+| Area | v0.3 | v0.4 (this version) |
+|------|------|---------------------|
+| Roles | `OFFICER`, `VERIFIER` | Adds **`ADMIN`** (manages staff, categories, assignment; cannot close) |
+| Tables | 7 tables | Adds `audit_log` and `notifications`; new columns `categories.sla_days`, `tickets.due_at`, and (optional) `media.kind` |
+| Status rules | No `SUBMITTED` exit | **`SUBMITTED` to `OPEN`** through admin assign only. Reassignment is not a status change |
+| Officer actions | Checked by ward | Start and Action Taken Report need the **assigned** officer (viewing stays ward-wide) |
+| API | Public, officer, verifier, shared | Adds Admin (7.7), Notifications (7.8) and Staff analytics (7.9) |
+| Staff accounts | Seed script or dashboard only | Admin creates officers and verifiers through the Auth admin API (section 8) |
+| Categories | `reportable` hides a category from the form | Same flag is the on/off switch; the public dashboard keeps showing categories that have tickets |
+| Video | Out | Optional Phase 17 (section 10) |
+
+The v0.2 to v0.3 changes (kept for history):
+
+### What changed from v0.2 to v0.3
 
 | Area | v0.2 | v0.3 (this version) |
 |------|------|---------------------|
@@ -131,20 +146,25 @@ gba-civic-tracker/
 │   └── migrations/
 │       ├── 0001_schema.sql            tables + security switches
 │       ├── 0002_seed_wards.sql        three sample ward shapes
-│       └── 0003_seed_categories.sql   the three categories
+│       ├── 0003_seed_categories.sql   the three categories
+│       ├── 0004_admin_audit.sql       Phase 14: ADMIN role, audit_log
+│       ├── 0005_sla_due_date.sql      Phase 15: categories.sla_days, tickets.due_at
+│       ├── 0006_notifications.sql     Phase 16: notifications
+│       └── 0007_media_kind.sql        Phase 17 (optional): media.kind, video constraints
 │
 ├── server/                      Node + Express
 │   ├── package.json
 │   ├── .env.example             server settings (real .env is git-ignored)
 │   ├── src/
 │   │   ├── index.js             starts the server
-│   │   ├── app.js               builds the app: middleware, routes, serves frontend
+│   │   ├── application.js       builds the app: middleware, routes, serves frontend
 │   │   ├── config.js            reads and checks settings
 │   │   ├── db.js                pg Pool + withTransaction() helper
 │   │   ├── supabase.js          admin client (Auth check + Storage)
 │   │   ├── middleware/
 │   │   │   ├── requireAuth.js   token → staff member
-│   │   │   ├── requireRole.js   OFFICER / VERIFIER gate
+│   │   │   ├── requireRole.js   OFFICER / VERIFIER / ADMIN gate
+│   │   │   ├── requireAdmin.js  ADMIN-only gate for /api/admin/** (Phase 14)
 │   │   │   ├── rateLimit.js
 │   │   │   ├── upload.js        multer setup
 │   │   │   └── errorHandler.js  one error shape for everything
@@ -153,10 +173,18 @@ gba-civic-tracker/
 │   │   │   ├── tickets/         ticket.routes.js, ticket.service.js,
 │   │   │   │                    ticket.stateMachine.js, ticket.queries.js
 │   │   │   ├── actionReports/   actionReport.service.js
+│   │   │   ├── officer/         officer.routes.js, officer.service.js     (own-ward list, counts)
+│   │   │   ├── verifier/        verifier.routes.js, verifier.service.js,
+│   │   │   │                    verifier.queries.js                       (queue, compare, approve, reject)
 │   │   │   ├── media/           media.service.js  (sharp + Storage + signed links)
 │   │   │   ├── wards/           ward.service.js   (which ward is this point in?)
 │   │   │   ├── geo/             geocoding.js, geoUtils.js
-│   │   │   └── dashboard/       dashboard.routes.js, dashboard.queries.js
+│   │   │   ├── dashboard/       dashboard.routes.js, dashboard.queries.js (public, aggregate only)
+│   │   │   ├── admin/           admin.routes.js, staff.service.js, category.service.js,
+│   │   │   │                    assignment.service.js, adminTickets.queries.js, csv.js   (Phases 14, 15, 18)
+│   │   │   ├── audit/           audit.service.js  (one helper: writeAudit(client, entry))
+│   │   │   ├── notifications/   notification.routes.js, notification.service.js          (Phase 16)
+│   │   │   └── analytics/       analytics.routes.js, analytics.queries.js  (staff only; separate from dashboard)
 │   │   └── utils/               ApiError.js, publicCode.js, schemas.js (zod)
 │   ├── scripts/
 │   │   ├── seed.js              creates demo staff (Supabase admin API) + demo tickets
@@ -169,7 +197,14 @@ gba-civic-tracker/
 │       ├── duplicates.test.js
 │       ├── categories.test.js
 │       ├── upload.test.js
-│       └── dashboard.test.js
+│       ├── dashboard.test.js
+│       ├── adminStaff.test.js         Phase 14
+│       ├── adminCategories.test.js    Phase 14
+│       ├── adminAssignment.test.js    Phase 15
+│       ├── notifications.test.js      Phase 16
+│       ├── analytics.test.js          Phase 18
+│       ├── csvExport.test.js          Phase 18
+│       └── roleMatrix.test.js         Phase 19
 │
 ├── frontend/                    React + Vite
 │   ├── package.json
@@ -181,8 +216,13 @@ gba-civic-tracker/
 │       │                        reports.js, tickets.js, dashboard.js
 │       ├── auth/                AuthContext.jsx, ProtectedRoute.jsx
 │       ├── i18n/                en.js  (all screen text in one place: English now, more languages later)
-│       ├── components/          MapPicker, PhotoPicker, StatusBadge, SideBySide, StatCard, charts/
+│       ├── components/          MapPicker, PhotoPicker, StatusBadge, SideBySide, StatCard, charts/,
+│       │                        NotificationBell (Phase 16)
 │       └── pages/
+│           ├── AdminPage.jsx            staff tab, categories tab (Phase 14)
+│           ├── AdminTicketsPage.jsx     all-ward list, assign / reassign, overdue (Phase 15)
+│           ├── NotificationsPage.jsx    inbox (Phase 16)
+│           ├── AnalyticsPage.jsx        staff analytics (Phase 18)
 │           ├── ReportPage.jsx           citizen report (R1 to R6, R10, R11)
 │           ├── TrackPage.jsx            status by ticket code (R7)
 │           ├── LoginPage.jsx
@@ -384,6 +424,78 @@ INSERT INTO categories (code, name, reportable) VALUES
   ('GARBAGE_DUMPING',       'Garbage Dumping',          true);
 ```
 
+### 5.1 Changes for Phases 14 to 19 (migrations 0004 onward)
+
+Each migration is a new SQL file applied with `supabase db push`. Existing files are never edited. **Every new table gets `ENABLE ROW LEVEL SECURITY` with no policies** in the same file. The test harness runs all files in order, and `schema.test.js` checks that RLS is on for every table (Phase 19 makes this check cover all tables).
+
+| Migration | Phase | Contents |
+|-----------|-------|----------|
+| `0004_admin_audit.sql` | 14 | `ADMIN` added to the staff role CHECK (`officer_has_ward` stays); `audit_log` table |
+| `0005_sla_due_date.sql` | 15 | `categories.sla_days`, `tickets.due_at`, index on `due_at` |
+| `0006_notifications.sql` | 16 | `notifications` table and index |
+| `0007_media_kind.sql` | 17 (optional) | `media.kind` and video constraints |
+
+**0004 (Phase 14):**
+
+```sql
+ALTER TABLE staff DROP CONSTRAINT staff_role_check;
+ALTER TABLE staff ADD CONSTRAINT staff_role_check
+    CHECK (role IN ('OFFICER', 'VERIFIER', 'ADMIN'));
+-- officer_has_ward is unchanged: only OFFICER needs a ward.
+
+CREATE TABLE audit_log (
+    id           INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    actor_id     UUID         NOT NULL REFERENCES staff(id),
+    action       VARCHAR(50)  NOT NULL,          -- e.g. STAFF_CREATED, CATEGORY_DISABLED, TICKET_REASSIGNED
+    entity_type  VARCHAR(30)  NOT NULL,          -- STAFF, CATEGORY, TICKET
+    entity_id    VARCHAR(40)  NOT NULL,          -- text, so it fits a UUID or an integer
+    before_data  JSONB,
+    after_data   JSONB,
+    created_at   TIMESTAMPTZ  NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_audit_log_entity  ON audit_log (entity_type, entity_id);
+CREATE INDEX idx_audit_log_created ON audit_log (created_at);
+ALTER TABLE audit_log ENABLE ROW LEVEL SECURITY;
+```
+
+**0005 (Phase 15):**
+
+```sql
+ALTER TABLE categories ADD COLUMN sla_days INT CHECK (sla_days IS NULL OR sla_days > 0);
+ALTER TABLE tickets    ADD COLUMN due_at   TIMESTAMPTZ;       -- null for tickets made before this phase
+CREATE INDEX idx_tickets_due_at ON tickets (due_at) WHERE status <> 'CLOSED';
+```
+
+**0006 (Phase 16):**
+
+```sql
+CREATE TABLE notifications (
+    id            INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    recipient_id  UUID         NOT NULL REFERENCES staff(id),
+    ticket_id     INT REFERENCES tickets(id) ON DELETE CASCADE,
+    type          VARCHAR(40)  NOT NULL,   -- TICKET_ASSIGNED, TICKET_REASSIGNED, NEW_TICKET_IN_WARD,
+                                           -- ACTION_REPORT_SUBMITTED, TICKET_REOPENED, TICKET_CLOSED,
+                                           -- UNASSIGNED_TICKET
+    message       VARCHAR(300) NOT NULL,
+    created_at    TIMESTAMPTZ  NOT NULL DEFAULT now(),
+    read_at       TIMESTAMPTZ
+);
+CREATE INDEX idx_notifications_recipient ON notifications (recipient_id, read_at);
+ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+```
+
+**0007 (Phase 17, optional):** adds `media.kind VARCHAR(10) NOT NULL DEFAULT 'PHOTO' CHECK (kind IN ('PHOTO', 'VIDEO'))`. The existing `media_type_matches_report` check is unchanged, so a video is still `ORIGINAL` or `ACTION`. New checks: a `VIDEO` row must have a `content_type` starting with `video/`, and a ticket or action report can have at most one `VIDEO` (partial unique indexes). Exact limits are confirmed before Phase 17.
+
+**Notes on these choices**
+- **No `categories.active` column.** The existing `reportable` flag already means "shown on the citizen form". A second flag would say the same thing twice. Disabling a category sets `reportable = false`.
+- **Public dashboard and disabled categories.** `dashboard.queries.js` by-category currently lists only `reportable = TRUE` categories, so a disabled category's old tickets would vanish and the totals would not add up. In Phase 14 the query changes to list every category that is reportable **or** has at least one ticket. This is the only public-dashboard change.
+- **`due_at` is fixed at creation:** `created_at + (category.sla_days or SLA_DEFAULT_DAYS)`. Changing a category's SLA later does not move existing due dates. Tickets made before Phase 15 have `due_at = NULL` and are never overdue. It is stored (not computed from the SLA) so history stays honest.
+- **Overdue is worked out on read:** `due_at < now() AND status <> 'CLOSED'`. No cron or background job (Decision Q19).
+- **`audit_log.actor_id` is `NOT NULL`:** only logged-in admins write to it. `entity_id` is text so one column fits both staff (UUID) and tickets or categories (integer).
+- **Audit rows never hold passwords.** Staff-create audit data stores name, email, role and ward only.
+- **`notifications` are only deleted with their ticket** (cascade). There is no clean-up job. This is fine for a pilot (known limit, section 8).
+- **Seed data:** `npm run seed` adds one demo admin (`admin@demo.example`, password from `SEED_DEMO_PASSWORD`) and a second Ward A officer (`officer.a2@demo.example`) so reassignment can be shown. The second officer slightly stretches PRD Q11 (one officer per ward); it exists only in demo data.
+
 ---
 
 ## 6. Ticket Status Rules
@@ -394,12 +506,17 @@ All status changes go through one file, `ticket.stateMachine.js`. It holds this 
 |------|----|-----|-------|-------|
 | (new) | `OPEN` | System | `POST /api/reports` | Ward found and an active officer exists for it |
 | (new) | `SUBMITTED` | System | `POST /api/reports` | Ward found but no active officer yet (PRD Q8) |
-| `OPEN` / `REOPENED` | `IN_PROGRESS` | Officer of that ward | `POST /api/tickets/:id/start` | R17 |
-| `OPEN` / `IN_PROGRESS` / `REOPENED` | `PENDING_VERIFICATION` | Officer of that ward | `POST /api/tickets/:id/action-report` | Needs at least one photo (R18, R19). Starting first is optional |
+| `SUBMITTED` | `OPEN` | **Admin only** | `POST /api/admin/tickets/:id/assign` | R42, Decision Q16. The only exit from `SUBMITTED`. Target officer must be active and in the ticket's ward |
+| `OPEN` / `REOPENED` | `IN_PROGRESS` | The **assigned** officer | `POST /api/tickets/:id/start` | R17 |
+| `OPEN` / `IN_PROGRESS` / `REOPENED` | `PENDING_VERIFICATION` | The **assigned** officer | `POST /api/tickets/:id/action-report` | Needs at least one photo (R18, R19). Starting first is optional |
 | `PENDING_VERIFICATION` | `CLOSED` | Verifier | `POST /api/tickets/:id/approve` | The **only** code path that sets `CLOSED` (R22) |
 | `PENDING_VERIFICATION` | `REOPENED` | Verifier | `POST /api/tickets/:id/reject` | Reason is required (R21) |
 | `CLOSED` | nothing | | | Final in the pilot |
 | any | `REJECTED` | | | **Reserved and unused** in the pilot (Decision T3, PRD Q9) |
+
+**Reassignment is not a status change.** `POST /api/admin/tickets/:id/reassign` only changes `assigned_officer_id`. It is allowed for `OPEN`, `IN_PROGRESS` and `REOPENED` tickets. `SUBMITTED` must use assign, and `PENDING_VERIFICATION` and `CLOSED` get **409** (a reject sends the ticket back to the assigned officer, so changing officer mid-check would be confusing). It is not in the state machine table above, because no status moves. It writes a `status_history` row with `from_status = to_status` and a reason such as "Reassigned from A to B", so the timeline shows it (R23, R42).
+
+**Admin cannot close.** No admin route, and no admin role check, touches `approve`, `reject` or `CLOSED`. `approve` and `reject` stay `requireRole('VERIFIER')` only (Decision Q15).
 
 Three layers guard the closing rule (R22):
 
@@ -471,7 +588,7 @@ Base path: `/api`. Everything is JSON, except uploads (`multipart/form-data`). A
 
 | Method | Route | Who | What it does |
 |--------|-------|-----|--------------|
-| `GET` | `/api/auth/me` | Logged in staff | Returns `{id, name, role, wardId}` from the `staff` table (used when the page reloads) |
+| `GET` | `/api/auth/me` | Logged in staff | Returns `{id, name, role, wardId}` from the `staff` table (used when the page reloads). `role` is `OFFICER`, `VERIFIER` or `ADMIN`; `wardId` is `null` for verifiers and admins |
 
 Logging out is `supabase.auth.signOut()` in the browser.
 
@@ -481,8 +598,8 @@ Logging out is `supabase.auth.signOut()` in the browser.
 |--------|-------|--------------|-----|
 | `GET` | `/api/officer/tickets?status=&page=` | Tickets of **the officer's own ward only** (all three categories) | R15 |
 | `GET` | `/api/officer/tickets/counts` | Counts for badges: new, reopened | R25 |
-| `POST` | `/api/tickets/:id/start` | Move to `IN_PROGRESS` | R17 |
-| `POST` | `/api/tickets/:id/action-report` | Form fields: `remarks`, `photos` (1 to 3 files), `lat`, `lng`. Moves to `PENDING_VERIFICATION` | R18, R19 |
+| `POST` | `/api/tickets/:id/start` | Move to `IN_PROGRESS`. Only the **assigned** officer (403 for another officer, even in the same ward) | R17 |
+| `POST` | `/api/tickets/:id/action-report` | Form fields: `remarks`, `photos` (1 to 3 files), `lat`, `lng`. Moves to `PENDING_VERIFICATION`. Only the **assigned** officer | R18, R19 |
 
 ### 7.4 Verifier (role `VERIFIER`)
 
@@ -515,11 +632,11 @@ Logging out is `supabase.auth.signOut()` in the browser.
 }
 ```
 
-### 7.5 Shared staff route (officer or verifier)
+### 7.5 Shared staff route (officer, verifier or admin)
 
 | Method | Route | What it does | PRD |
 |--------|-------|--------------|-----|
-| `GET` | `/api/tickets/:id` | Ticket detail: photo links, description, map position, ward, status timeline. **Officers get 403 for tickets of another ward.** | R16 |
+| `GET` | `/api/tickets/:id` | Ticket detail: photo links, description, map position, ward, status timeline, `dueAt`, `isOverdue`, assigned officer. **Officers get 403 for tickets of another ward.** Verifiers and admins can read any ticket (admin is read-only here) | R16 |
 
 ### 7.6 Errors
 
@@ -541,9 +658,83 @@ Every error uses the same shape (`errorHandler.js`), so the frontend handles all
 | 422 | Location is outside the pilot wards |
 | 429 | Too many requests (rate limit) |
 
+Phases 14 to 16 add these error codes, all in the same shape: `409 STAFF_HAS_ACTIVE_TICKETS` (deactivate or ward change without a replacement), `409 LAST_ADMIN`, `409 CANNOT_DEACTIVATE_SELF`, `409 EMAIL_EXISTS`, `409 CATEGORY_EXISTS`, `409 TICKET_NOT_ASSIGNABLE` (assign on a ticket that is not `SUBMITTED`), `409 TICKET_NOT_REASSIGNABLE` (status is `SUBMITTED`, `PENDING_VERIFICATION` or `CLOSED`), and `409 OFFICER_NOT_ELIGIBLE` (officer is inactive, not an officer, or not in the ticket's ward). An officer who is not the assigned officer gets `403 FORBIDDEN` on start and action-report.
+
 **Why one route per action** (`/start`, `/approve`, `/reject`) and not a single "change status" route? Each route allows exactly one move and one role. There is no way to send `{"status": "CLOSED"}` and skip a step.
 
 **Express note:** on Express 4, wrap async route functions so a thrown error reaches `errorHandler` (Express 5 does this for you). Check which version `npm install express` gives you.
+
+### 7.7 Admin (role `ADMIN`, Phases 14, 15 and 18)
+
+Every route under `/api/admin` uses `requireAuth` then `requireAdmin`, and the admin rate limit. **Every write below runs in one transaction with an `audit_log` row** (`writeAudit(client, {...})`). None of these routes sets a ticket status except `assign` (the one `SUBMITTED` to `OPEN` move). Lists use `?page=` (from 1) and `?pageSize=` (default and maximum from settings in code, 20 and 100).
+
+**Staff (Phase 14)**
+
+| Method | Route | Body | Response | PRD |
+|--------|-------|------|----------|-----|
+| `GET` | `/api/admin/staff?role=&active=&wardId=&page=` | | `{ "staff": [{ id, fullName, email, role, wardId, wardName, active, unfinishedTickets, createdAt }], "page", "total" }`. `unfinishedTickets` counts assigned tickets not `CLOSED` | R39 |
+| `POST` | `/api/admin/staff` | `{ fullName, email, password, role: "OFFICER" or "VERIFIER", wardId }` (`wardId` required for `OFFICER`, must be empty for `VERIFIER`) | `201` `{ id, fullName, email, role, wardId, active }`. **No password in the response.** `ADMIN` as a role gives 400 | R39 |
+| `PATCH` | `/api/admin/staff/:id` | `{ fullName?, wardId?, replacementOfficerId? }`. Role and email cannot be changed. `wardId` only for officers. Changing the ward of an officer with unfinished tickets needs `replacementOfficerId` (same rule as deactivate) | The updated staff row | R39 |
+| `POST` | `/api/admin/staff/:id/deactivate` | `{ replacementOfficerId? }`. If the person has unfinished tickets and no replacement is sent: `409 STAFF_HAS_ACTIVE_TICKETS` with the count. With a replacement (an **active officer of the same ward**): all their unfinished tickets move to the replacement in the same transaction, each with a `status_history` reassignment row, a notification (Phase 16) and an audit row | The updated staff row. `409 CANNOT_DEACTIVATE_SELF` and `409 LAST_ADMIN` apply | R39 |
+| `POST` | `/api/admin/staff/:id/activate` | none | The updated staff row | R39 |
+| `GET` | `/api/admin/audit-log?entityType=&entityId=&page=` | | `{ "entries": [{ id, actorId, actorName, action, entityType, entityId, before, after, createdAt }], "page", "total" }` | R48 |
+
+**Categories (Phase 14, SLA field from Phase 15)**
+
+| Method | Route | Body | Response | PRD |
+|--------|-------|------|----------|-----|
+| `GET` | `/api/admin/categories` | | `{ "categories": [{ id, code, name, reportable, slaDays, ticketCount }] }` (all, including disabled) | R40 |
+| `POST` | `/api/admin/categories` | `{ name, slaDays? }`. The `code` is made from the name (upper case, underscores) and cannot be edited later. Starts enabled. Duplicate: `409 CATEGORY_EXISTS` | `201` the category | R40 |
+| `PATCH` | `/api/admin/categories/:id` | `{ name?, slaDays? }` (`slaDays: null` clears it). `code` never changes | The category | R40 |
+| `POST` | `/api/admin/categories/:id/enable` | none | The category (`reportable = true`) | R40 |
+| `POST` | `/api/admin/categories/:id/disable` | none | The category (`reportable = false`). Old tickets keep it. It leaves `GET /api/categories` and the report form | R40 |
+
+**Tickets (Phase 15, export in Phase 18)**
+
+| Method | Route | Body | Response | PRD |
+|--------|-------|------|----------|-----|
+| `GET` | `/api/admin/tickets?wardId=&categoryId=&status=&officerId=&unassigned=&overdue=&from=&to=&sort=&order=&page=&pageSize=` | | `{ "tickets": [{ id, publicCode, categoryName, status, wardName, street, area, assignedOfficerId, assignedOfficerName, createdAt, dueAt, isOverdue }], "page", "pageSize", "total" }`. `unassigned=true` means `assigned_officer_id IS NULL`. `overdue=true` means `due_at < now() AND status <> 'CLOSED'`. `from` and `to` filter `created_at`. `sort` is one of `createdAt`, `dueAt`, `status` and `order` is `asc` or `desc`. Unknown values give 400 | R41, R43 |
+| `POST` | `/api/admin/tickets/:id/assign` | `{ officerId }` | `{ ticketId, status: "OPEN", assignedOfficerId }`. Row lock, ticket must be `SUBMITTED` (else `409 TICKET_NOT_ASSIGNABLE`), officer must be active and in the ticket's ward (else `409 OFFICER_NOT_ELIGIBLE`). Writes history `SUBMITTED` to `OPEN`, audit, notification | R42 |
+| `POST` | `/api/admin/tickets/:id/reassign` | `{ officerId, reason? }` | `{ ticketId, status, assignedOfficerId }` with the **same status as before**. Row lock. Allowed for `OPEN`, `IN_PROGRESS`, `REOPENED`; otherwise `409 TICKET_NOT_REASSIGNABLE`. Same officer check as assign. Writes history (from = to status, with reason), audit, notification | R42 |
+| `GET` | `/api/admin/tickets/export.csv` | same filters as the list, no paging | `text/csv`, at most `CSV_EXPORT_MAX_ROWS` rows, sorted as asked. Cells starting with `=`, `+`, `-` or `@` get a leading apostrophe; quotes, commas and new lines are escaped | R47 |
+
+### 7.8 Notifications (roles `OFFICER`, `VERIFIER`, `ADMIN`, Phase 16)
+
+All routes use `requireAuth` and the notification rate limit. Each query includes `WHERE recipient_id = $userId`, so a user only ever sees their own. Another person's notification id gives **404** (not 403, so ids are not confirmed to exist).
+
+| Method | Route | Response | PRD |
+|--------|-------|----------|-----|
+| `GET` | `/api/notifications?unread=&page=` | `{ "notifications": [{ id, ticketId, type, message, createdAt, readAt }], "page", "total" }`, newest first | R45 |
+| `GET` | `/api/notifications/unread-count` | `{ "unread": 3 }` | R45 |
+| `POST` | `/api/notifications/:id/read` | `{ "id": 7, "readAt": "..." }`. Reading twice is fine (keeps the first time) | R45 |
+| `POST` | `/api/notifications/read-all` | `{ "updated": 4 }` | R45 |
+
+**When rows are created** (inside the same transaction as the change, so a failed change creates none):
+
+| Trigger | Recipient | Type |
+|---------|-----------|------|
+| Report created and auto-assigned | The ward's officer | `NEW_TICKET_IN_WARD` |
+| Report created with no officer (`SUBMITTED`) | All active admins | `UNASSIGNED_TICKET` |
+| Admin assigns | The new officer | `TICKET_ASSIGNED` |
+| Admin reassigns (or deactivate with replacement) | The new officer | `TICKET_REASSIGNED` |
+| Action Taken Report submitted | All active verifiers | `ACTION_REPORT_SUBMITTED` |
+| Verifier rejects | The assigned officer | `TICKET_REOPENED` |
+| Verifier approves | The assigned officer | `TICKET_CLOSED` |
+
+The page polls `unread-count` every `VITE_NOTIFICATION_POLL_SECONDS` seconds (no realtime, no new library). Phase 16's plan decides whether the bell replaces the R25 badge (`/api/officer/tickets/counts`).
+
+### 7.9 Staff analytics (roles `OFFICER`, `VERIFIER`, `ADMIN`, Phase 18)
+
+Separate from the public dashboard, which stays aggregate-only and unchanged. Every route takes optional `?wardId=&from=&to=` (`from` and `to` filter `created_at`). **Scoping:** verifiers and admins see all wards. An officer is always limited to their own ward: omitting `wardId` means their ward, and asking for another ward gives `403 FORBIDDEN`. Counts are cast to `::int` and averages are rounded in SQL.
+
+| Method | Route | Response | PRD |
+|--------|-------|----------|-----|
+| `GET` | `/api/analytics/resolution-time` | `{ "byWard": [{ ward, closed, avgHours, medianHours }], "byCategory": [{ category, closed, avgHours, medianHours }] }`. Time = `closed_at - created_at` for `CLOSED` tickets. Median uses `percentile_cont(0.5)` | R46 |
+| `GET` | `/api/analytics/reopen-rate` | `{ "ticketsChecked": 40, "reopened": 6, "rate": 15.0 }`. Of tickets that ever reached `PENDING_VERIFICATION`, the share that were ever `REOPENED` (from `status_history`) | R46 |
+| `GET` | `/api/analytics/rejection-rate` | `{ "decided": 50, "rejected": 8, "rate": 16.0 }`. Of decided action reports, the share with decision `REJECTED` | R46 |
+| `GET` | `/api/analytics/workload` | `{ "officers": [{ officerId, officerName, wardName, open, inProgress, pendingVerification, reopened, overdue }] }` | R46 |
+| `GET` | `/api/analytics/overdue` | `{ "overdue": 12, "totalUnfinished": 80 }` | R46, R43 |
+| `GET` | `/api/analytics/age-buckets` | `{ "buckets": [{ label: "0-2 days", count }, { "3-7 days" }, { "8-14 days" }, { "15+ days" }] }` for unfinished tickets, by `now() - created_at`. Bucket edges are named constants in `analytics.queries.js` | R46 |
 
 ---
 
@@ -555,8 +746,9 @@ Every error uses the same shape (`errorHandler.js`), so the frontend handles all
 |------|--------|---------------------|
 | Public visitor | No | Dashboard and status page only |
 | Citizen | No (pilot) | Can create a report, add support, check status by code. Rate-limited |
-| Ward Officer | Yes | Sees and changes tickets **of their own ward only** |
+| Ward Officer | Yes | Sees tickets **of their own ward only**. Changes only tickets **assigned to them** |
 | Verifier | Yes | Sees tickets in all wards, approves or rejects |
+| Admin | Yes | Sees all wards. Manages staff, categories and assignment. **Cannot** approve, reject, close, start work or submit Action Taken Reports |
 
 ### How it works
 
@@ -564,12 +756,24 @@ Every error uses the same shape (`errorHandler.js`), so the frontend handles all
 2. For every request to Express, `api/client.js` adds the header `Authorization: Bearer <token>`.
 3. `requireAuth` in Express asks Supabase "who is this token?" using `supabaseAdmin.auth.getUser(token)`. Invalid or expired → **401**.
 4. Express then reads that person's row: `SELECT role, ward_id FROM staff WHERE id = $1 AND active`. No row, or `active = false` → **403**. Sets `req.user = { id, role, wardId }`.
-5. `requireRole('OFFICER')` or `requireRole('VERIFIER')` guards **each route separately** (Decision S4):
+5. `requireRole('OFFICER')`, `requireRole('VERIFIER')` or `requireAdmin` guards **each route separately** (Decision S4):
    - Officer only: `/api/officer/**`, `POST /api/tickets/:id/start`, `POST /api/tickets/:id/action-report`
    - Verifier only: `/api/verifier/**`, `GET /api/tickets/:id/compare`, `POST /api/tickets/:id/approve`, `POST /api/tickets/:id/reject`
-   - Any active staff member: `GET /api/tickets/:id`, `GET /api/auth/me`
+   - Admin only (`requireAdmin`): `/api/admin/**`
+   - Any active staff member: `GET /api/tickets/:id`, `GET /api/auth/me`, `/api/notifications/**`, `/api/analytics/**` (officers are limited to their own ward)
    - Public routes from 7.1 need nothing
-6. **Ward check happens inside the SQL,** not just in the route: every officer query includes `WHERE ward_id = $wardId`. An officer who guesses another ticket's ID gets 403.
+6. **Ward check happens inside the SQL,** not just in the route: every officer query includes `WHERE ward_id = $wardId`. An officer who guesses another ticket's ID gets 403. For `start` and `action-report`, the SQL also checks `assigned_officer_id = $userId`.
+
+### Admin-created staff accounts (Phase 14)
+
+The first admin comes from the seed script (or the Supabase dashboard). After that, admins create officers and verifiers from the screen, with no public sign-up.
+
+1. The admin form sends `{ fullName, email, password, role, wardId }` to `POST /api/admin/staff` over HTTPS. The password is at least 12 characters.
+2. Express calls `supabaseAdmin.auth.admin.createUser({ email, password, email_confirm: true })` with the **existing server key**. This runs only on the server. The demo email domain cannot receive mail, so there is no email invite in the pilot.
+3. Then, in **one database transaction**, Express inserts the `staff` row (same id as the new Auth user) and the `audit_log` row. If that transaction fails, Express deletes the new Auth user again. This is the same upload-then-clean-up pattern as photos (section 10), because Auth and the database are separate systems and cannot share a transaction.
+4. **The password is never stored by us, logged, put in the audit log, or sent back.** The request body is not logged anywhere, the zod error messages never echo it, and the response has no password field. The admin tells the person their password outside the system. Tests check that no response or audit row contains it.
+5. Deactivation sets `staff.active = false`. `requireAuth` reads `active` on every request, so it works at once and the Auth user does not need to be banned. Staff and Auth users are **never deleted**.
+6. **Known limit:** there is no change-password or forgot-password screen in the pilot. A shared initial password stays in use until someone resets it in the Supabase dashboard.
 
 ### Details and the reasons
 
@@ -600,6 +804,9 @@ That is why the schema file ends with `ENABLE ROW LEVEL SECURITY` on every table
 - Anyone can add "support" to a ticket several times. The rate limit only slows this down.
 - One extra call to Supabase Auth on every staff request.
 - No two-step login.
+- No change-password screen. Initial passwords for admin-created staff are chosen by the admin (see above).
+- Notifications are never cleaned up, and polling means a delay of up to the poll interval.
+- Uploaded videos (if Phase 17 is built) are not cleaned of hidden data, and a signed upload URL that is never registered leaves an unused file (section 10).
 
 ---
 
@@ -619,6 +826,12 @@ That is why the schema file ends with `ENABLE ROW LEVEL SECURITY` on every table
 2. Officer submits the report: `POST /action-report` with remarks and photo(s). Location is read from the officer's browser at that moment. Status → `PENDING_VERIFICATION`.
 3. Verifier opens the queue, then `GET /compare`. Express measures the distance between both locations with PostGIS `ST_Distance` and sets `farWarning` if over 50 m (adjustable). The screen shows both photos side by side.
 4. Verifier taps **Approve** (`CLOSED`, sets `closed_by`, `closed_at`, marks the action report `APPROVED`) or **Reject** (`REOPENED`, saves the reason, marks the action report `REJECTED`).
+
+### Additions to these flows (Phases 14 to 19)
+
+- **Report creation (Phase 15, 16):** the same transaction also sets `due_at` (`created_at + sla_days`, or `SLA_DEFAULT_DAYS`) and writes the notification row (the ward's officer, or all admins if the ticket is `SUBMITTED`).
+- **Assign and reassign (Phase 15):** `SELECT ... FOR UPDATE` on the ticket, check status, check the officer (active, role `OFFICER`, same ward), update `assigned_officer_id` (and status for assign), then `status_history`, `audit_log` and the notification, all in one `withTransaction`.
+- **Approve, reject, action report (Phase 16):** the existing transaction gets one more insert for the notification. Nothing else changes, and closing is still verifier-only.
 
 ### Dashboard (R26 to R34)
 
@@ -654,6 +867,22 @@ The page re-requests every 10 seconds (R34). `summary` includes `isDemoData: tru
 | **Not one transaction** | The photo upload and the database insert are separate systems. Upload first; if the database step fails, delete the photo. |
 | **Privacy notice** | The upload screen shows a short "avoid faces and number plates" note (PRD privacy row). |
 
+### Video evidence (Phase 17, optional: only if the owner says yes)
+
+Proposed limits, confirmed before Phase 17 starts (Decision Q20): MP4, MOV or WebM; **20 MB**; **20 seconds**; one video per report and per Action Taken Report; a photo is still required.
+
+| Step | Rule |
+|------|------|
+| **Why not through Express** | Vercel Functions accept at most 4.5 MB per request body (section 13). A video cannot pass through Express, so the browser uploads **straight to Supabase Storage** with a signed upload URL. |
+| **Bucket** | A second **private** bucket, `ticket-videos` (`SUPABASE_VIDEO_BUCKET`), with the size limit and allowed types set on the bucket. `ticket-media` keeps its 5 MB limit. The bucket is the real server-side limit on size and type. |
+| **1. Ask** | `POST /api/tickets/:id/video-upload` (officer for an Action Taken Report) or `POST /api/reports/video-upload` (citizen, before the report exists). Body: `{ contentType, sizeBytes }`. Express checks type and size, rate limits, and returns `{ path, token }` from `createSignedUploadUrl`. Path is `tickets/<uuid>.<ext>`, never a user file name. |
+| **2. Upload** | The browser sends the file to Storage with that token. |
+| **3. Register** | The report or action-report request includes the `videoPath`. Express asks Storage for the object's real size and type, rejects it if it is missing or over the limit, then inserts the `media` row (`kind = 'VIDEO'`) in the same transaction as the report. |
+| **Duration** | The browser reads the video length and refuses over 20 seconds, but **the server cannot verify duration** without a new library (ffprobe or similar). Size and type are the hard limits. This is a known limit. |
+| **Cleaning** | `sharp` cannot clean video. Hidden data (GPS, device) stays in the file. The privacy notice must say so. |
+| **Unused files** | A signed URL that is never registered leaves a file in the bucket. There are no background jobs, so it stays until someone clears it. Known limit. The upload-ask routes are rate limited to slow abuse. |
+| **Showing a video** | A signed link (`createSignedUrl`, 5 minutes), shown in a plain `<video controls>` player. No poster frame is generated. |
+
 ---
 
 ## 11. Location Handling
@@ -687,7 +916,14 @@ The page re-requests every 10 seconds (R34). `summary` includes `isDemoData: tru
 | `NOMINATIM_USER_AGENT` | Name sent to the address service | `gba-civic-tracker-pilot` |
 | `NOMINATIM_BASE_URL` | Address-lookup provider endpoint; keeping it configurable lets the server switch providers without a browser update | `https://nominatim.openstreetmap.org` |
 | `RATE_LIMIT_REPORTS_PER_HOUR` | Spam limit per IP | `20` |
-| `SEED_DEMO_PASSWORD` | Password used only when creating the four demo staff logins | (throwaway demo password) |
+| `SEED_DEMO_PASSWORD` | Password used only when creating the demo staff logins (from Phase 14: two more, the demo admin and a second Ward A officer) | (throwaway demo password) |
+| `RATE_LIMIT_ADMIN_PER_MINUTE` | Rate limit per user for `/api/admin/**` (Phase 14) | `60` |
+| `SLA_DEFAULT_DAYS` | Days until a ticket is due when its category has no `sla_days` (Phase 15) | `7` |
+| `RATE_LIMIT_NOTIFICATIONS_PER_MINUTE` | Rate limit per user for `/api/notifications/**`; must be above the polling rate (Phase 16) | `60` |
+| `CSV_EXPORT_MAX_ROWS` | Most rows one CSV export can contain (Phase 18) | `5000` |
+| `SUPABASE_VIDEO_BUCKET` | Private bucket for videos (Phase 17, optional) | `ticket-videos` |
+| `MAX_VIDEO_MB` | Video size limit (Phase 17, optional) | `20` |
+| `MAX_VIDEO_SECONDS` | Video length limit, checked in the browser only (Phase 17, optional) | `20` |
 
 **Frontend (`frontend/.env`, never committed. Template: `frontend/.env.example`. These end up in the browser, so only public values):**
 
@@ -698,6 +934,8 @@ The page re-requests every 10 seconds (R34). `summary` includes `isDemoData: tru
 | `VITE_MAP_TILE_URL` | Public OpenStreetMap tile template used by the Leaflet map | `https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png` |
 | `VITE_API_BASE_URL` | Public origin of the deployed Express API project | `https://<api-project>.vercel.app` |
 | `VITE_MAX_UPLOAD_MB` | Client-side source-file limit, matching `MAX_UPLOAD_MB` | `5` |
+| `VITE_NOTIFICATION_POLL_SECONDS` | How often the staff header asks for the unread count (Phase 16) | `30` |
+| `VITE_MAX_VIDEO_MB`, `VITE_MAX_VIDEO_SECONDS` | Client-side video limits, matching the server (Phase 17, optional) | `20`, `20` |
 
 **Test-only setting:** `TEST_DATABASE_URL` points Vitest at a local PostGIS database. It must use
 `localhost`, `127.0.0.1` or `::1`; it is not used by the deployed server.
@@ -711,7 +949,7 @@ The page re-requests every 10 seconds (R34). `summary` includes `isDemoData: tru
 | **One-time Supabase setup** | Create a project. Apply the SQL files (`supabase link`, then `supabase db push`, or paste them into the SQL editor). Create a **private** bucket named `ticket-media` with a 5 MB limit. Then run `npm run seed` in `server/`. |
 | **Development** | `npm run dev` in `server/` (Express on port 3000) and `npm run dev` in `frontend/` (Vite forwards `/api` to Express). |
 | **Demo hosting** | Two Vercel projects connected to this repository. Set the frontend project's root directory to `frontend` (build `npm run build`, output `dist`) and the API project's root directory to `server` (Express entrypoint `src/index.js`). Add the public `VITE_` settings to the frontend project and the server settings, including `FRONTEND_ORIGINS`, to the API project. |
-| **Reset between rehearsals** | Run `server/scripts/reset-demo.sql` (deletes tickets where `is_demo = false`, and their photo records, history and reports). Delete the matching files from the bucket too, or ignore them. |
+| **Reset between rehearsals** | Run `server/scripts/reset-demo.sql` (deletes tickets where `is_demo = false`, and their photo records, history, reports and notifications; from Phase 19 it also clears `audit_log` rows. Staff and category changes made by an admin are not undone). It does **not** delete files in Storage. Delete the matching files from the bucket too, or ignore them. |
 | **Backup plan** | A screen recording of the full demo, as the PRD says. |
 
 ### Things that can bite you before the demo
@@ -728,7 +966,7 @@ The page re-requests every 10 seconds (R34). `summary` includes `isDemoData: tru
 
 ## 14. Testing Plan
 
-Tests need a database with PostGIS. Use a local container (the `postgis/postgis` image) and run the same SQL files. Supabase's `auth.users` table doesn't exist there, so `tests/setup/` creates a tiny stand-in table with just an `id`. For the login step, `createApp({ authenticate })` takes a fake "who is this token?" function in tests, so tests never call Supabase Auth.
+Tests need a database with PostGIS. Use a local container (the `postgis/postgis` image) and run the same SQL files. Supabase's `auth.users` table doesn't exist there, so `tests/setup/` creates a tiny stand-in table with just an `id`. For the login step, `createApp({ authenticate })` takes a fake "who is this token?" function in tests, so tests never call Supabase Auth. From Phase 14 the stand-in `auth.users` table also has an `email` column (the staff list reads it), and `createApp` takes a fake admin client so tests can "create" and "delete" Auth users without calling Supabase.
 
 | Test | Type | What it proves |
 |------|------|----------------|
@@ -741,7 +979,17 @@ Tests need a database with PostGIS. Use a local container (the `postgis/postgis`
 | `upload.test.js` | Integration | 6 MB file gets 413. A `.txt` renamed `.jpg` gets 415. Saved image has no EXIF and is upright |
 | `categories.test.js` | Integration | All three category codes are accepted. An unknown code gets 400. The duplicate check ignores tickets of another category |
 | `dashboard.test.js` | Integration | Counts match a known set of tickets and are numbers, not strings |
-| Row-level security check | Manual, once | With the anon key, reading `tickets` through the Supabase API returns nothing |
+| `adminStaff.test.js` (Phase 14) | Integration | Officer and verifier get 403 and anonymous gets 401 on `/api/admin/*`. Create staff makes an Auth user (fake) and a `staff` row. No password in the response or audit row. Deactivate works, refuses self, last admin, and active tickets without a replacement; with a replacement the tickets move. Every write creates an `audit_log` row |
+| `adminCategories.test.js` (Phase 14) | Integration | Disabling a category removes it from `GET /api/categories`; old tickets keep it and still show on the dashboard by-category. Duplicate name gives 409. Audit rows written |
+| `schema.test.js` | Integration | Updated each migration: new tables exist, `ADMIN` is accepted by the role check, `officer_has_ward` still holds, RLS is on for every table (all tables in Phase 19) |
+| `adminAssignment.test.js` (Phase 15) | Integration | Assign moves `SUBMITTED` to `OPEN`. Reassign keeps the status. Inactive or other-ward officer gets 409. Closed and pending tickets get 409. Non-admin gets 403. Filters, paging and overdue work. A non-assigned officer gets 403 on start and action-report |
+| `ticketStateMachine.test.js` (Phase 15) | Unit | `SUBMITTED` to `OPEN` allowed, and nothing else leaves `SUBMITTED` |
+| `notifications.test.js` (Phase 16) | Integration | Each trigger creates the right rows for the right people. A user cannot list, read or mark another user's notifications (404). Unread count and mark-all work |
+| `analytics.test.js` (Phase 18) | Integration | Metrics match a known seeded set. Officer is limited to own ward (403 for another). Verifier and admin see all wards |
+| `csvExport.test.js` (Phase 18) | Unit and integration | Cells starting with `=`, `+`, `-`, `@` are prefixed. Commas, quotes and new lines are escaped. Only admin can export. Row cap holds |
+| `roleMatrix.test.js` (Phase 19) | Integration | Every route called as anonymous, officer (own and other ward), verifier and admin returns the expected status |
+| Video tests (Phase 17, optional) | Integration | Wrong type, over-size and wrong role are refused; a registered video creates a `VIDEO` media row |
+| Row-level security check | Manual, once | With the anon key, reading `tickets` through the Supabase API returns nothing. Repeat for `audit_log` and `notifications` after their migrations |
 | Demo rehearsal | Manual on a phone | Full flow in section 10 of the PRD |
 
 ---
@@ -765,6 +1013,15 @@ Tests need a database with PostGIS. Use a local container (the `postgis/postgis`
 | R24 (distance warning) | `distanceMeters`, `farWarning` in `/compare` |
 | R25 (badge) | `GET /api/officer/tickets/counts` |
 | R26 to R34 (dashboard) | `/api/dashboard/*`, section 9, `is_demo` |
+| R38 (admin role) | `staff.role = 'ADMIN'`, `requireAdmin`, sections 6 and 8 |
+| R39 (staff management) | 7.7 staff routes, section 8 (admin-created accounts) |
+| R40 (category management) | 7.7 category routes, `categories.reportable`, `sla_days` |
+| R41, R42 (admin list, assign, reassign) | 7.7 ticket routes, section 6 |
+| R43 (overdue) | `tickets.due_at`, computed on read |
+| R44, R45 (notifications) | `notifications` table, 7.8 |
+| R46, R47 (staff analytics, CSV) | 7.9, `GET /api/admin/tickets/export.csv` |
+| R48 (audit log) | `audit_log`, `writeAudit` in the same transaction, `GET /api/admin/audit-log` |
+| R49 (video, optional) | Section 10 video flow, `media.kind` |
 | R35 (standalone portal) | One Express service with its own address |
 | R36 (mock GBA site link) | `mock-gba-site/index.html` |
 | R37 (mobile browsers) | React + Tailwind, tested on a phone |
@@ -786,6 +1043,14 @@ These are the calls most likely to raise a question. Ask about any of them.
 9. **Why does the database also block closing?** If someone later adds a new route and forgets the check, the database still refuses.
 10. **Why poll the dashboard instead of live push?** A 10-second refresh looks live enough and is much simpler.
 11. **Why three categories on one flow?** Potholes and garbage need the same steps as footpath encroachment (photo, location, fix, before/after check). Each one is a database row and a label, with no new screens. One officer per ward handles all three to keep the pilot simple.
+12. **Why can the Admin not close tickets?** The "no closing without a check" rule is the point of the whole pilot. If the person who assigns tickets could also close them, the rule would have a back door. Admin and Verifier stay separate roles.
+13. **Why write the audit row in the same transaction?** If the change succeeds, the log row exists; if the change fails, no log row is left behind. There is no case where something changed without a record.
+14. **Why compute overdue on read, with a stored `due_at`?** No cron or background job is needed on Vercel. Storing `due_at` at creation keeps old tickets honest if the SLA is edited later.
+15. **Why reuse `reportable` and not add `active`?** It already means "shown on the form". Two flags for one idea would drift apart.
+16. **Why check the assigned officer, not only the ward?** Otherwise a reassignment would only change a name on screen: the old officer could still start work or submit the report.
+17. **Why in-app notifications with polling?** No mail service, no realtime server, no new library. A 30-second poll is enough for a pilot. Same reasoning as the dashboard refresh (point 10).
+18. **Why upload video straight to Supabase?** Vercel limits request bodies to 4.5 MB, so a video cannot go through Express. Express still decides who may upload, checks the result and writes the database row.
+19. **Why does the admin set the initial password?** The demo emails cannot receive mail, so an invite link cannot work, and returning a generated password would put a secret in a response. The admin types it, Express passes it on, and nothing keeps it.
 
 ---
 
@@ -804,10 +1069,20 @@ Every question from earlier versions is now decided. These are defaults chosen t
 | T4 | Anonymous citizens? | **Yes**, anonymous with rate limits. |
 | T5 | Which categories? | **Three**, all reportable: footpath encroachment, potholes / road damage, garbage dumping. Same 50 m duplicate distance for all. One officer per ward handles all three. |
 | T6 | Where do the docs and env files live? | Docs in the **project root**. Env files are **`server/.env` and `frontend/.env`**, each with a `.env.example`. |
+| T7 | Admin role (PRD Q15) | **`ADMIN`** in the staff role CHECK. `requireAdmin` guards `/api/admin/**`. Admin can never approve, reject or close. |
+| T8 | Assign and reassign (PRD Q16, Q17) | `SUBMITTED` to `OPEN` through admin assign only. Reassign changes the officer, not the status. Same ward only. Only `OPEN`, `IN_PROGRESS`, `REOPENED` can be reassigned. Writes a `status_history` row (from = to) and an audit row. |
+| T9 | Who may act on a ticket | Start and Action Taken Report need the **assigned** officer. Viewing stays ward-wide for officers. (Changes Phase 6 and 7 behaviour.) |
+| T10 | Category switch-off | Reuse **`categories.reportable`**. No `active` column. The public by-category chart lists categories that are reportable or have tickets. |
+| T11 | Staff accounts (PRD Q22) | Admin creates **officers and verifiers** through the Auth admin API, with an initial password typed by the admin and never stored, logged or returned. Staff are only deactivated, never deleted. Deactivation or ward change with unfinished tickets needs a same-ward replacement officer. An admin cannot deactivate themselves; the last active admin cannot be deactivated. |
+| T12 | Overdue (PRD Q19) | `tickets.due_at` set at creation from `sla_days` or `SLA_DEFAULT_DAYS`. Overdue is worked out on read. Old tickets have no due date. |
+| T13 | Notifications (PRD Q18) | In-app table, polled by the browser. No email, SMS or push. Created inside the existing transactions. |
+| T14 | Audit log | `audit_log` written by `writeAudit(client, entry)` in the same transaction as every admin write. Never holds passwords. |
+| T15 | CSV export | Hand-written, admin only, capped by `CSV_EXPORT_MAX_ROWS`, with formula-injection protection. No new library. |
+| T16 | Video (PRD Q20) | Optional Phase 17. Signed upload straight to a separate private bucket. Duration is checked in the browser only. Confirm limits before starting. |
 
 ---
 
-### Sources (Supabase docs and pricing, checked 29 Sept 2026)
+### Sources (Supabase docs and pricing, checked 29 Sept 2026; not re-checked for v0.4)
 
 - [PostGIS on Supabase](https://supabase.com/docs/guides/database/extensions/postgis)
 - [Storage file limits](https://supabase.com/docs/guides/storage/uploads/file-limits)

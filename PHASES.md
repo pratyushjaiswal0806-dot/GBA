@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| **Status** | Phase 13 complete; all phases done |
-| **Current phase** | None (all phases complete) |
+| **Status** | Phase 14 not started (Phases 1 to 13 complete) |
+| **Current phase** | Phase 14: Admin role, staff and category management |
 | **Reads with** | [PRD.md](PRD.md) (what), [TRD.md](TRD.md) (how, source of truth), [CLAUDE.md](CLAUDE.md) (rules) |
 
 **How to use this file**
@@ -30,8 +30,16 @@
 | 11 | Duplicate check | Reporting the same spot twice in the same category is caught, and the citizen can add support instead. | R10, R11, R12 | Complete |
 | 12 | Polish and error handling | Every screen handles loading, empty and error cases and works well on a phone. | R36, R37 | Complete |
 | 13 | Deploy | The whole demo runs on a hosted HTTPS address, from a phone, without manual fixes. | (demo readiness) | Complete |
+| 14 | Admin role, staff and category management | An admin can log in, manage staff and categories, and every admin change is audited. | R38, R39, R40, R48 | Not started |
+| 15 | Assignment and complaint management | An admin can list all tickets with filters, assign unassigned tickets, reassign others, and see overdue ones. | R41, R42, R43 | Not started |
+| 16 | Notifications (in-app) | Staff see a bell with an unread count and an inbox for the events that matter to them. | R44, R45 | Not started |
+| 17 | Video evidence (OPTIONAL, last) | A short video can be added to a report and an Action Taken Report. Only if the owner says yes. | R49 | Not started |
+| 18 | Analytics expansion (staff only) | Staff see resolution times, rejection and reopen rates, workload and age buckets, and admins can export a CSV. | R46, R47 | Not started |
+| 19 | Hardening and role-boundary review | Every route is tested for every role, RLS is checked on every table, and the docs and demo helpers are up to date. | (security and demo readiness) | Not started |
 
-Every requirement R1 to R37 sits in exactly one phase above (R23 starts in Phase 4 and every later status change keeps it true).
+Every requirement R1 to R49 sits in exactly one phase above (R23 starts in Phase 4 and every later status change keeps it true; R48 starts in Phase 14 and every later admin write keeps it true).
+
+**Execution order for Phases 14 to 19: 14, 15, 16, 18, 19, then 17 only if the owner says yes.** Phase 17 is optional and last, so the table order and the build order differ on purpose. Phase 17 needs the owner to confirm the video limits before its plan is written. Because Phase 17 may come after Phase 19, Phase 19's tests and docs must still pass without it, and Phase 17 updates them if it is built.
 
 ---
 
@@ -726,6 +734,358 @@ My host is Vercel. Check Vercel's current documentation before writing the steps
 
 ---
 
+## Phase 14: Admin role, staff and category management
+
+**Goal:** An admin can log in, manage staff and categories, and every admin change is saved in an audit log. The admin cannot close tickets.
+
+**Manual steps (I do these before starting):**
+
+1. Add `RATE_LIMIT_ADMIN_PER_MINUTE=60` to `server/.env` (copy from `server/.env.example`) and to the API project on Vercel.
+2. Confirm the demo admin email (`admin@demo.example`) and the second Ward A officer email (`officer.a2@demo.example`) are accepted by Supabase Auth, or give Claude two addresses you control. The seed uses `SEED_DEMO_PASSWORD` for both.
+3. After Claude writes migration `0004`: apply it (`supabase link`, then `supabase db push`, or paste it into the SQL Editor). Then run `npm run seed` again.
+
+**What Claude builds:**
+
+- Migration `0004_admin_audit.sql`: `ADMIN` added to the staff role CHECK (keeping `officer_has_ward`), and the `audit_log` table with RLS enabled and no policies (TRD 5.1).
+- `middleware/requireAdmin.js`; `GET /api/auth/me` returns `ADMIN`; the frontend `AuthContext` and `ProtectedRoute` accept the `ADMIN` role. The seed adds the demo admin and the second Ward A officer (password from `SEED_DEMO_PASSWORD`).
+- `modules/audit/audit.service.js`: one small helper `writeAudit(client, entry)`, used inside each admin transaction.
+- `modules/admin`: staff list, create (Supabase Auth admin API, then the `staff` row and audit row in one transaction; the Auth user is deleted again if the transaction fails), update name or ward, activate, deactivate. Deactivating (or moving to another ward) an officer with unfinished tickets needs `replacementOfficerId` (an active officer of the same ward); without it the answer is `409 STAFF_HAS_ACTIVE_TICKETS`. Cannot deactivate yourself or the last active admin. Category list, create, rename, enable and disable (sets `reportable`). `GET /api/admin/audit-log`. Routes and bodies are in TRD 7.7.
+- The password is never stored, logged, audited or returned (TRD section 8).
+- `dashboard.queries.js` by-category lists categories that are reportable **or** have tickets (the only public-dashboard change, so a disabled category does not make totals disagree).
+- The admin rate limit on `/api/admin/**`.
+- Frontend `AdminPage` (staff tab, categories tab) inside `StaffArea`, with a link for admins only. Text goes in `i18n/en.js`.
+- Test setup: the stand-in `auth.users` table gets an `email` column, and `createApp` takes a fake admin client.
+- Docs: tick this phase in PHASES.md, update the status line in `CLAUDE.md`, `AGENTS.md` and `README.md`.
+
+**Starter prompt:**
+
+```
+Read CLAUDE.md, AGENTS.md, PRD.md, TRD.md and PHASES.md fully. We are on Phase 14: Admin role, staff and category management.
+Do only this phase. Make a plan first and wait for my approval before writing any code.
+Admin cannot close tickets, approve or reject. Every admin write needs an audit_log row in the same transaction.
+No new libraries. Never log or return a password.
+```
+
+**Manual testing (I do these):**
+
+1. Sign in as the demo admin. Expected: you land in the staff area and see an **Admin** link. Officers and the verifier do not see it.
+2. As an officer, open the admin address directly. Expected: blocked (redirect or 403). Repeat as the verifier.
+3. Staff tab: create a new officer for Ward B with a 12+ character password. Expected: the person appears in the list. Sign out and sign in as them with that password. Expected: it works and they see only Ward B.
+4. In **Supabase > Authentication**, check the new user exists. In **Table Editor > audit_log**, check a `STAFF_CREATED` row exists and **no password appears anywhere in it**.
+5. Change the new officer's name. Expected: the list updates and an audit row shows before and after.
+6. Deactivate an officer who has unfinished tickets, with no replacement. Expected: a clear message with the ticket count (409), and the officer is still active.
+7. Deactivate the same officer with a replacement from the same ward (use the second Ward A officer for Ward A). Expected: it works, their unfinished tickets now show the replacement as assigned, and the old officer can no longer sign in (clear "account disabled" message).
+8. Bad input: try to deactivate yourself, then (with only one admin) try again. Expected: a clear message each time (409).
+9. Bad input: create staff with a short password, a bad email, an existing email, and role `ADMIN`. Expected: a clear message each time and no new login in Supabase.
+10. Categories tab: add a category, rename it, then disable it. Expected: it leaves the citizen report form. Existing tickets in a disabled category still show their category name, and the public dashboard category chart still counts them. Enable it again. Expected: it returns to the form.
+11. Refresh check: refresh the admin page. Expected: you stay logged in and see the same data.
+
+**Automated tests:** Role boundaries (anonymous 401; officer and verifier 403 on every `/api/admin/*` route). Create staff makes an Auth user (fake) and a `staff` row, with no password in the response or audit row. Fake-Auth failure and database failure both leave nothing behind. Deactivate: works, refuses self, last admin, and active tickets without a replacement; with a replacement the tickets move. Category: disable hides it from `GET /api/categories`, the dashboard still counts old tickets, duplicate name gives 409. Every admin write creates an `audit_log` row (and none on failure). `schema.test.js` updated: `audit_log` exists with RLS on, `ADMIN` accepted, `officer_has_ward` still refuses an officer with no ward.
+
+**Done when:**
+
+- [ ] Migration `0004` applied and `audit_log` has RLS on with no policies
+- [ ] Admin can sign in; officers and the verifier get 403 on `/api/admin/*`
+- [ ] Staff can be created, renamed, moved, deactivated and activated, never deleted
+- [ ] Deactivating an officer with unfinished tickets is refused without a replacement
+- [ ] A disabled category leaves the report form but old tickets and the dashboard keep it
+- [ ] Every admin write has an audit row in the same transaction, and no password is stored anywhere
+- [ ] `npm test` passes and the frontend build passes
+- [ ] Status lines updated in `CLAUDE.md`, `AGENTS.md`, `README.md`
+
+**Commit message:** `Phase 14: admin role, staff and category management with audit log`
+
+---
+
+## Phase 15: Assignment and complaint management
+
+**Goal:** An admin can list all tickets with filters, assign an unassigned ticket, reassign others to another officer of the same ward, and see overdue tickets.
+
+**Manual steps (I do these before starting):**
+
+1. Add `SLA_DEFAULT_DAYS=7` to `server/.env`, `server/.env.example` and the API project on Vercel.
+2. After Claude writes migration `0005`: apply it. Run `npm run seed` again so demo tickets get due dates (some in the past, so overdue shows).
+3. Make sure a ward has no active officer before testing assign (for example, deactivate the Ward C officer in Phase 14's screen, with no unfinished tickets, or use a ward you set up), so a report there becomes `SUBMITTED`.
+
+**What Claude builds:**
+
+- Migration `0005_sla_due_date.sql`: `categories.sla_days` (nullable) and `tickets.due_at` (nullable), with an index (TRD 5.1). Report creation sets `due_at` from the category's `sla_days` or `SLA_DEFAULT_DAYS`. The admin category screen gets an SLA field.
+- State machine: `SUBMITTED` to `OPEN` allowed, reachable only from the admin assign route. `ticketStateMachine.test.js` updated.
+- Officer `start` and `action-report` now require the **assigned** officer (403 otherwise). Viewing stays ward-wide.
+- `GET /api/admin/tickets` (filters: ward, category, status, officer, unassigned, overdue, date range; sorting; pages), `POST /api/admin/tickets/:id/assign`, `POST /api/admin/tickets/:id/reassign` (TRD 7.7). Row lock plus transaction; the target officer must be active, an officer, and in the ticket's ward; writes `status_history` with a reason and an `audit_log` row. Deactivate-with-replacement (Phase 14) uses the same reassign code.
+- Overdue is computed on read (`due_at < now()` and status not `CLOSED`). No cron or background job. `GET /api/tickets/:id` also returns `dueAt` and `isOverdue`.
+- Admin rate limit on the new routes.
+- Frontend `AdminTicketsPage`: table with filters and paging, an overdue badge, a ticket detail with an assign or reassign control (read-only otherwise), and the timeline shows "Reassigned". Text in `i18n/en.js`.
+- Docs: PHASES.md, status lines.
+
+**Starter prompt:**
+
+```
+Read CLAUDE.md, AGENTS.md, PRD.md, TRD.md and PHASES.md fully. We are on Phase 15: Assignment and complaint management.
+Do only this phase. Make a plan first and wait for my approval before writing any code.
+SUBMITTED to OPEN is allowed only through the admin assign route. Reassign must not change the status.
+Closing stays verifier-only. No route may set a status directly.
+```
+
+**Manual testing (I do these):**
+
+1. Sign in as the admin and open the ticket list. Expected: tickets from all wards, with status, ward, officer, due date and an overdue badge on the late ones.
+2. Use each filter (ward, category, status, officer, unassigned, overdue, date range) and the sort. Expected: the list changes to match, and the total changes with it. Compare with **Table Editor > tickets**.
+3. Report an issue in a ward with no active officer. Expected: it shows as `SUBMITTED` and unassigned. Assign it to a new officer of that ward. Expected: status `OPEN`, the officer sees it in their list, and the timeline shows the assignment.
+4. Reassign an `OPEN` ticket in Ward A from the first officer to the second. Expected: status unchanged, the timeline shows "Reassigned" with a reason, the old officer no longer has it as theirs, and the new one does.
+5. As the **old** officer, try to start work on that ticket (open its address). Expected: refused (403). As the new officer: **Start work** works.
+6. Bad input: assign a ticket to an inactive officer, to an officer of another ward, and to a verifier. Expected: a clear 409 each time and no change.
+7. Bad input: try to reassign a `CLOSED` ticket and a `PENDING_VERIFICATION` ticket, and try to assign a ticket that is not `SUBMITTED`. Expected: 409 each time.
+8. As an officer or verifier, call the admin routes (Claude gives you a command). Expected: 403.
+9. Database check: `status_history` has the assignment and reassignment rows and `audit_log` has `TICKET_ASSIGNED` and `TICKET_REASSIGNED` rows.
+10. Set an SLA on a category, then report in it. Expected: the new ticket's `due_at` is created time plus that many days. Older tickets are unchanged.
+11. Refresh check: refresh the list with filters set. Expected: it loads clean.
+
+**Automated tests:** Assign moves `SUBMITTED` to `OPEN` and writes history, audit and (later) notification rows. Reassign keeps the status. Inactive, non-officer and other-ward targets give 409. Closed and pending tickets cannot be reassigned (409). Assign on a non-`SUBMITTED` ticket gives 409. Non-admin gets 403, anonymous 401. A non-assigned officer gets 403 on start and action-report. Filters, sort and paging return the right rows. Overdue only for unfinished tickets with a past `due_at`. Old tickets with `due_at = NULL` are never overdue. State machine: only `SUBMITTED` to `OPEN` was added. Two simultaneous assigns: one wins, one gets 409.
+
+**Done when:**
+
+- [ ] Migration `0005` applied; new tickets get a due date
+- [ ] Admin ticket list filters, sorts and pages correctly
+- [ ] Assign (`SUBMITTED` to `OPEN`) and reassign (status unchanged) work, with history and audit rows
+- [ ] Inactive or other-ward officers, closed and pending tickets are refused (409)
+- [ ] The old officer can no longer act on a reassigned ticket
+- [ ] Overdue badge and filter work, with no background job
+- [ ] `npm test` passes and the frontend build passes
+- [ ] Status lines updated in `CLAUDE.md`, `AGENTS.md`, `README.md`
+
+**Commit message:** `Phase 15: admin ticket list, assign and reassign, SLA due dates and overdue flag`
+
+---
+
+## Phase 16: Notifications (in-app)
+
+**Goal:** Staff see a bell with an unread count and an inbox for the events that matter to them. No email, SMS or push.
+
+**Manual steps (I do these before starting):**
+
+1. Add `RATE_LIMIT_NOTIFICATIONS_PER_MINUTE=60` to `server/.env`, `server/.env.example` and the API project. Add `VITE_NOTIFICATION_POLL_SECONDS=30` to `frontend/.env`, `frontend/.env.example` and the frontend project on Vercel.
+2. After Claude writes migration `0006`: apply it.
+
+**What Claude builds:**
+
+- Migration `0006_notifications.sql`: `notifications` table, index on `(recipient_id, read_at)`, RLS enabled with no policies (TRD 5.1).
+- `modules/notifications`: a small `createNotification(client, {...})` helper called **inside the existing transactions**, and the four routes in TRD 7.8: list mine, unread count, mark one read, mark all read. Every query is limited to the signed-in user; another person's id gives 404.
+- Triggers (TRD 7.8): new ticket in ward and ticket assigned or reassigned (officer), action report submitted (all active verifiers), reopened (officer), closed (assigned officer), unassigned ticket created (all active admins).
+- Notification rate limit.
+- Frontend: `NotificationBell` in the staff header with the unread count, a simple inbox page, polling every `VITE_NOTIFICATION_POLL_SECONDS` seconds (no realtime, no new library), polling pauses in a hidden tab. Clicking a notification marks it read and opens the ticket.
+- R25 badge: Claude proposes in the plan whether the bell replaces the officer badge (`/api/officer/tickets/counts`) or both stay. I decide.
+- Docs: PHASES.md, status lines.
+
+**Starter prompt:**
+
+```
+Read CLAUDE.md, AGENTS.md, PRD.md, TRD.md and PHASES.md fully. We are on Phase 16: Notifications (in-app).
+Do only this phase. Make a plan first and wait for my approval before writing any code.
+Create notification rows inside the existing service transactions. Poll, no realtime, no new library.
+Tell me in the plan whether the bell should replace the R25 badge.
+```
+
+**Manual testing (I do these):**
+
+1. Report a new issue in Ward A. Sign in as the Ward A officer. Expected: the bell shows 1 unread and the inbox has a "new ticket in your ward" message.
+2. Report an issue in a ward with no active officer. Sign in as the admin. Expected: an "unassigned ticket" notification.
+3. As the admin, assign it, and reassign another ticket. Expected: the new officer gets a notification each time.
+4. As the officer, submit an Action Taken Report. Sign in as the verifier. Expected: an "action report submitted" notification.
+5. As the verifier, reject one ticket and approve another. Expected: the assigned officer gets "reopened" and "closed" notifications.
+6. Click a notification. Expected: it opens the ticket and the unread count goes down by one. Use **Mark all read**. Expected: the count is 0.
+7. Polling: keep a staff page open, then cause an event in another window. Expected: the bell updates within the poll interval without a reload. Switch tabs: polling pauses while the tab is hidden.
+8. Privacy: as the Ward B officer, check you never see Ward A's notifications. Ask Claude for a command that marks another user's notification as read. Expected: 404.
+9. Failure case: a failed action (for example a 409 on a second approve) creates no new notification (check **Table Editor > notifications**).
+10. Stop the server while the page is open. Expected: the bell keeps the last count, and recovers when the server is back.
+11. Refresh check: refresh any staff page. Expected: the bell count is right immediately.
+
+**Automated tests:** Each trigger creates the right rows for the right recipients (and only those). A failed transaction creates none. A user cannot list or mark another user's notifications (404). Unread count, mark-one, mark-twice (keeps the first time) and mark-all work. Anonymous gets 401. Notification rate limit gives 429. `schema.test.js`: `notifications` exists with RLS on.
+
+**Done when:**
+
+- [ ] Migration `0006` applied and `notifications` has RLS on with no policies
+- [ ] All seven triggers create the right notifications inside the existing transactions
+- [ ] The bell, count and inbox work for officer, verifier and admin, with polling
+- [ ] A user can only see and change their own notifications
+- [ ] The R25 badge decision is recorded
+- [ ] `npm test` passes and the frontend build passes
+- [ ] Status lines updated in `CLAUDE.md`, `AGENTS.md`, `README.md`
+
+**Commit message:** `Phase 16: in-app notifications with bell, inbox and polling`
+
+---
+
+## Phase 18: Analytics expansion (staff only)
+
+**Goal:** Staff see resolution times, reopen and rejection rates, officer workload, overdue counts and age buckets, and admins can export the ticket list as CSV. The public dashboard stays unchanged.
+
+(Phase 18 is built before Phase 17. Phase 17 is optional and last.)
+
+**Manual steps (I do these before starting):**
+
+1. Add `CSV_EXPORT_MAX_ROWS=5000` to `server/.env`, `server/.env.example` and the API project.
+2. Run `npm run seed` if Claude's plan says the seed needs more demo history (for example closed, reopened and rejected tickets with different times) so the charts are not empty.
+
+**What Claude builds:**
+
+- `modules/analytics`: `analytics.queries.js` and `analytics.routes.js` with the six routes in TRD 7.9 (resolution time average and median by ward and category, reopen rate, rejection rate, officer workload, overdue count, open tickets by age). Optional `wardId`, `from` and `to`. Admin and verifier see all wards; an officer is limited to their own ward (another ward gives 403).
+- `modules/admin/csv.js` and `GET /api/admin/tickets/export.csv`: written by hand, same filters as the admin list, capped by `CSV_EXPORT_MAX_ROWS`, with formula-injection protection (cells starting with `=`, `+`, `-` or `@` get a prefix) and proper escaping.
+- The public `/api/dashboard/*` routes and page are not touched.
+- Frontend: `AnalyticsPage` for staff, reusing the existing chart components, with ward and date filters; an **Export CSV** button on the admin ticket list. The link shows for the roles that may use it.
+- Docs: PHASES.md, status lines.
+
+**Starter prompt:**
+
+```
+Read CLAUDE.md, AGENTS.md, PRD.md, TRD.md and PHASES.md fully. We are on Phase 18: Analytics expansion (staff only).
+Do only this phase. Make a plan first and wait for my approval before writing any code.
+Keep the public dashboard aggregate-only and unchanged. Write the CSV by hand, no new library.
+```
+
+**Manual testing (I do these):**
+
+1. Sign in as the admin and open Analytics. Expected: all six metrics show, for all wards.
+2. Check two numbers against the database by hand: the average resolution time for one ward (closed tickets, `closed_at - created_at`) and the overdue count. Expected: they match.
+3. Apply a ward filter and a date range. Expected: the numbers change and make sense.
+4. Sign in as a Ward A officer. Expected: only Ward A numbers. Ask Claude for a command that requests Ward B's analytics as that officer. Expected: 403.
+5. Sign in as the verifier. Expected: all wards.
+6. Open the public dashboard. Expected: unchanged.
+7. As the admin, export the CSV with a filter. Expected: a file opens in a spreadsheet with the right rows and columns.
+8. Formula check: create a ticket whose description starts with `=1+1` (or ask Claude for a safe test). Export. Expected: the cell shows as text, not as a formula.
+9. Try the export as an officer and as the verifier. Expected: 403.
+10. Bad input: a bad date, `from` after `to`, and an unknown sort value. Expected: 400 in the standard shape.
+11. Refresh check: reload the analytics page with filters. Expected: loads clean.
+
+**Automated tests:** Each metric matches a known seeded set (including the median, a ward with no closed tickets, and zero values). Reopen and rejection rates handle a zero denominator. Officer scoping (own ward only, 403 for another). Verifier and admin see all wards. Anonymous 401. CSV: formula prefix for `=`, `+`, `-`, `@`; commas, quotes and new lines escaped; row cap; only admin allowed; same filters as the list. Public dashboard tests still pass unchanged.
+
+**Done when:**
+
+- [ ] The six staff metrics are correct against seeded data
+- [ ] Admin and verifier see all wards; an officer sees only their own
+- [ ] CSV export works, is capped, and is safe against formula injection
+- [ ] The public dashboard is unchanged
+- [ ] `npm test` passes and the frontend build passes
+- [ ] Status lines updated in `CLAUDE.md`, `AGENTS.md`, `README.md`
+
+**Commit message:** `Phase 18: staff analytics and CSV export`
+
+---
+
+## Phase 19: Hardening and role-boundary review
+
+**Goal:** Every route is tested for every role, RLS is confirmed on every table, rate limits cover the new routes, and the demo helpers and docs are up to date.
+
+**Manual steps (I do these before starting):**
+
+1. In Supabase, check the project is not paused.
+2. Have the demo logins ready: admin, verifier, the three officers and the second Ward A officer.
+
+**What Claude builds:**
+
+- `roleMatrix.test.js`: a role-by-route table that calls **every** route as anonymous, officer (own ward and another ward), verifier and admin, and checks the expected status code. A new route without a row in the table fails the test.
+- `schema.test.js`: RLS is enabled on **every** table, including `audit_log` and `notifications`, with no policies.
+- Rate limits on admin and notification routes confirmed; error shapes follow `errorHandler` everywhere (including the CSV route and the 404 and 403 cases).
+- `seed.js` and `reset-demo.sql` updated for the new tables, the demo admin and the second officer (reset also clears notifications and `audit_log`). The script and README say that **Storage files are still not removed**.
+- Final doc sweep: README (demo logins, demo script steps for admin), TRD known limits, PHASES.md, PRD traceability and the demo script in PRD section 10 (add an optional admin step).
+- Fixes for anything the matrix finds. No new features.
+
+**Starter prompt:**
+
+```
+Read CLAUDE.md, AGENTS.md, PRD.md, TRD.md and PHASES.md fully. We are on Phase 19: Hardening and role-boundary review.
+Do only this phase. Make a plan first and wait for my approval before writing any code.
+Build the role-by-route matrix test first, tell me what it finds, then fix. No new features.
+```
+
+**Manual testing (I do these):**
+
+1. Run `npm test` in `server/`. Expected: everything passes, including the role matrix.
+2. Public-key check (Phase 2 command), now for `tickets`, `staff`, `audit_log` and `notifications`. Expected: no rows from any of them.
+3. In the Supabase dashboard, check each table shows RLS enabled and no policies.
+4. Walk the whole demo script on a phone, including the admin steps: sign in as admin, assign a `SUBMITTED` ticket, reassign one, watch the officer's bell, close it as the verifier. Expected: no error screens.
+5. Try to close a ticket as the admin (Claude gives you a command). Expected: 403, and no route sets a status directly.
+6. Rate limits: hit an admin route and the notification route repeatedly (Claude gives a command). Expected: 429 in the standard shape.
+7. Run `reset-demo.sql`. Expected: live tickets, notifications and audit rows are gone, and seed tickets, staff and the demo admin stay. Storage files remain (as documented).
+8. Read the README demo logins and steps. Expected: they work exactly as written.
+
+**Automated tests:** The role matrix, the all-tables RLS check, the rate-limit checks for admin and notification routes, an error-shape check for admin and notification errors, and the updated reset-script test.
+
+**Done when:**
+
+- [ ] Role matrix test covers every route and passes
+- [ ] RLS is on for every table, with no policies, checked by a test
+- [ ] Admin and notification routes are rate limited and use the standard error shape
+- [ ] `seed.js`, `reset-demo.sql` and the README match the new tables and logins
+- [ ] Docs sweep done (README, TRD known limits, PHASES.md, PRD traceability)
+- [ ] `npm test` passes and the frontend build passes
+- [ ] Status lines updated in `CLAUDE.md`, `AGENTS.md`, `README.md`
+
+**Commit message:** `Phase 19: role-boundary tests, RLS check, rate limits and final doc sweep`
+
+---
+
+## Phase 17: Video evidence (OPTIONAL, build last, only after the owner says yes)
+
+**Goal:** A short video can be added to a citizen report and to an Action Taken Report, uploaded straight to Supabase Storage. A photo is still required.
+
+**Before this phase:** Claude asks the owner to confirm the limits first. Proposed: MP4, MOV or WebM; 20 MB; 20 seconds; one video per report and per Action Taken Report; citizen reports included (anonymous uploads carry more abuse risk than officer uploads, so the owner may choose officers only). The owner must also confirm the storage risk: the free plan has 1 GB.
+
+**Manual steps (I do these before starting):**
+
+1. Say **yes** to starting this phase, and confirm or change the limits above.
+2. In Supabase, create a second **private** bucket named `ticket-videos`. Set its file size limit to the video limit and its allowed types to `video/mp4`, `video/quicktime`, `video/webm`.
+3. Add `SUPABASE_VIDEO_BUCKET`, `MAX_VIDEO_MB`, `MAX_VIDEO_SECONDS` to `server/.env`, `server/.env.example` and the API project. Add `VITE_MAX_VIDEO_MB` and `VITE_MAX_VIDEO_SECONDS` to the frontend settings.
+4. After Claude writes migration `0007`: apply it.
+5. Have a short MP4 or MOV, one over the size limit, one over the length limit, and a text file renamed `.mp4`.
+
+**What Claude builds:**
+
+- Migration `0007_media_kind.sql`: `media.kind` (`PHOTO` or `VIDEO`) with the constraints in TRD 5.1 (type, one video per report or action report).
+- Signed-upload flow (TRD section 10): an upload-ask route that checks type, size and role and rate limits, then returns a signed upload token; the browser uploads straight to Storage (Vercel's 4.5 MB request limit); the report or action-report request includes `videoPath`; Express checks the real object size and type in Storage and writes the `media` row in the same transaction.
+- Duration is checked in the browser only (the server cannot verify it without a new library). Say so in the plan.
+- A plain `<video controls>` player with a signed link, on the ticket detail, `ComparePage` and `ActionReportPage` (and the report form if citizens are included). No poster frame.
+- The privacy notice now says videos are stored as uploaded and hidden data (such as location) is not removed. `en.js` updated.
+- Update `roleMatrix.test.js`, `schema.test.js`, README and TRD known limits.
+
+**Starter prompt:**
+
+```
+Read CLAUDE.md, AGENTS.md, PRD.md, TRD.md and PHASES.md fully. We are on Phase 17: Video evidence (optional).
+I confirm: build it. Limits: <fill in: types, MB, seconds, who may upload>.
+Do only this phase. Make a plan first and wait for my approval before writing any code.
+No new libraries. A photo is still required. Videos go straight to Supabase Storage with a signed upload URL.
+```
+
+**Manual testing (I do these):**
+
+1. As an officer, submit an Action Taken Report with 1 photo and 1 short video. Expected: it works, the status becomes Pending Verification, and the video plays on the detail page.
+2. As the verifier, open the compare page. Expected: the video plays beside the photos.
+3. As a citizen (if included), report with a photo and a video. Expected: a ticket code, and the officer sees the video.
+4. Bad input: a video over the size limit, over the length limit, a text file renamed `.mp4`, and a second video. Expected: a clear message each time and no ticket or status change.
+5. Try an upload-ask as the wrong role (for example the verifier asking for an action-report upload). Expected: 403.
+6. Skip the video. Expected: photo-only reports and Action Taken Reports still work exactly as before.
+7. Database and Storage check: `media` has a `VIDEO` row; the file is in `ticket-videos`. The privacy notice mentions video.
+8. Phone check: record a video on a phone and upload it on the live address. Expected: it works within the limits.
+9. Refresh check: refresh a ticket with a video. Expected: the player still works (new signed link).
+
+**Automated tests:** Wrong type, over-size, missing object and a second video are refused. Wrong role gets 403. Rate limit gives 429. A registered video creates a `VIDEO` media row in the same transaction as the report. Photo-only paths are unchanged. `schema.test.js` covers the new constraints.
+
+**Done when:**
+
+- [ ] Owner confirmed yes and the limits
+- [ ] Migration `0007` applied and the video bucket exists with its limits
+- [ ] A video can be added to an Action Taken Report (and a report, if included) within the limits
+- [ ] Wrong type, size and role are refused
+- [ ] ComparePage and ActionReportPage show and accept video; photo-only still works
+- [ ] Privacy notice and known limits (no duration check on the server, unused files, hidden data) updated
+- [ ] `npm test` passes and the frontend build passes
+- [ ] Status lines updated in `CLAUDE.md`, `AGENTS.md`, `README.md`
+
+**Commit message:** `Phase 17: optional video evidence with signed uploads`
+
+---
+
 ## Environment variables needed across the project (names only)
 
 **Server (`server/.env`, never committed; template `server/.env.example`):**
@@ -748,6 +1108,13 @@ My host is Vercel. Check Vercel's current documentation before writing the steps
 | `SEED_DEMO_PASSWORD` | Phase 2 |
 | `TEST_DATABASE_URL` (local test database only) | Phase 2 |
 | `FRONTEND_ORIGINS` | Phase 13 |
+| `RATE_LIMIT_ADMIN_PER_MINUTE` | Phase 14 |
+| `SLA_DEFAULT_DAYS` | Phase 15 |
+| `RATE_LIMIT_NOTIFICATIONS_PER_MINUTE` | Phase 16 |
+| `CSV_EXPORT_MAX_ROWS` | Phase 18 |
+| `SUPABASE_VIDEO_BUCKET` (optional) | Phase 17 |
+| `MAX_VIDEO_MB` (optional) | Phase 17 |
+| `MAX_VIDEO_SECONDS` (optional) | Phase 17 |
 
 **Frontend (`frontend/.env`, never committed; template `frontend/.env.example`; public values only):**
 
@@ -758,6 +1125,9 @@ My host is Vercel. Check Vercel's current documentation before writing the steps
 | `VITE_MAP_TILE_URL` | Phase 3 |
 | `VITE_API_BASE_URL` | Phase 13 |
 | `VITE_MAX_UPLOAD_MB` | Phase 13 |
+| `VITE_NOTIFICATION_POLL_SECONDS` | Phase 16 |
+| `VITE_MAX_VIDEO_MB` (optional) | Phase 17 |
+| `VITE_MAX_VIDEO_SECONDS` (optional) | Phase 17 |
 
 The host (Phase 13) needs the same server names as its environment variables, plus the `VITE_` names available at build time.
 
@@ -781,3 +1151,21 @@ I did not guess these. Where a phase above had to assume something, I say what.
 12. **Demo emails.** **Resolved:** use the four illustrative `demo.example` addresses with email confirmation enabled by the seed. If the Supabase project rejects them, replace them in the seed script with four addresses you control.
 13. **Install commands.** CLAUDE.md lists Install as TODO, and the TRD has no root `package.json`. Phase 1 assumes two separate installs (`npm install` in `server/` and in `frontend/`). OK?
 14. **Should and Could items.** R25 (badges, Could) is in Phase 5 and R12 (support count, Could) is in Phase 11. If time is short, they can be dropped without breaking the main demo. Do you agree to keep them in?
+
+### Phases 14 to 19: questions and decisions (2 October 2026)
+
+Answered by the owner ("all recommended") before the docs were changed. Recorded here and in PRD Q15 to Q22 and TRD T7 to T16.
+
+15. **Disabled categories.** **Resolved:** reuse `categories.reportable`, no `active` column. The public by-category chart lists categories that are reportable or have tickets.
+16. **Reassignment scope.** **Resolved:** same ward only, only for `OPEN`, `IN_PROGRESS` and `REOPENED` tickets. A second Ward A officer is added to the demo seed. (Slightly stretches PRD Q11, demo data only.)
+17. **Assigned officer rule.** **Resolved:** start and Action Taken Report need the assigned officer. This changes Phase 6 and 7 behaviour and is done in Phase 15.
+18. **Initial passwords.** **Resolved:** the admin types an initial password (12+ characters); it is never stored, logged, audited or returned. No email invite. Known limit: no change-password screen.
+19. **Who an admin can create.** **Resolved:** officers and verifiers only. Admins come from the seed or the Supabase dashboard.
+20. **Deactivation with unfinished tickets.** **Resolved:** refused without a same-ward replacement officer; the replacement takes the tickets. The same rule applies to a ward change.
+21. **Reassign history and SLA.** **Resolved:** reassignment writes a `status_history` row with from = to. `SLA_DEFAULT_DAYS` is used when a category has no SLA; old tickets have no due date.
+22. **CSV export.** **Resolved:** admin only.
+23. **R25 badge.** **Open on purpose:** decided in the Phase 16 plan.
+24. **Video (Phase 17).** **Open until the owner says yes:** the limits, whether citizen reports are included, and the free-plan storage risk. The server cannot check video duration without a new library; the browser check is the only duration limit.
+25. **Docs drift fixed in Stage 1.** `AGENTS.md` had the heading `# CLAUDE.md` and an old status; it is now identical to `CLAUDE.md`. TRD section 4 said `app.js` (the code uses `application.js`) and did not list the `officer` and `verifier` modules.
+26. **Not yet verified.** The Supabase Auth admin API call shape (`auth.admin.createUser`) and the signed-upload API for video have not been re-checked against current docs; Claude checks them when the phase plan is written. A free-plan check of Supabase limits (TRD section 3) was not repeated.
+27. **Manual items from Phase 13 still open:** the backup screen recording, the roadmap slide, and the Supabase pause check.

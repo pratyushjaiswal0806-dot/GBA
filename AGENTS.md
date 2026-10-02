@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-> Implementation status: Phase 12 complete; Phase 13 deployment pending.
+> Implementation status: Phase 13 complete (deployed on Vercel). Phases 14 to 19 approved, not started (Phase 14 is next; Phase 17 is optional and last).
 
 Rules for working on this project. Read this at the start of every session.
 
@@ -10,13 +10,14 @@ GBA Civic Issue Tracker (pilot): a small, separate web portal with one shared fl
 footpath encroachment (main demo), potholes / road damage, and garbage dumping.
 A citizen reports with a photo and automatic location. A ward officer fixes it and uploads an Action
 Taken Report. A verifier compares before/after photos, and only then can the ticket close.
+An admin manages staff, categories and ticket assignment, but cannot close tickets.
 A public dashboard shows demo data. This is a prototype for a presentation: no real data, no real users.
 
 ## 2. Docs to read
 
 Before starting ANY task, read these in full:
 
-- [PRD.md](PRD.md): what to build (requirements R1 to R37, out of scope, demo script)
+- [PRD.md](PRD.md): what to build (requirements R1 to R49, out of scope, demo script)
 - [TRD.md](TRD.md): how to build it. **TRD.md is the source of truth for the stack, data model and API routes.**
 - [PHASES.md](PHASES.md): the phase plan and which phase is current
 
@@ -29,9 +30,14 @@ If any of these files is missing or unclear, stop and tell me. Do not guess what
 - Frontend: React + Vite (JavaScript) with Tailwind, Leaflet and Recharts, in `frontend/`.
 - Supabase: Postgres + PostGIS, Auth (staff login only), Storage (private bucket `ticket-media`).
 - Express serves `/api` and the built frontend. The browser talks to Supabase only to sign in.
-- Server code is grouped by feature in `server/src/modules/` (tickets, media, wards, geo, dashboard).
+- Server code is grouped by feature in `server/src/modules/`: tickets, actionReports, officer, verifier,
+  media, wards, geo, dashboard, auth, plus (Phases 14 to 18) admin, audit, notifications and analytics.
+  `analytics` is staff-only and separate from the public `dashboard`.
 - Database changes are SQL files in `supabase/migrations/`. Mock GBA site is in `mock-gba-site/`.
-- The three categories are rows in the `categories` table. One officer per ward handles all three.
+- The three categories are rows in the `categories` table. One officer per ward handles all three
+  (the demo may add a second officer in one ward to show reassignment).
+- Roles: `OFFICER` (own ward), `VERIFIER` (all wards, closes tickets), `ADMIN` (all wards, manages staff,
+  categories and assignment, never closes or approves). Citizens and the public have no account.
 - Docs sit in the project root. Env files: `server/.env` and `frontend/.env`, each with a `.env.example`.
 - Libraries named in the TRD are approved: zod, multer, sharp, express-rate-limit, helmet, Vitest, Supertest.
 
@@ -65,12 +71,16 @@ Never invent a command. If one is missing, write TODO.
   Frontend gets only public `VITE_` values.
 - Every new table gets `ENABLE ROW LEVEL SECURITY` with no policies (TRD section 8).
 - Closing a ticket is enforced on the server. Never add a route that sets a ticket status directly.
+- Admin routes need `requireAdmin`. Every admin write creates an audit_log row in the same transaction.
+  No route sets ticket status directly except the existing state-machine paths.
 
 ## 7. Working rules
 
 - Work on the current phase only. Do not build ahead.
 - Do not add new libraries or change the stack without asking me.
-- Do not build anything listed as out of scope in the PRD.
+- Do not build anything listed as out of scope in the PRD. The Phase 14 to 19 scope (admin, notifications,
+  staff analytics, and optional video) is approved, and the out-of-scope list in the updated PRD
+  section 3 is the one that applies.
 - If the code needs to differ from the TRD, stop and ask me first, then update the TRD.
 - Before writing code for a phase, give me a plan and wait for my approval.
 - After each phase, tell me what to test manually, and what you skipped or are unsure about.
