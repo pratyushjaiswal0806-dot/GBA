@@ -6,7 +6,7 @@ function formatValue(value) {
 
 export function LocationSummary({ location, loading }) {
   if (loading) {
-    return <p className="mt-4 text-sm text-slate-500" role="status">{text.report.locationLoading}</p>;
+    return <p className="mt-4 text-sm text-slate-600" role="status">{text.report.locationLoading}</p>;
   }
 
   if (!location) {
@@ -28,15 +28,15 @@ export function LocationSummary({ location, loading }) {
     <div className="location-summary mt-4" role="status">
       <dl className="grid gap-2 sm:grid-cols-3">
         <div>
-          <dt className="font-medium text-emerald-800">{text.report.ward}</dt>
+          <dt className="font-medium text-blue-900">{text.report.ward}</dt>
           <dd>{location.ward.name}</dd>
         </div>
         <div>
-          <dt className="font-medium text-emerald-800">{text.report.street}</dt>
+          <dt className="font-medium text-blue-900">{text.report.street}</dt>
           <dd>{formatValue(location.street)}</dd>
         </div>
         <div>
-          <dt className="font-medium text-emerald-800">{text.report.area}</dt>
+          <dt className="font-medium text-blue-900">{text.report.area}</dt>
           <dd>{formatValue(location.area)}</dd>
         </div>
       </dl>

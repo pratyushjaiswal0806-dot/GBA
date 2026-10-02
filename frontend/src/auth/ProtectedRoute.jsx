@@ -10,7 +10,7 @@ function AccessNotice({ message }) {
     <main className="portal-page px-4 sm:px-6">
       <section className="portal-card portal-card--padded mx-auto max-w-lg">
         <h1 className="portal-section-title">{text.auth.accessTitle}</h1>
-        <p className="portal-copy mt-2 text-sm">{message}</p>
+        <p className="portal-copy mt-2">{message}</p>
         <button className="portal-button mt-5" onClick={() => signOut()} type="button">
           {text.auth.logOut}
         </button>

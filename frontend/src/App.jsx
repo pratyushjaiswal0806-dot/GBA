@@ -5,36 +5,20 @@ import { TrackPage } from './pages/TrackPage.jsx';
 import { NotFoundPage } from './pages/NotFoundPage.jsx';
 import { text } from './i18n/en.js';
 import { PortalChrome } from './components/PortalChrome.jsx';
+import { AppLink } from './components/AppLink.jsx';
+import { HeroIllustration } from './components/HeroIllustration.jsx';
+import { Icon } from './components/Icon.jsx';
 
-const initialHealth = { state: 'loading', data: null, error: null };
+const stepIcons = ['camera', 'user', 'check', 'shield'];
 const initialCategories = { state: 'loading', data: [], error: null };
 const StaffArea = lazy(() => import('./StaffArea.jsx'));
 const DashboardPage = lazy(() => import('./pages/DashboardPage.jsx'));
 
-function StatusLine({ label, value }) {
-  return (
-    <div className="health-row">
-      <span className="health-row__label">{label}</span>
-      <span className="health-row__value">{value}</span>
-    </div>
-  );
-}
-
 function HomePage() {
-  const [health, setHealth] = useState(initialHealth);
   const [categories, setCategories] = useState(initialCategories);
 
   useEffect(() => {
     const controller = new AbortController();
-
-    async function loadHealth() {
-      try {
-        const data = await requestJson('/api/health', { signal: controller.signal });
-        setHealth({ state: 'ready', data, error: null });
-      } catch (error) {
-        if (error.name !== 'AbortError') setHealth({ state: 'error', data: null, error: error.message || text.health.error });
-      }
-    }
 
     async function loadCategories() {
       try {
@@ -45,69 +29,85 @@ function HomePage() {
       }
     }
 
-    loadHealth();
     loadCategories();
     return () => controller.abort();
   }, []);
 
-  const isReady = health.state === 'ready';
-  const isDatabaseReady = isReady && health.data.database === 'ok';
-  const isDegraded = isReady && !isDatabaseReady;
-  const serverValue = isReady ? text.health.ok : health.state === 'loading' ? text.health.checking : text.health.notReachable;
-  const databaseValue = isReady ? health.data.database === 'ok' ? text.health.ok : text.health.down : health.state === 'loading' ? text.health.checking : text.health.unknown;
-  const healthTone = isDatabaseReady ? 'health-state--good' : 'health-state--warn';
-
   return (
-    <main className="portal-page portal-page--home px-4 sm:px-6">
-      <section className="home-page-width">
-        <header className="home-heading">
-          <div className="home-heading__copy">
+    <main className="portal-page portal-page--home">
+      <section className="hero">
+        <div className="hero__inner">
+          <div>
             <p className="portal-kicker">{text.app.eyebrow}</p>
-            <h1>{text.app.title}</h1>
-            <p>{text.app.description}</p>
+            <h1>{text.home.heroTitle} <span>{text.home.heroTitleAccent}</span></h1>
+            <p className="hero__lead">{text.home.heroDescription}</p>
+            <div className="hero__actions">
+              <a className="portal-button" href="#report">{text.home.reportAction}<Icon name="arrow" size={18} /></a>
+              <AppLink className="portal-button-secondary" href="/track">{text.home.trackAction}</AppLink>
+            </div>
+            <ul className="hero__chips">
+              {text.home.chips.map((chip) => <li key={chip}><Icon name="check" size={16} />{chip}</li>)}
+            </ul>
           </div>
+          <HeroIllustration />
+        </div>
+      </section>
+
+      <div className="home-page-width px-4 sm:px-6">
+        <section aria-labelledby="how-it-works-title" className="home-section home-steps">
+          <h2 className="home-section__title" id="how-it-works-title">{text.home.howTitle}</h2>
+          <ol>
+            {text.home.steps.map((step, index) => (
+              <li key={step.title}>
+                <span aria-hidden="true" className="home-steps__count">{index + 1}</span>
+                <span className="icon-chip"><Icon name={stepIcons[index]} /></span>
+                <strong>{step.title}</strong>
+                <span>{step.description}</span>
+              </li>
+            ))}
+          </ol>
           <div className="home-promise">
+            <span className="icon-chip"><Icon name="shield" /></span>
             <p><strong>{text.portal.promiseTitle}</strong>{text.portal.promiseDescription}</p>
           </div>
-        </header>
+        </section>
 
-        <div className="home-grid">
+        <div className="home-grid home-section">
           <ReportPage categories={categories} />
           <aside className="home-sidebar">
-            <section aria-labelledby="system-status-title" className="home-sidebar__panel">
-              <header className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <h2 id="system-status-title">{text.health.title}</h2>
-                  <p className="mt-1 text-sm leading-relaxed text-slate-600">{text.health.description}</p>
-                </div>
-                <span className={`health-state ${healthTone}`}>
-                  {isDatabaseReady ? text.health.ready : isDegraded ? text.health.degraded : health.state === 'error' ? text.health.offline : text.health.checking}
-                </span>
-              </header>
-              <div className="mt-3">
-                <StatusLine label={text.health.server} value={serverValue} />
-                <StatusLine label={text.health.database} value={databaseValue} />
-              </div>
-              {health.error && <p className="portal-alert mt-3" role="alert">{text.health.error}</p>}
+            <section aria-labelledby="home-track-title" className="home-sidebar__panel">
+              <span className="icon-chip"><Icon name="search" /></span>
+              <h2 className="mt-3" id="home-track-title">{text.home.trackTitle}</h2>
+              <p className="mt-1 text-slate-700">{text.home.trackDescription}</p>
+              <AppLink className="portal-button-secondary mt-4 w-full" href="/track">{text.home.trackAction}</AppLink>
             </section>
-
-            <section aria-labelledby="report-categories-title" className="home-sidebar__panel">
-              <h2 id="report-categories-title">{text.categories.title}</h2>
-              <p className="mt-1 text-sm leading-relaxed text-slate-600">{text.categories.description}</p>
-              {categories.state === 'loading' && <p className="portal-loading">{text.categories.loading}</p>}
-              {categories.state === 'error' && <p className="portal-alert mt-3" role="alert">{categories.error || text.categories.error}</p>}
-              {categories.state === 'ready' && categories.data.length === 0 && <p className="portal-empty mt-3">{text.categories.empty}</p>}
-              {categories.state === 'ready' && categories.data.length > 0 && (
-                <ul aria-label={text.categories.label} className="category-list">
-                  {categories.data.map((category) => <li key={category.code}>{category.name}</li>)}
-                </ul>
-              )}
+            <section aria-labelledby="home-dashboard-title" className="home-sidebar__panel">
+              <span className="icon-chip"><Icon name="chart" /></span>
+              <h2 className="mt-3" id="home-dashboard-title">{text.home.dashboardTitle}</h2>
+              <p className="mt-1 text-slate-700">{text.home.dashboardDescription}</p>
+              <AppLink className="portal-button-secondary mt-4 w-full" href="/dashboard">{text.home.dashboardAction}</AppLink>
             </section>
           </aside>
         </div>
-      </section>
+      </div>
     </main>
   );
+}
+
+const pageTitles = {
+  '/': text.portal.report,
+  '/track': text.track.homeLink,
+  '/dashboard': text.dashboard.homeLink,
+  '/login': text.auth.staffLogin,
+  '/officer': text.officer.title,
+  '/verifier': text.verifier.queueTitle
+};
+
+function titleForPath(path) {
+  if (pageTitles[path]) return pageTitles[path];
+  if (path.startsWith('/officer')) return text.officer.title;
+  if (path.startsWith('/verifier')) return text.verifier.queueTitle;
+  return text.notFound.title;
 }
 
 function AppContent() {
@@ -118,6 +118,10 @@ function AppContent() {
     window.addEventListener('popstate', updatePath);
     return () => window.removeEventListener('popstate', updatePath);
   }, []);
+
+  useEffect(() => {
+    document.title = `${titleForPath(path)} | ${text.app.title}`;
+  }, [path]);
 
   let page;
   if (path === '/track') page = <TrackPage />;

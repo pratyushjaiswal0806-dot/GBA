@@ -10,7 +10,7 @@ function statusName(status) {
 
 export function TicketTimeline({ entries, showStaffNames = false }) {
   if (entries.length === 0) {
-    return <p className="text-sm text-slate-500">{text.ticket.timelineEmpty}</p>;
+    return <p className="text-sm text-slate-600">{text.ticket.timelineEmpty}</p>;
   }
 
   return (

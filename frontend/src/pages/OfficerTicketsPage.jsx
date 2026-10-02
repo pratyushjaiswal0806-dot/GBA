@@ -90,7 +90,7 @@ export function OfficerTicketsPage() {
           <div>
             <p className="portal-kicker">{text.app.eyebrow}</p>
             <h1 className="portal-title mt-2">{text.officer.title}</h1>
-            <p className="portal-copy text-sm">{profile.wardName} · {profile.name}</p>
+            <p className="portal-copy">{profile.wardName} · {profile.name}</p>
           </div>
           <button className="portal-button-secondary" onClick={() => signOut()} type="button">
             {text.auth.logOut}
@@ -101,13 +101,13 @@ export function OfficerTicketsPage() {
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <h2 className="portal-section-title">{text.officer.ticketListTitle}</h2>
-              <p className="portal-copy mt-1 text-sm">{text.officer.ticketListDescription}</p>
+              <p className="portal-copy mt-1">{text.officer.ticketListDescription}</p>
             </div>
             <div className="portal-notice min-w-44" aria-label={text.officer.attentionLabel}>
               <p className="font-semibold">{text.officer.attentionLabel}</p>
               <p className="portal-data mt-1 text-2xl font-extrabold">{counts.state === 'ready' ? attentionCount : '—'}</p>
-              {counts.state === 'ready' && <p className="mt-1 text-xs">{counts.data.open} {text.officer.open}, {counts.data.reopened} {text.officer.reopened}</p>}
-              {counts.state === 'error' && <p className="mt-1 text-xs" role="alert">{counts.error || text.officer.loadError}</p>}
+              {counts.state === 'ready' && <p className="mt-1 text-sm">{counts.data.open} {text.officer.open}, {counts.data.reopened} {text.officer.reopened}</p>}
+              {counts.state === 'error' && <p className="mt-1 text-sm" role="alert">{counts.error || text.officer.loadError}</p>}
             </div>
           </div>
 
@@ -128,7 +128,7 @@ export function OfficerTicketsPage() {
           {tickets.state === 'ready' && tickets.data.length === 0 && <p className="portal-empty mt-6">{text.officer.empty}</p>}
           {tickets.state === 'ready' && tickets.data.length > 0 && (
             <div className="mt-6">
-              <div className="hidden overflow-x-auto rounded-xl border border-slate-200 sm:block">
+              <div className="hidden overflow-x-auto rounded border border-slate-300 sm:block">
               <table className="portal-table min-w-full divide-y divide-slate-200 text-left text-sm">
                 <thead className="bg-slate-50 text-slate-600">
                   <tr>
@@ -141,7 +141,7 @@ export function OfficerTicketsPage() {
                 <tbody className="divide-y divide-slate-100">
                   {tickets.data.map((ticket) => (
                     <tr key={ticket.publicCode}>
-                      <td className="whitespace-nowrap px-4 py-3 font-mono font-semibold text-slate-900"><AppLink className="text-emerald-800 underline decoration-emerald-300 underline-offset-2 hover:text-emerald-950" href={`/officer/tickets/${ticket.ticketId}`}>{ticket.publicCode}<span className="sr-only">: {text.officer.view}</span></AppLink></td>
+                      <td className="whitespace-nowrap px-4 py-3 font-mono font-semibold text-slate-900"><AppLink className="text-blue-900 underline decoration-blue-300 underline-offset-2 hover:text-blue-950" href={`/officer/tickets/${ticket.ticketId}`}>{ticket.publicCode}<span className="sr-only">: {text.officer.view}</span></AppLink></td>
                       <td className="px-4 py-3 text-slate-700">{ticket.categoryName}</td>
                       <td className="px-4 py-3"><StatusBadge status={ticket.status} /></td>
                       <td className="whitespace-nowrap px-4 py-3 text-slate-700">{formatDate(ticket.createdAt)}</td>
@@ -155,12 +155,12 @@ export function OfficerTicketsPage() {
                   <li className="portal-card p-4" key={`mobile-${ticket.publicCode}`}>
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <AppLink className="break-all font-mono text-sm font-bold text-emerald-800 underline underline-offset-2" href={`/officer/tickets/${ticket.ticketId}`}>{ticket.publicCode}<span className="sr-only">: {text.officer.view}</span></AppLink>
+                        <AppLink className="break-all font-mono text-sm font-bold text-blue-900 underline underline-offset-2" href={`/officer/tickets/${ticket.ticketId}`}>{ticket.publicCode}<span className="sr-only">: {text.officer.view}</span></AppLink>
                         <p className="mt-2 break-words font-semibold text-slate-900">{ticket.categoryName}</p>
                       </div>
                       <StatusBadge status={ticket.status} />
                     </div>
-                    <p className="mt-3 text-xs text-slate-500">{text.officer.created}: {formatDate(ticket.createdAt)}</p>
+                    <p className="mt-3 text-sm text-slate-600">{text.officer.created}: {formatDate(ticket.createdAt)}</p>
                   </li>
                 ))}
               </ul>

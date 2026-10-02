@@ -1,8 +1,9 @@
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { text } from '../../i18n/en.js';
-import { chartColors, chartHeights } from './chartColors.js';
+import { chartColors, chartFontSize, chartHeights } from './chartColors.js';
 
-const lineWidth = 2;
+const lineWidth = 3;
+const axisTick = { fontSize: chartFontSize };
 const dotRadius = 4;
 const dateFormats = {
   week: { day: 'numeric', month: 'short', timeZone: 'UTC' },
@@ -28,8 +29,8 @@ export function TrendChart({ points, interval }) {
       <ResponsiveContainer height="100%" width="100%">
         <LineChart data={data} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
           <CartesianGrid stroke={chartColors.grid} vertical={false} />
-          <XAxis axisLine={false} dataKey="label" minTickGap={16} stroke={chartColors.axis} tickLine={false} />
-          <YAxis allowDecimals={false} axisLine={false} stroke={chartColors.axis} tickLine={false} width={32} />
+          <XAxis axisLine={false} dataKey="label" minTickGap={16} stroke={chartColors.axis} tick={axisTick} tickLine={false} />
+          <YAxis allowDecimals={false} axisLine={false} stroke={chartColors.axis} tick={axisTick} tickLine={false} width={32} />
           <Tooltip labelFormatter={tooltipLabel} />
           <Line
             activeDot={{ r: dotRadius + 2, fill: chartColors.total, stroke: chartColors.surface, strokeWidth: 2 }}

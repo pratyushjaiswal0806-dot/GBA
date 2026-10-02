@@ -16,7 +16,7 @@ function ChartSection({ title, description, actions, children }) {
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="portal-section-title">{title}</h2>
-          <p className="portal-copy mt-1 text-sm">{description}</p>
+          <p className="portal-copy mt-1">{description}</p>
         </div>
         {actions}
       </header>
@@ -27,7 +27,7 @@ function ChartSection({ title, description, actions, children }) {
 
 function IntervalToggle({ interval, onChange }) {
   return (
-    <div aria-label={text.dashboard.intervalLabel} className="inline-flex rounded-lg border border-slate-300 p-0.5" role="group">
+    <div aria-label={text.dashboard.intervalLabel} className="inline-flex gap-1 rounded-xl border border-slate-300 bg-slate-50 p-1" role="group">
       {intervals.map((option) => (
         <button
           aria-pressed={interval === option}
@@ -49,13 +49,13 @@ export default function DashboardPage() {
 
   return (
     <main className="portal-page px-4 sm:px-6">
-      <section className="mx-auto max-w-4xl">
+      <section className="mx-auto max-w-6xl">
         <header className="portal-page-heading">
           <div>
             <p className="portal-kicker">{text.portal.publicDashboard}</p>
             <h1 className="portal-title">{text.dashboard.title}</h1>
-            <p className="portal-copy text-sm">{text.dashboard.description}</p>
-            <p className="mt-2 text-xs font-medium text-slate-500">{text.dashboard.liveNote}</p>
+            <p className="portal-copy">{text.dashboard.description}</p>
+            <p className="mt-2 text-sm font-medium text-slate-600">{text.dashboard.liveNote}</p>
           </div>
           <AppLink className="portal-button-secondary" href="/">{text.dashboard.backHome}</AppLink>
         </header>
@@ -73,11 +73,11 @@ export default function DashboardPage() {
             {refreshFailed && <p className="portal-alert mt-5" role="status">{text.dashboard.refreshFailed}</p>}
             {data.summary.isDemoData && <p className="portal-notice mt-5" role="note">{text.dashboard.demoBanner}</p>}
 
-            <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <StatCard label={text.dashboard.total} value={data.summary.total} />
-              <StatCard label={text.dashboard.open} value={data.summary.open} />
-              <StatCard label={text.dashboard.resolved} value={data.summary.resolved} />
-              <StatCard label={text.dashboard.resolutionRate} value={`${data.summary.resolutionRate}%`} />
+            <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+              <StatCard icon="chart" label={text.dashboard.total} value={data.summary.total} />
+              <StatCard icon="clock" label={text.dashboard.open} value={data.summary.open} />
+              <StatCard icon="check" label={text.dashboard.resolved} value={data.summary.resolved} />
+              <StatCard icon="shield" label={text.dashboard.resolutionRate} value={`${data.summary.resolutionRate}%`} />
             </div>
 
             {data.summary.total === 0 && <p className="portal-empty mt-5">{text.dashboard.empty}</p>}
@@ -88,12 +88,14 @@ export default function DashboardPage() {
             <ChartSection actions={<IntervalToggle interval={trendInterval} onChange={setTrendInterval} />} description={text.dashboard.trendDescription} title={text.dashboard.trendTitle}>
               <TrendChart interval={trendInterval} points={data.trend} />
             </ChartSection>
-            <ChartSection description={text.dashboard.wardDescription} title={text.dashboard.wardTitle}>
-              <WardChart wards={data.wards} />
-            </ChartSection>
-            <ChartSection description={text.dashboard.categoryDescription} title={text.dashboard.categoryTitle}>
-              <CategoryChart categories={data.categories} />
-            </ChartSection>
+            <div className="dashboard-pair">
+              <ChartSection description={text.dashboard.wardDescription} title={text.dashboard.wardTitle}>
+                <WardChart wards={data.wards} />
+              </ChartSection>
+              <ChartSection description={text.dashboard.categoryDescription} title={text.dashboard.categoryTitle}>
+                <CategoryChart categories={data.categories} />
+              </ChartSection>
+            </div>
           </>
         )}
       </section>

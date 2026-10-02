@@ -69,6 +69,10 @@ After the first deployment, set the Supabase Auth Site URL to the production web
 
 Use a Preview deployment for the health, report, officer, verifier, dashboard and phone checks before deploying Production. The `frontend/vercel.json` file provides the SPA fallback needed when a React route is refreshed.
 
+## Frontend look
+
+The frontend uses a government-portal style: navy and saffron palette, system fonts, a header with a utility bar, a main menu that collapses to a "Menu" button on phones, and a footer with a service status line. Colours live as CSS variables at the top of `frontend/src/index.css`. All screen text is in `frontend/src/i18n/en.js`. The crest in the header is a placeholder; replace it in `frontend/src/components/PortalChrome.jsx` with the official logo when available.
+
 ## Database and tests
 
 Apply the migrations with the Supabase CLI (`supabase link`, then `supabase db push`) and seed the demo users and tickets:

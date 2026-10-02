@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { text } from '../i18n/en.js';
+import { Icon } from './Icon.jsx';
 
 export function PhotoPicker({ file, onChange, disabled = false, describedBy }) {
   const [previewUrl, setPreviewUrl] = useState(null);
@@ -18,25 +19,28 @@ export function PhotoPicker({ file, onChange, disabled = false, describedBy }) {
 
   return (
     <div>
-      <label className="block text-sm font-semibold text-slate-800" htmlFor="report-photo">
+      <label className="portal-field-label" htmlFor="report-photo">
         {text.report.photoLabel}
       </label>
-      <p className="mt-1 text-sm text-slate-500">{text.report.photoHelp}</p>
-      <input
+      <p className="portal-info mt-2">{text.report.photoHelp}</p>
+      <div className="photo-drop">
+        <span className="icon-chip"><Icon name="camera" /></span>
+        <input
         accept="image/jpeg,image/png"
         aria-describedby={describedBy}
         aria-invalid={Boolean(describedBy)}
         capture="environment"
-        className="photo-input mt-3 block w-full text-sm text-slate-700"
+        className="photo-input block w-full text-sm text-slate-700"
         disabled={disabled}
         id="report-photo"
         name="photo"
         onChange={(event) => onChange(event.target.files?.[0] ?? null)}
         type="file"
       />
+      </div>
       {file && (
-        <div className="mt-3 rounded-xl border border-slate-200 p-3">
-          <p className="break-words text-sm font-medium text-slate-800">{text.report.photoSelected}: {file.name}</p>
+        <div className="mt-3 rounded-xl border border-slate-300 p-3">
+          <p className="break-words text-sm font-medium text-slate-900">{text.report.photoSelected}: {file.name}</p>
           {previewUrl && <img alt={text.report.photoPreviewAlt} className="mt-3 max-h-64 w-full rounded-lg bg-slate-100 object-contain" height="480" src={previewUrl} width="640" />}
         </div>
       )}

@@ -16,7 +16,7 @@ export function DuplicatePrompt({ tickets, busyAction, onSupport, onSubmitAnyway
           <li className="portal-card p-4 text-sm text-slate-700" key={ticket.publicCode}>
             <p className="break-words font-semibold text-slate-900">{ticket.categoryName} · {text.officer.statuses[ticket.status] ?? ticket.status}</p>
             <p className="mt-1 break-words">{[ticket.street, ticket.area, ticket.wardName].filter(Boolean).join(', ')}</p>
-            <p className="mt-1 text-slate-500">
+            <p className="mt-1 text-slate-600">
               {ticket.distanceMeters} {text.map.metersShort} {text.report.duplicateDistance} · {text.report.duplicateReported} {formatDate(ticket.createdAt)} · {text.report.duplicatePeople}: {ticket.supportCount}
             </p>
             <button

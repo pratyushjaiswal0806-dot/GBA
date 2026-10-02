@@ -33,15 +33,15 @@ export function MapPicker({ position, onPositionChange, disabled = false, descri
   const tileUrl = import.meta.env.VITE_MAP_TILE_URL;
 
   if (!tileUrl) {
-    return <p className="rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">{text.map.configurationMissing}</p>;
+    return <p className="rounded bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">{text.map.configurationMissing}</p>;
   }
 
   return (
     <div>
-      <div aria-describedby={describedBy} aria-label={text.report.mapLabel} className={`map-surface overflow-hidden rounded-xl border border-slate-200 ${disabled ? 'map-surface--disabled' : ''}`} role="region">
+      <div aria-describedby={describedBy} aria-label={text.report.mapLabel} className={`map-surface overflow-hidden border border-slate-400 ${disabled ? 'map-surface--disabled' : ''}`} role="region">
         <MapContainer
           center={position || sampleWardCenter}
-          className="h-80 w-full"
+          className="map-height w-full"
           scrollWheelZoom
           zoom={14}
         >
@@ -62,7 +62,7 @@ export function MapPicker({ position, onPositionChange, disabled = false, descri
         </MapContainer>
       </div>
       {tileError && <p className="portal-notice mt-2" role="status">{text.map.tilesUnavailable}</p>}
-      <p className="mt-2 text-sm text-slate-500">{text.report.mapHelp}</p>
+      <p className="mt-2 text-sm text-slate-600">{text.report.mapHelp}</p>
     </div>
   );
 }

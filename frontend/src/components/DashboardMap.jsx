@@ -32,7 +32,7 @@ function StatusLegend({ points }) {
   const counts = countByStatus(points);
 
   return (
-    <ul aria-label={text.dashboard.legendLabel} className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-700">
+    <ul aria-label={text.dashboard.legendLabel} className="mb-3 flex flex-wrap gap-x-5 gap-y-2 text-slate-800">
       {Object.keys(statusColors).filter((status) => counts[status]).map((status) => (
         <li className="flex items-center gap-2" key={status}>
           <span aria-hidden="true" className="inline-block rounded-full" style={{ width: legendDotSize, height: legendDotSize, backgroundColor: statusColors[status] }} />
@@ -48,13 +48,14 @@ export function DashboardMap({ points }) {
   const tileUrl = import.meta.env.VITE_MAP_TILE_URL;
 
   if (!tileUrl) {
-    return <p className="rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">{text.map.configurationMissing}</p>;
+    return <p className="rounded bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">{text.map.configurationMissing}</p>;
   }
 
   return (
     <div>
-      <div aria-label={text.dashboard.mapLabel} className="map-surface overflow-hidden rounded-xl border border-slate-200" role="region">
-        <MapContainer center={defaultCenter} className="h-80 w-full" scrollWheelZoom={false} zoom={defaultZoom}>
+      <StatusLegend points={points} />
+      <div aria-label={text.dashboard.mapLabel} className="map-surface overflow-hidden border border-slate-400" role="region">
+        <MapContainer center={defaultCenter} className="map-height w-full" scrollWheelZoom={false} zoom={defaultZoom}>
           <TileLayer attribution={text.map.attribution} eventHandlers={{ tileerror: () => setTileError(true) }} url={tileUrl} />
           <FitOnFirstPoints points={points} />
           {points.map((point, index) => (
@@ -70,8 +71,7 @@ export function DashboardMap({ points }) {
         </MapContainer>
       </div>
       {tileError && <p className="portal-notice mt-2" role="status">{text.map.tilesUnavailable}</p>}
-      <StatusLegend points={points} />
-      <p className="mt-2 text-sm text-slate-500">{points.length} {text.dashboard.mapCount}</p>
+      <p className="mt-2 text-slate-600">{points.length} {text.dashboard.mapCount}</p>
     </div>
   );
 }

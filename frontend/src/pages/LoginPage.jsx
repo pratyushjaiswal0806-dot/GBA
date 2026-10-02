@@ -2,12 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { text } from '../i18n/en.js';
 import { navigate } from '../routing.js';
+import { Icon } from '../components/Icon.jsx';
 
 export function LoginPage() {
   const { loading, session, profile, profileError, profileLoading, signIn, signOut } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const submitLock = useRef(false);
   const [sessionMessage] = useState(() => {
@@ -76,9 +78,9 @@ export function LoginPage() {
   return (
     <main className="portal-page px-4 sm:px-6">
       <section className="portal-card portal-card--padded mx-auto max-w-lg">
-        <p className="portal-kicker">{text.app.eyebrow}</p>
-        <h1 className="portal-title mt-2">{text.auth.title}</h1>
-        <p className="portal-copy mt-2 text-sm">{text.auth.description}</p>
+        <span className="icon-chip auth-mark"><Icon name="lock" /></span>
+        <h1 className="portal-title">{text.auth.title}</h1>
+        <p className="portal-copy mt-2">{text.auth.description}</p>
         {sessionMessage && <p className="portal-notice mt-4" role="status">{sessionMessage}</p>}
         <form className="mt-6 space-y-5" onSubmit={submit}>
           <div>
@@ -87,7 +89,10 @@ export function LoginPage() {
           </div>
           <div>
             <label className="portal-field-label" htmlFor="staff-password">{text.auth.password}</label>
-            <input autoComplete="current-password" className="portal-field mt-2" disabled={submitting} id="staff-password" name="password" onChange={(event) => setPassword(event.target.value)} required type="password" value={password} />
+            <div className="mt-2 flex gap-2">
+              <input autoComplete="current-password" className="portal-field min-w-0" disabled={submitting} id="staff-password" name="password" onChange={(event) => setPassword(event.target.value)} required type={showPassword ? 'text' : 'password'} value={password} />
+              <button aria-pressed={showPassword} className="portal-button-secondary shrink-0" onClick={() => setShowPassword((value) => !value)} type="button">{showPassword ? text.auth.hidePassword : text.auth.showPassword}</button>
+            </div>
           </div>
           {error && <p className="portal-alert" role="alert">{error}</p>}
           <button className="portal-button w-full" disabled={submitting} type="submit">

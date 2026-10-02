@@ -84,7 +84,7 @@ export function TicketDetailPage({ ticketId }) {
         <article className="portal-card portal-card--padded mt-3">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <p className="portal-data font-mono text-sm font-bold text-emerald-800">{data.publicCode}</p>
+              <p className="portal-data font-mono text-sm font-bold text-blue-900">{data.publicCode}</p>
               <h1 className="portal-section-title mt-2 text-2xl">{data.categoryName}</h1>
             </div>
             <StatusBadge status={data.status} />
@@ -109,7 +109,7 @@ export function TicketDetailPage({ ticketId }) {
 
           <section className="mt-7" aria-labelledby="original-photo-heading">
             <h2 className="portal-section-title" id="original-photo-heading">{text.ticket.originalPhoto}</h2>
-            {data.original ? <img alt={text.ticket.originalPhoto} className="mt-3 max-h-[32rem] w-full rounded-xl bg-slate-100 object-contain" height="1200" src={data.original.url} width="1600" /> : <p className="portal-empty mt-3">{text.ticket.photoUnavailable}</p>}
+            {data.original ? <img alt={text.ticket.originalPhoto} className="mt-3 max-h-[32rem] w-full rounded bg-slate-100 object-contain" height="1200" src={data.original.url} width="1600" /> : <p className="portal-empty mt-3">{text.ticket.photoUnavailable}</p>}
           </section>
 
           <section className="mt-7" aria-labelledby="ticket-map-heading">
@@ -121,12 +121,12 @@ export function TicketDetailPage({ ticketId }) {
             <h2 className="portal-section-title" id="action-reports-heading">{text.actionReport.sectionTitle}</h2>
             {data.actionReports.length === 0 && <p className="portal-empty mt-3">{text.actionReport.empty}</p>}
             {data.actionReports.map((report) => (
-              <div className="mt-3 rounded-xl border border-slate-200 p-4" key={report.id}>
+              <div className="mt-3 rounded border border-slate-300 p-4" key={report.id}>
                 <p className="break-words whitespace-pre-wrap text-slate-700">{report.remarks}</p>
-                {report.decision && <p className={`mt-2 break-words text-xs font-semibold ${report.decision === 'REJECTED' ? 'text-rose-700' : 'text-emerald-700'}`}>{report.decision === 'REJECTED' ? text.actionReport.rejectedLabel : text.actionReport.approvedLabel}{report.decisionReason ? `: ${report.decisionReason}` : ''}</p>}
-                <p className="mt-2 text-xs text-slate-500">{text.actionReport.submittedBy} {report.officerName}, {formatDate(report.submittedAt)}</p>
+                {report.decision && <p className={`mt-2 break-words text-sm font-semibold ${report.decision === 'REJECTED' ? 'text-rose-700' : 'text-emerald-700'}`}>{report.decision === 'REJECTED' ? text.actionReport.rejectedLabel : text.actionReport.approvedLabel}{report.decisionReason ? `: ${report.decisionReason}` : ''}</p>}
+                <p className="mt-2 text-sm text-slate-600">{text.actionReport.submittedBy} {report.officerName}, {formatDate(report.submittedAt)}</p>
                 <div className="mt-3 grid gap-3 sm:grid-cols-3">
-                  {report.photos.map((photo) => <img alt={text.actionReport.photoAlt} className="h-40 w-full rounded-lg bg-slate-100 object-cover" height="160" key={photo.url} loading="lazy" src={photo.url} width="240" />)}
+                  {report.photos.map((photo) => <img alt={text.actionReport.photoAlt} className="h-40 w-full rounded bg-slate-100 object-cover" height="160" key={photo.url} loading="lazy" src={photo.url} width="240" />)}
                 </div>
               </div>
             ))}

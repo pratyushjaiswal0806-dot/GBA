@@ -1,8 +1,9 @@
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { text } from '../../i18n/en.js';
-import { chartColors, chartHeights } from './chartColors.js';
+import { chartColors, chartFontSize, chartHeights } from './chartColors.js';
 
-const wardAxisWidth = 110;
+const wardAxisWidth = 100;
+const axisTick = { fontSize: chartFontSize };
 const segmentGap = { stroke: chartColors.surface, strokeWidth: 2 };
 
 export function WardChart({ wards }) {
@@ -14,17 +15,17 @@ export function WardChart({ wards }) {
         <ResponsiveContainer height="100%" width="100%">
           <BarChart data={data} layout="vertical" margin={{ top: 0, right: 16, bottom: 0, left: 0 }}>
             <CartesianGrid horizontal={false} stroke={chartColors.grid} />
-            <XAxis allowDecimals={false} axisLine={false} stroke={chartColors.axis} tickLine={false} type="number" />
-            <YAxis axisLine={false} dataKey="ward" stroke={chartColors.axis} tickLine={false} type="category" width={wardAxisWidth} />
+            <XAxis allowDecimals={false} axisLine={false} stroke={chartColors.axis} tick={axisTick} tickLine={false} type="number" />
+            <YAxis axisLine={false} dataKey="ward" stroke={chartColors.axis} tick={axisTick} tickLine={false} type="category" width={wardAxisWidth} />
             <Tooltip cursor={{ fill: chartColors.grid, opacity: 0.4 }} />
-            <Legend formatter={(value) => <span style={{ color: chartColors.axis }}>{value}</span>} />
+            <Legend formatter={(value) => <span style={{ color: chartColors.axis, fontSize: chartFontSize }}>{value}</span>} />
             <Bar dataKey="resolved" isAnimationActive={false} fill={chartColors.resolved} maxBarSize={48} name={text.dashboard.resolved} stackId="tickets" {...segmentGap} />
-            <Bar dataKey="pending" isAnimationActive={false} fill={chartColors.pending} maxBarSize={48} name={text.dashboard.pending} radius={[0, 4, 4, 0]} stackId="tickets" {...segmentGap} />
+            <Bar dataKey="pending" isAnimationActive={false} fill={chartColors.pending} maxBarSize={48} name={text.dashboard.pending} radius={[0, 6, 6, 0]} stackId="tickets" {...segmentGap} />
           </BarChart>
         </ResponsiveContainer>
       </div>
 
-      <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200">
+      <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200 overflow-hidden">
         <table className="portal-table min-w-full divide-y divide-slate-200 text-left text-sm">
           <thead className="bg-slate-50 text-slate-600">
             <tr>

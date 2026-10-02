@@ -77,7 +77,7 @@ export function ActionReportPage({ ticketId }) {
       <main className="portal-page px-4 sm:px-6">
         <section className="portal-card portal-card--padded mx-auto max-w-2xl" aria-live="polite">
           <h1 className="portal-section-title">{text.actionReport.sentTitle}</h1>
-          <p className="portal-copy mt-2 text-sm">{text.actionReport.sentDescription}</p>
+          <p className="portal-copy mt-2">{text.actionReport.sentDescription}</p>
           <AppLink className="portal-button mt-5" href={ticketPath}>{text.actionReport.backToTicket}</AppLink>
         </section>
       </main>
@@ -92,7 +92,7 @@ export function ActionReportPage({ ticketId }) {
           <div>
             <p className="portal-kicker">{text.ticket.submitActionReport}</p>
             <h1 className="portal-title mt-2">{text.actionReport.title}</h1>
-            <p className="portal-copy mt-2 text-sm">{text.actionReport.description}</p>
+            <p className="portal-copy mt-2">{text.actionReport.description}</p>
           </div>
           <div>
             <label className="portal-field-label" htmlFor="action-remarks">{text.actionReport.remarksLabel}</label>
@@ -100,7 +100,7 @@ export function ActionReportPage({ ticketId }) {
               setRemarks(event.target.value);
               setFieldErrors((current) => ({ ...current, remarks: null }));
             }} placeholder={text.actionReport.remarksPlaceholder} required value={remarks} />
-            <p className="mt-1 text-right text-xs text-slate-500" id="action-remarks-count">{remarks.length}/{remarksLimit} {text.report.characterCount}</p>
+            <p className="mt-1 text-right text-sm text-slate-600" id="action-remarks-count">{remarks.length}/{remarksLimit} {text.report.characterCount}</p>
             {fieldErrors.remarks && <p className="portal-alert mt-2" id="action-remarks-error" role="alert">{fieldErrors.remarks}</p>}
           </div>
           <div>

@@ -83,7 +83,7 @@ export function ComparePage({ ticketId }) {
           <p className="portal-kicker">{text.verifier.queueTitle}</p>
           <h1 className="portal-title mt-2">{text.verifier.compareTitle}</h1>
 
-          <div className={`portal-data mt-5 rounded-xl border px-4 py-3 text-sm ${farWarning ? 'border-amber-300 bg-amber-50 text-amber-950' : 'border-slate-200 bg-slate-50 text-slate-800'}`} role={farWarning ? 'alert' : 'status'}>
+          <div className={`portal-data mt-5 rounded border px-4 py-3 text-sm ${farWarning ? 'border-amber-300 bg-amber-50 text-amber-950' : 'border-slate-300 bg-slate-50 text-slate-800'}`} role={farWarning ? 'alert' : 'status'}>
             <p><span className="font-semibold">{text.verifier.distance}:</span> {distanceMeters === null ? text.verifier.distanceUnknown : `${distanceMeters} ${text.verifier.meters}`}</p>
             {farWarning && <p className="mt-1 font-semibold">{text.verifier.farWarning}</p>}
           </div>
@@ -98,16 +98,16 @@ export function ComparePage({ ticketId }) {
           {isRejecting ? (
             <form className="mt-6" onSubmit={submitReject}>
               <label className="portal-field-label" htmlFor="reject-reason">{text.verifier.rejectReasonLabel}</label>
-              <p className="mt-1 text-xs text-slate-500" id="reject-reason-help">{text.verifier.rejectReasonHelp}</p>
+              <p className="mt-1 text-sm text-slate-600" id="reject-reason-help">{text.verifier.rejectReasonHelp}</p>
               <textarea aria-describedby="reject-reason-help reject-reason-count" autoComplete="off" className="portal-field mt-2 min-h-24" disabled={isBusy} id="reject-reason" maxLength={reasonMaxLength + 100} name="reason" onChange={(event) => setReason(event.target.value)} rows={3} value={reason} />
-              <p className={`mt-1 text-xs ${reason.length > reasonMaxLength ? 'text-rose-700' : 'text-slate-500'}`} id="reject-reason-count">{reason.length}/{reasonMaxLength} {text.report.characterCount}</p>
+              <p className={`mt-1 text-sm ${reason.length > reasonMaxLength ? 'text-rose-700' : 'text-slate-600'}`} id="reject-reason-count">{reason.length}/{reasonMaxLength} {text.report.characterCount}</p>
               <div className="mt-3 flex flex-wrap gap-3">
                 <button className="portal-button-danger" disabled={isBusy} type="submit">{busyAction === 'reject' ? text.verifier.rejecting : text.verifier.confirmReject}</button>
                 <button className="portal-button-secondary" disabled={isBusy} onClick={() => { setIsRejecting(false); setActionError(null); }} type="button">{text.verifier.cancel}</button>
               </div>
             </form>
           ) : (
-            <div className="mt-6 flex flex-wrap gap-3">
+            <div className="action-bar mt-6 flex flex-wrap gap-3">
               {confirmingApprove ? (
                 <div className="approval-confirm" role="group" aria-label={text.verifier.approvalConfirmLabel}>
                   <p className="font-semibold text-slate-900">{text.verifier.approvalConfirmPrompt}</p>

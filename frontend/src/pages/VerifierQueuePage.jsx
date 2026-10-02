@@ -42,19 +42,19 @@ export function VerifierQueuePage() {
           <div>
             <p className="portal-kicker">{text.app.eyebrow}</p>
             <h1 className="portal-title mt-2">{text.verifier.queueTitle}</h1>
-            <p className="portal-copy text-sm">{profile.name}</p>
+            <p className="portal-copy">{profile.name}</p>
           </div>
           <button className="portal-button-secondary" onClick={() => signOut()} type="button">{text.auth.logOut}</button>
         </header>
 
         <section className="portal-card portal-card--padded">
-          <p className="portal-copy text-sm">{text.verifier.queueDescription}</p>
+          <p className="portal-copy">{text.verifier.queueDescription}</p>
           {queue.state === 'loading' && <p className="portal-loading" role="status">{text.verifier.loading}</p>}
           {queue.state === 'error' && <div className="portal-alert mt-6" role="alert"><p>{queue.error || text.verifier.loadError}</p><button className="portal-button mt-3" onClick={() => setReloadKey((current) => current + 1)} type="button">{text.verifier.retry}</button></div>}
           {queue.state === 'ready' && queue.data.length === 0 && <p className="portal-empty mt-6">{text.verifier.empty}</p>}
           {queue.state === 'ready' && queue.data.length > 0 && (
             <div className="mt-6">
-              <div className="hidden overflow-x-auto rounded-xl border border-slate-200 sm:block">
+              <div className="hidden overflow-x-auto rounded border border-slate-300 sm:block">
               <table className="portal-table min-w-full divide-y divide-slate-200 text-left text-sm">
                 <thead className="bg-slate-50 text-slate-600">
                   <tr>
@@ -67,7 +67,7 @@ export function VerifierQueuePage() {
                 <tbody className="divide-y divide-slate-100">
                   {queue.data.map((ticket) => (
                     <tr key={ticket.ticketId}>
-                      <td className="whitespace-nowrap px-4 py-3 font-mono font-semibold"><AppLink className="text-left text-emerald-800 underline decoration-emerald-300 underline-offset-2 hover:text-emerald-950" href={`/verifier/tickets/${ticket.ticketId}`}>{ticket.publicCode}<span className="sr-only">: {text.verifier.review}</span></AppLink></td>
+                      <td className="whitespace-nowrap px-4 py-3 font-mono font-semibold"><AppLink className="text-left text-blue-900 underline decoration-blue-300 underline-offset-2 hover:text-blue-950" href={`/verifier/tickets/${ticket.ticketId}`}>{ticket.publicCode}<span className="sr-only">: {text.verifier.review}</span></AppLink></td>
                       <td className="px-4 py-3 text-slate-700">{ticket.categoryName}</td>
                       <td className="px-4 py-3 text-slate-700">{ticket.wardName}</td>
                       <td className="whitespace-nowrap px-4 py-3 text-slate-700">{formatDate(ticket.submittedAt)}</td>
@@ -81,12 +81,12 @@ export function VerifierQueuePage() {
                   <li className="portal-card p-4" key={`mobile-${ticket.ticketId}`}>
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <AppLink className="break-all font-mono text-sm font-bold text-emerald-800 underline underline-offset-2" href={`/verifier/tickets/${ticket.ticketId}`}>{ticket.publicCode}<span className="sr-only">: {text.verifier.review}</span></AppLink>
+                        <AppLink className="break-all font-mono text-sm font-bold text-blue-900 underline underline-offset-2" href={`/verifier/tickets/${ticket.ticketId}`}>{ticket.publicCode}<span className="sr-only">: {text.verifier.review}</span></AppLink>
                         <p className="mt-2 break-words font-semibold text-slate-900">{ticket.categoryName}</p>
                         <p className="mt-1 break-words text-sm text-slate-600">{ticket.wardName}</p>
                       </div>
                     </div>
-                    <p className="mt-3 text-xs text-slate-500">{text.verifier.waitingSince}: {formatDate(ticket.submittedAt)}</p>
+                    <p className="mt-3 text-sm text-slate-600">{text.verifier.waitingSince}: {formatDate(ticket.submittedAt)}</p>
                   </li>
                 ))}
               </ul>
