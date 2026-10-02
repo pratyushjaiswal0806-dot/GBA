@@ -4,6 +4,17 @@ export const text = {
     title: 'Civic Issue Tracker',
     description: 'A location-aware reporting portal for the GBA pilot.'
   },
+  portal: {
+    navigation: 'Main navigation',
+    skipToContent: 'Skip to content',
+    prototypeTag: 'Pilot prototype',
+    report: 'Report an issue',
+    publicPortal: 'Public portal',
+    publicDashboard: 'Public pilot data',
+    promiseTitle: 'Proof before closure',
+    promiseDescription: 'Reports move from a citizen photo to an officer’s action evidence, then wait for a verifier to check the result.',
+    footerNote: 'Presentation pilot · Demo data only'
+  },
   health: {
     title: 'System status',
     description: 'This page checks the backend connection.',
@@ -57,8 +68,9 @@ export const text = {
     label: 'Reportable categories'
   },
   report: {
-    title: 'Choose the issue location',
-    description: 'Use your browser location or place a pin on the map so we can find the right ward.',
+    title: 'Tell us about the issue',
+    locationHeading: 'Choose a location',
+    description: 'Add a photo and short description, then use your location or place a pin to find the right ward.',
     useMyLocation: 'Use my location',
     locating: 'Finding your location…',
     mapLabel: 'Location picker',
@@ -78,7 +90,7 @@ export const text = {
     categoryPlaceholder: 'Choose a category',
     descriptionLabel: 'Describe the issue',
     descriptionHelp: 'Describe what needs attention. Do not include personal details.',
-    descriptionPlaceholder: 'For example: A shop display is blocking the footpath.',
+    descriptionPlaceholder: 'For example: A shop display blocks the footpath…',
     characterCount: 'characters',
     photoLabel: 'Photo of the issue',
     photoHelp: 'Use a clear photo of the public issue. Avoid faces and number plates.',
@@ -94,6 +106,7 @@ export const text = {
     confirmationTitle: 'Report submitted',
     confirmationDescription: 'Keep this ticket code to check the report status later.',
     ticketCode: 'Ticket code',
+    trackThisReport: 'Track this report',
     startAnother: 'Submit another report',
     checking: 'Checking for similar reports…',
     duplicateTitle: 'A similar report already exists nearby',
@@ -184,7 +197,7 @@ export const text = {
     title: 'Action Taken Report',
     description: 'Describe what was done and add 1 to 3 photos taken at the spot. A verifier will check them.',
     remarksLabel: 'What action was taken?',
-    remarksPlaceholder: 'For example: Encroachment removed with the shop owner.',
+    remarksPlaceholder: 'For example: Encroachment removed with the shop owner…',
     remarksMissing: 'Add remarks about the action taken.',
     remarksTooLong: 'Remarks must be 500 characters or fewer.',
     photosLabel: 'Action photos',
@@ -239,6 +252,9 @@ export const text = {
     beforeAlt: 'Original photo of the issue',
     afterAlt: 'Action photo',
     approve: 'Approve and close',
+    approvalConfirmLabel: 'Confirm ticket closure',
+    approvalConfirmPrompt: 'Approve the evidence and close this ticket?',
+    confirmApprove: 'Yes, approve and close',
     approving: 'Closing…',
     reject: 'Reject',
     rejecting: 'Rejecting…',
@@ -256,7 +272,7 @@ export const text = {
     title: 'Track a report',
     description: 'Enter the ticket code shown after submitting a report.',
     codeLabel: 'Ticket code',
-    codePlaceholder: 'For example: K7M2QX9A',
+    codePlaceholder: 'For example: K7M2QX9A…',
     codeRequired: 'Enter a ticket code.',
     submit: 'Check status',
     loading: 'Checking…',
@@ -288,6 +304,7 @@ export const text = {
     pending: 'Pending',
     categoryTitle: 'Complaints by category',
     categoryDescription: 'All complaints for each issue type.',
+    categoryColumn: 'Category',
     categoryChartLabel: 'Bar chart of total complaints for each category',
     mapTitle: 'Complaint locations',
     mapDescription: 'Each pin is one complaint, coloured by its current status. Click a pin to see its status.',
@@ -310,6 +327,7 @@ export const text = {
   map: {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     configurationMissing: 'Map configuration is missing.',
+    tilesUnavailable: 'Map tiles could not load. You can still use the map area to choose a location.',
     metersShort: 'm'
   }
 };

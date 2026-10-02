@@ -7,11 +7,11 @@ function AccessNotice({ message }) {
   const { signOut } = useAuth();
 
   return (
-    <main className="min-h-screen bg-slate-950 px-4 py-10 text-slate-900 sm:px-6">
-      <section className="mx-auto max-w-lg rounded-2xl bg-white p-6 shadow-xl">
-        <h1 className="text-xl font-semibold text-slate-900">{text.auth.accessTitle}</h1>
-        <p className="mt-2 text-sm text-slate-600">{message}</p>
-        <button className="mt-5 rounded-lg bg-cyan-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-cyan-800" onClick={() => signOut()} type="button">
+    <main className="portal-page px-4 sm:px-6">
+      <section className="portal-card portal-card--padded mx-auto max-w-lg">
+        <h1 className="portal-section-title">{text.auth.accessTitle}</h1>
+        <p className="portal-copy mt-2 text-sm">{message}</p>
+        <button className="portal-button mt-5" onClick={() => signOut()} type="button">
           {text.auth.logOut}
         </button>
       </section>

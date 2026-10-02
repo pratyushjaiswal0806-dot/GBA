@@ -7,6 +7,7 @@ import { PhotoPicker } from '../components/PhotoPicker.jsx';
 import { useLocationPicker } from '../hooks/useLocationPicker.js';
 import { text } from '../i18n/en.js';
 import { prepareImageForUpload } from '../utils/imageUpload.js';
+import { AppLink } from '../components/AppLink.jsx';
 
 const descriptionLimit = 300;
 
@@ -82,6 +83,12 @@ export function ReportPage({ categories }) {
     if (validationError) {
       setFieldErrors({ [validationError.field]: validationError.message });
       setFormError(null);
+      const focusTarget = validationError.field === 'location'
+        ? 'report-use-location'
+        : validationError.field === 'photo'
+          ? 'report-photo'
+          : `report-${validationError.field}`;
+      window.requestAnimationFrame(() => document.getElementById(focusTarget)?.focus());
       return;
     }
 
@@ -121,13 +128,13 @@ export function ReportPage({ categories }) {
 
   if (supportConfirmation) {
     return (
-      <section className="mt-6 rounded-2xl bg-white p-5 shadow-xl sm:p-7" aria-live="polite">
-        <h2 className="text-xl font-semibold text-slate-900">{text.report.supportTitle}</h2>
-        <p className="mt-2 text-sm text-slate-600">{text.report.supportDescription}</p>
+      <section className="portal-card portal-card--padded" aria-live="polite">
+        <p className="portal-kicker">{text.report.supportTitle}</p>
+        <h2 className="portal-section-title mt-2">{text.report.supportDescription}</h2>
         <p className="mt-5 text-sm font-medium text-slate-700">{text.report.ticketCode}</p>
-        <p className="mt-1 break-all rounded-lg bg-cyan-50 px-4 py-3 font-mono text-xl font-bold text-cyan-950">{supportConfirmation.publicCode}</p>
+        <p className="portal-data mt-1 break-all rounded-lg bg-emerald-50 px-4 py-3 font-mono text-xl font-bold text-emerald-950">{supportConfirmation.publicCode}</p>
         <p className="mt-4 text-sm text-slate-700">{text.report.supportCountLabel}: <span className="font-semibold">{supportConfirmation.supportCount}</span></p>
-        <button className="mt-5 rounded-lg border border-cyan-700 px-4 py-2.5 text-sm font-semibold text-cyan-800 hover:bg-cyan-50" onClick={resetReport} type="button">
+        <button className="portal-button-secondary mt-5" onClick={resetReport} type="button">
           {text.report.startAnother}
         </button>
       </section>
@@ -136,64 +143,71 @@ export function ReportPage({ categories }) {
 
   if (confirmation) {
     return (
-      <section className="mt-6 rounded-2xl bg-white p-5 shadow-xl sm:p-7" aria-live="polite">
-        <h2 className="text-xl font-semibold text-slate-900">{text.report.confirmationTitle}</h2>
-        <p className="mt-2 text-sm text-slate-600">{text.report.confirmationDescription}</p>
+      <section className="portal-card portal-card--padded" aria-live="polite">
+        <p className="portal-kicker">{text.report.confirmationTitle}</p>
+        <h2 className="portal-section-title mt-2">{text.report.confirmationDescription}</h2>
         <p className="mt-5 text-sm font-medium text-slate-700">{text.report.ticketCode}</p>
-        <p className="mt-1 break-all rounded-lg bg-cyan-50 px-4 py-3 font-mono text-xl font-bold text-cyan-950">{confirmation.publicCode}</p>
-        <button className="mt-5 rounded-lg border border-cyan-700 px-4 py-2.5 text-sm font-semibold text-cyan-800 hover:bg-cyan-50" onClick={resetReport} type="button">
+        <p className="portal-data mt-1 break-all rounded-lg bg-emerald-50 px-4 py-3 font-mono text-xl font-bold text-emerald-950">{confirmation.publicCode}</p>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <AppLink className="portal-button" href={`/track?code=${encodeURIComponent(confirmation.publicCode)}`}>{text.report.trackThisReport}</AppLink>
+          <button className="portal-button-secondary" onClick={resetReport} type="button">
           {text.report.startAnother}
-        </button>
+          </button>
+        </div>
       </section>
     );
   }
 
   return (
-    <section className="mt-6 rounded-2xl bg-white p-5 shadow-xl sm:p-7">
-      <h2 className="text-xl font-semibold text-slate-900">{text.report.title}</h2>
-      <p className="mt-1 text-sm text-slate-500">{text.report.description}</p>
+    <section className="portal-card portal-card--padded min-w-0">
+      <p className="portal-kicker">{text.portal.report}</p>
+      <h2 className="portal-section-title mt-2">{text.report.title}</h2>
+      <p className="portal-copy mt-1 text-sm">{text.report.description}</p>
       <form className="mt-5 space-y-6" onSubmit={submitReport}>
         <div>
-          <label className="block text-sm font-semibold text-slate-800" htmlFor="report-category">{text.report.categoryLabel}</label>
-          <select className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900" id="report-category" onChange={(event) => {
+          <label className="portal-field-label" htmlFor="report-category">{text.report.categoryLabel}</label>
+          <select aria-invalid={Boolean(fieldErrors.category)} aria-describedby={fieldErrors.category ? 'report-category-error' : undefined} className="portal-field mt-2" disabled={categories.state !== 'ready' || busyAction !== null} id="report-category" name="categoryCode" onChange={(event) => {
             setCategoryCode(event.target.value);
             setDuplicates(null);
             setFieldErrors((current) => ({ ...current, category: null }));
-          }} value={categoryCode}>
+          }} required value={categoryCode}>
             <option value="">{text.report.categoryPlaceholder}</option>
             {categories.data.map((category) => <option key={category.code} value={category.code}>{category.name}</option>)}
           </select>
-          {fieldErrors.category && <p className="mt-2 text-sm text-rose-700" role="alert">{fieldErrors.category}</p>}
+          {categories.state === 'loading' && <p className="mt-2 text-sm text-slate-500" role="status">{text.categories.loading}</p>}
+          {categories.state === 'error' && <p className="portal-alert mt-2" role="alert">{categories.error || text.categories.error}</p>}
+          {fieldErrors.category && <p className="portal-alert mt-2" id="report-category-error" role="alert">{fieldErrors.category}</p>}
         </div>
         <div>
-          <label className="block text-sm font-semibold text-slate-800" htmlFor="report-description">{text.report.descriptionLabel}</label>
-          <textarea className="mt-2 min-h-28 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900" id="report-description" maxLength={descriptionLimit} onChange={(event) => {
+          <label className="portal-field-label" htmlFor="report-description">{text.report.descriptionLabel}</label>
+          <textarea aria-describedby={`report-description-help report-description-count${fieldErrors.description ? ' report-description-error' : ''}`} aria-invalid={Boolean(fieldErrors.description)} autoComplete="off" className="portal-field mt-2 min-h-28" disabled={busyAction !== null} id="report-description" maxLength={descriptionLimit} name="description" onChange={(event) => {
             setDescription(event.target.value);
             setFieldErrors((current) => ({ ...current, description: null }));
-          }} placeholder={text.report.descriptionPlaceholder} value={description} />
-          <p className="mt-1 text-right text-xs text-slate-500">{description.length}/{descriptionLimit} {text.report.characterCount}</p>
-          <p className="text-sm text-slate-500">{text.report.descriptionHelp}</p>
-          {fieldErrors.description && <p className="mt-2 text-sm text-rose-700" role="alert">{fieldErrors.description}</p>}
+          }} placeholder={text.report.descriptionPlaceholder} required value={description} />
+          <p className="mt-1 text-right text-xs text-slate-500" id="report-description-count">{description.length}/{descriptionLimit} {text.report.characterCount}</p>
+          <p className="text-sm text-slate-500" id="report-description-help">{text.report.descriptionHelp}</p>
+          {fieldErrors.description && <p className="portal-alert mt-2" id="report-description-error" role="alert">{fieldErrors.description}</p>}
         </div>
         <div>
-          <PhotoPicker file={file} onChange={(nextFile) => {
+          <PhotoPicker describedBy={fieldErrors.photo ? 'report-photo-error' : undefined} disabled={busyAction !== null} file={file} onChange={(nextFile) => {
             setFile(nextFile);
             setFieldErrors((current) => ({ ...current, photo: null }));
           }} />
-          {fieldErrors.photo && <p className="mt-2 text-sm text-rose-700" role="alert">{fieldErrors.photo}</p>}
+          {fieldErrors.photo && <p className="portal-alert mt-2" id="report-photo-error" role="alert">{fieldErrors.photo}</p>}
         </div>
         <div>
-          <button className="rounded-lg bg-cyan-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-cyan-800 disabled:cursor-wait disabled:opacity-70" disabled={picker.isLocating} onClick={picker.useMyLocation} type="button">
+          <p className="portal-field-label">{text.report.locationHeading}</p>
+          <button aria-describedby={fieldErrors.location ? 'report-location-error' : undefined} aria-invalid={Boolean(fieldErrors.location)} className="portal-button mt-2" disabled={picker.isLocating || busyAction !== null} id="report-use-location" onClick={picker.useMyLocation} type="button">
             {picker.isLocating ? text.report.locating : text.report.useMyLocation}
           </button>
-          <div className="mt-5"><MapPicker onPositionChange={picker.resolvePosition} position={position} /></div>
+          <div className="mt-5"><MapPicker describedBy={fieldErrors.location ? 'report-location-error' : undefined} disabled={busyAction !== null} onPositionChange={picker.resolvePosition} position={position} /></div>
           <LocationSummary loading={picker.isResolving} location={location} />
-          {fieldErrors.location && <p className="mt-3 text-sm text-rose-700" role="alert">{fieldErrors.location}</p>}
+          {fieldErrors.location && <p className="portal-alert mt-3" id="report-location-error" role="alert">{fieldErrors.location}</p>}
         </div>
-        {(formError || picker.error) && <p className="rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">{formError || picker.error}</p>}
+        {(formError || picker.error) && <p className="portal-alert" role="alert">{formError || picker.error}</p>}
         {duplicates && <DuplicatePrompt busyAction={busyAction} onSubmitAnyway={submitAnyway} onSupport={addSupport} tickets={duplicates} />}
         {!duplicates && (
-          <button className="w-full rounded-lg bg-cyan-700 px-4 py-3 text-sm font-semibold text-white hover:bg-cyan-800 disabled:cursor-wait disabled:opacity-70" disabled={busyAction !== null || categories.state !== 'ready'} type="submit">
+          <button className="portal-button w-full" disabled={busyAction !== null || categories.state !== 'ready'} type="submit">
             {busyAction === 'check' ? text.report.checking : text.report.submit}
           </button>
         )}

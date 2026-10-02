@@ -8,19 +8,19 @@ export function DuplicatePrompt({ tickets, busyAction, onSupport, onSubmitAnyway
   const isBusy = busyAction !== null;
 
   return (
-    <section aria-live="polite" className="rounded-xl border border-amber-300 bg-amber-50 p-4">
-      <h3 className="text-base font-semibold text-amber-950">{text.report.duplicateTitle}</h3>
+    <section aria-live="polite" className="duplicate-prompt">
+      <h3 className="portal-section-title">{text.report.duplicateTitle}</h3>
       <p className="mt-1 text-sm text-amber-900">{text.report.duplicateDescription}</p>
       <ul className="mt-4 space-y-3">
         {tickets.map((ticket) => (
-          <li className="rounded-lg bg-white p-4 text-sm text-slate-700" key={ticket.publicCode}>
+          <li className="portal-card p-4 text-sm text-slate-700" key={ticket.publicCode}>
             <p className="break-words font-semibold text-slate-900">{ticket.categoryName} · {text.officer.statuses[ticket.status] ?? ticket.status}</p>
             <p className="mt-1 break-words">{[ticket.street, ticket.area, ticket.wardName].filter(Boolean).join(', ')}</p>
             <p className="mt-1 text-slate-500">
               {ticket.distanceMeters} {text.map.metersShort} {text.report.duplicateDistance} · {text.report.duplicateReported} {formatDate(ticket.createdAt)} · {text.report.duplicatePeople}: {ticket.supportCount}
             </p>
             <button
-              className="mt-3 w-full rounded-lg bg-cyan-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-cyan-800 disabled:cursor-wait disabled:opacity-70 sm:w-auto"
+              className="portal-button mt-3 w-full sm:w-auto"
               disabled={isBusy}
               onClick={() => onSupport(ticket.publicCode)}
               type="button"
@@ -31,7 +31,7 @@ export function DuplicatePrompt({ tickets, busyAction, onSupport, onSubmitAnyway
         ))}
       </ul>
       <button
-        className="mt-4 w-full rounded-lg border border-cyan-700 bg-white px-4 py-2.5 text-sm font-semibold text-cyan-800 hover:bg-cyan-50 disabled:cursor-wait disabled:opacity-70"
+        className="portal-button-secondary mt-4 w-full"
         disabled={isBusy}
         onClick={onSubmitAnyway}
         type="button"

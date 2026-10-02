@@ -5,7 +5,7 @@ import { MapPicker } from '../components/MapPicker.jsx';
 import { MultiPhotoPicker } from '../components/MultiPhotoPicker.jsx';
 import { useLocationPicker } from '../hooks/useLocationPicker.js';
 import { text } from '../i18n/en.js';
-import { navigate } from '../routing.js';
+import { AppLink } from '../components/AppLink.jsx';
 import { prepareImageForUpload } from '../utils/imageUpload.js';
 
 const remarksLimit = 500;
@@ -41,6 +41,12 @@ export function ActionReportPage({ ticketId }) {
     if (problem) {
       setFieldErrors({ [problem.field]: problem.message });
       setFormError(null);
+      const focusTarget = problem.field === 'photos'
+        ? 'action-photos'
+        : problem.field === 'location'
+          ? 'action-use-location'
+          : 'action-remarks';
+      window.requestAnimationFrame(() => document.getElementById(focusTarget)?.focus());
       return;
     }
 
@@ -68,53 +74,54 @@ export function ActionReportPage({ ticketId }) {
 
   if (isSent) {
     return (
-      <main className="min-h-screen bg-slate-950 px-4 py-8 sm:px-6">
-        <section className="mx-auto max-w-2xl rounded-2xl bg-white p-5 shadow-xl sm:p-7" aria-live="polite">
-          <h1 className="text-xl font-semibold text-slate-900">{text.actionReport.sentTitle}</h1>
-          <p className="mt-2 text-sm text-slate-600">{text.actionReport.sentDescription}</p>
-          <button className="mt-5 rounded-lg bg-cyan-700 px-4 py-3 text-sm font-semibold text-white hover:bg-cyan-800" onClick={() => navigate(ticketPath)} type="button">{text.actionReport.backToTicket}</button>
+      <main className="portal-page px-4 sm:px-6">
+        <section className="portal-card portal-card--padded mx-auto max-w-2xl" aria-live="polite">
+          <h1 className="portal-section-title">{text.actionReport.sentTitle}</h1>
+          <p className="portal-copy mt-2 text-sm">{text.actionReport.sentDescription}</p>
+          <AppLink className="portal-button mt-5" href={ticketPath}>{text.actionReport.backToTicket}</AppLink>
         </section>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 px-4 py-8 text-slate-900 sm:px-6">
+    <main className="portal-page px-4 sm:px-6">
       <section className="mx-auto max-w-2xl">
-        <button className="text-sm font-semibold text-cyan-200 hover:text-white" onClick={() => navigate(ticketPath)} type="button">← {text.actionReport.backToTicket}</button>
-        <form className="mt-4 space-y-6 rounded-2xl bg-white p-5 shadow-xl sm:p-7" onSubmit={submit}>
+        <AppLink className="portal-back-link" href={ticketPath}>← {text.actionReport.backToTicket}</AppLink>
+        <form className="portal-card portal-card--padded mt-3 space-y-6" onSubmit={submit}>
           <div>
-            <h1 className="text-xl font-semibold">{text.actionReport.title}</h1>
-            <p className="mt-1 text-sm text-slate-500">{text.actionReport.description}</p>
+            <p className="portal-kicker">{text.ticket.submitActionReport}</p>
+            <h1 className="portal-title mt-2">{text.actionReport.title}</h1>
+            <p className="portal-copy mt-2 text-sm">{text.actionReport.description}</p>
           </div>
           <div>
-            <label className="block text-sm font-semibold text-slate-800" htmlFor="action-remarks">{text.actionReport.remarksLabel}</label>
-            <textarea className="mt-2 min-h-28 w-full rounded-lg border border-slate-300 px-3 py-2" id="action-remarks" maxLength={remarksLimit} onChange={(event) => {
+            <label className="portal-field-label" htmlFor="action-remarks">{text.actionReport.remarksLabel}</label>
+            <textarea aria-describedby={`action-remarks-count${fieldErrors.remarks ? ' action-remarks-error' : ''}`} aria-invalid={Boolean(fieldErrors.remarks)} autoComplete="off" className="portal-field mt-2 min-h-28" disabled={isSubmitting} id="action-remarks" maxLength={remarksLimit} name="remarks" onChange={(event) => {
               setRemarks(event.target.value);
               setFieldErrors((current) => ({ ...current, remarks: null }));
-            }} placeholder={text.actionReport.remarksPlaceholder} value={remarks} />
-            <p className="mt-1 text-right text-xs text-slate-500">{remarks.length}/{remarksLimit} {text.report.characterCount}</p>
-            {fieldErrors.remarks && <p className="mt-2 text-sm text-rose-700" role="alert">{fieldErrors.remarks}</p>}
+            }} placeholder={text.actionReport.remarksPlaceholder} required value={remarks} />
+            <p className="mt-1 text-right text-xs text-slate-500" id="action-remarks-count">{remarks.length}/{remarksLimit} {text.report.characterCount}</p>
+            {fieldErrors.remarks && <p className="portal-alert mt-2" id="action-remarks-error" role="alert">{fieldErrors.remarks}</p>}
           </div>
           <div>
-            <MultiPhotoPicker files={files} maxFiles={maxPhotos} onChange={(next) => {
+            <MultiPhotoPicker describedBy={fieldErrors.photos ? 'action-photos-error' : undefined} disabled={isSubmitting} files={files} maxFiles={maxPhotos} onChange={(next) => {
               setFiles(next);
               setFieldErrors((current) => ({ ...current, photos: null }));
             }} />
-            {fieldErrors.photos && <p className="mt-2 text-sm text-rose-700" role="alert">{fieldErrors.photos}</p>}
+            {fieldErrors.photos && <p className="portal-alert mt-2" id="action-photos-error" role="alert">{fieldErrors.photos}</p>}
           </div>
           <div>
-            <p className="text-sm font-semibold text-slate-800">{text.actionReport.locationLabel}</p>
-            <button className="mt-2 rounded-lg bg-cyan-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-cyan-800 disabled:cursor-wait disabled:opacity-70" disabled={picker.isLocating} onClick={picker.useMyLocation} type="button">
+            <p className="portal-field-label">{text.actionReport.locationLabel}</p>
+            <button aria-describedby={fieldErrors.location ? 'action-location-error' : undefined} aria-invalid={Boolean(fieldErrors.location)} className="portal-button mt-2" disabled={picker.isLocating || isSubmitting} id="action-use-location" onClick={picker.useMyLocation} type="button">
               {picker.isLocating ? text.report.locating : text.report.useMyLocation}
             </button>
-            <div className="mt-5"><MapPicker onPositionChange={picker.resolvePosition} position={picker.position} /></div>
+            <div className="mt-5"><MapPicker describedBy={fieldErrors.location ? 'action-location-error' : undefined} disabled={isSubmitting} onPositionChange={picker.resolvePosition} position={picker.position} /></div>
             <LocationSummary loading={picker.isResolving} location={picker.location} />
-            {picker.error && <p className="mt-3 text-sm text-rose-700" role="alert">{picker.error}</p>}
-            {fieldErrors.location && <p className="mt-3 text-sm text-rose-700" role="alert">{fieldErrors.location}</p>}
+            {picker.error && <p className="portal-alert mt-3" role="alert">{picker.error}</p>}
+            {fieldErrors.location && <p className="portal-alert mt-3" id="action-location-error" role="alert">{fieldErrors.location}</p>}
           </div>
-          {formError && <p className="rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">{formError}</p>}
-          <button className="w-full rounded-lg bg-cyan-700 px-4 py-3 text-sm font-semibold text-white hover:bg-cyan-800 disabled:cursor-wait disabled:opacity-70" disabled={isSubmitting} type="submit">
+          {formError && <p className="portal-alert" role="alert">{formError}</p>}
+          <button className="portal-button w-full" disabled={isSubmitting} type="submit">
             {isSubmitting ? text.actionReport.submitting : text.actionReport.submit}
           </button>
         </form>

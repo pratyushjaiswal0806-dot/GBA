@@ -6,20 +6,20 @@ import { DashboardMap } from '../components/DashboardMap.jsx';
 import { StatCard } from '../components/StatCard.jsx';
 import { useDashboardData } from '../hooks/useDashboardData.js';
 import { text } from '../i18n/en.js';
-import { navigate } from '../routing.js';
+import { AppLink } from '../components/AppLink.jsx';
 
 const intervals = ['week', 'month'];
 
 function ChartSection({ title, description, actions, children }) {
   return (
-    <section className="mt-6 rounded-2xl bg-white p-5 shadow-xl sm:p-7">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <section className="portal-section">
+      <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-xl font-semibold text-slate-900">{title}</h2>
-          <p className="mt-1 mb-4 text-sm text-slate-500">{description}</p>
+          <h2 className="portal-section-title">{title}</h2>
+          <p className="portal-copy mt-1 text-sm">{description}</p>
         </div>
         {actions}
-      </div>
+      </header>
       {children}
     </section>
   );
@@ -31,7 +31,7 @@ function IntervalToggle({ interval, onChange }) {
       {intervals.map((option) => (
         <button
           aria-pressed={interval === option}
-          className={`rounded-md px-3 py-1.5 text-sm font-semibold ${interval === option ? 'bg-cyan-700 text-white' : 'text-slate-700 hover:bg-slate-100'}`}
+          className={interval === option ? 'portal-button' : 'portal-button-secondary'}
           key={option}
           onClick={() => onChange(option)}
           type="button"
@@ -48,27 +48,30 @@ export default function DashboardPage() {
   const { state, data, refreshFailed, retry } = useDashboardData(trendInterval);
 
   return (
-    <main className="min-h-screen bg-slate-950 px-4 py-8 text-slate-900 sm:px-6">
+    <main className="portal-page px-4 sm:px-6">
       <section className="mx-auto max-w-4xl">
-        <header className="text-white">
-          <button className="text-sm font-semibold text-cyan-200 hover:text-white" onClick={() => navigate('/')} type="button">← {text.dashboard.backHome}</button>
-          <h1 className="mt-3 text-3xl font-bold tracking-tight">{text.dashboard.title}</h1>
-          <p className="mt-2 text-sm text-slate-300">{text.dashboard.description}</p>
-          <p className="mt-1 text-xs text-slate-400">{text.dashboard.liveNote}</p>
+        <header className="portal-page-heading">
+          <div>
+            <p className="portal-kicker">{text.portal.publicDashboard}</p>
+            <h1 className="portal-title">{text.dashboard.title}</h1>
+            <p className="portal-copy text-sm">{text.dashboard.description}</p>
+            <p className="mt-2 text-xs font-medium text-slate-500">{text.dashboard.liveNote}</p>
+          </div>
+          <AppLink className="portal-button-secondary" href="/">{text.dashboard.backHome}</AppLink>
         </header>
 
-        {state === 'loading' && <p className="mt-6 text-sm text-slate-300" role="status">{text.dashboard.loading}</p>}
+        {state === 'loading' && <p className="portal-loading" role="status">{text.dashboard.loading}</p>}
         {state === 'error' && (
-          <div className="mt-6 rounded-2xl bg-white p-5 shadow-xl" role="alert">
-            <p className="text-sm text-rose-700">{text.dashboard.loadError} {text.dashboard.retryingAutomatically}</p>
-            <button className="mt-3 rounded-lg bg-cyan-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-cyan-800" onClick={retry} type="button">{text.dashboard.retry}</button>
+          <div className="portal-card portal-card--padded" role="alert">
+            <p className="portal-alert">{text.dashboard.loadError} {text.dashboard.retryingAutomatically}</p>
+            <button className="portal-button mt-4" onClick={retry} type="button">{text.dashboard.retry}</button>
           </div>
         )}
 
         {state === 'ready' && (
           <>
-            {refreshFailed && <p className="mt-6 rounded-xl bg-rose-100 px-4 py-3 text-sm font-semibold text-rose-900" role="status">{text.dashboard.refreshFailed}</p>}
-            {data.summary.isDemoData && <p className="mt-6 rounded-xl bg-amber-100 px-4 py-3 text-sm font-semibold text-amber-950" role="note">{text.dashboard.demoBanner}</p>}
+            {refreshFailed && <p className="portal-alert mt-5" role="status">{text.dashboard.refreshFailed}</p>}
+            {data.summary.isDemoData && <p className="portal-notice mt-5" role="note">{text.dashboard.demoBanner}</p>}
 
             <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
               <StatCard label={text.dashboard.total} value={data.summary.total} />
@@ -77,7 +80,7 @@ export default function DashboardPage() {
               <StatCard label={text.dashboard.resolutionRate} value={`${data.summary.resolutionRate}%`} />
             </div>
 
-            {data.summary.total === 0 && <p className="mt-6 text-sm text-slate-300">{text.dashboard.empty}</p>}
+            {data.summary.total === 0 && <p className="portal-empty mt-5">{text.dashboard.empty}</p>}
 
             <ChartSection description={text.dashboard.mapDescription} title={text.dashboard.mapTitle}>
               <DashboardMap points={data.points} />

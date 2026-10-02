@@ -14,13 +14,13 @@ export function TicketTimeline({ entries, showStaffNames = false }) {
   }
 
   return (
-    <ol className="space-y-4 border-l-2 border-cyan-100 pl-5">
+    <ol className="ticket-timeline">
       {entries.map((entry, index) => (
         <li key={`${entry.createdAt}-${entry.toStatus}-${index}`}>
           <p className="font-semibold text-slate-900">
             {entry.fromStatus ? `${statusName(entry.fromStatus)} → ${statusName(entry.toStatus)}` : text.ticket.created}
           </p>
-          <p className="mt-1 text-sm text-slate-600">{formatDate(entry.createdAt)}</p>
+          <time className="mt-1 block text-sm text-slate-600" dateTime={entry.createdAt}>{formatDate(entry.createdAt)}</time>
           {showStaffNames && entry.reason && <p className="mt-1 break-words text-sm text-rose-700">{text.ticket.reason}: {entry.reason}</p>}
           {showStaffNames && entry.changedByName && <p className="mt-1 text-sm text-slate-600">{text.ticket.by} {entry.changedByName}</p>}
         </li>

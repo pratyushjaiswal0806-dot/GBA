@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { CircleMarker, MapContainer, Popup, TileLayer, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { text } from '../i18n/en.js';
@@ -44,6 +44,7 @@ function StatusLegend({ points }) {
 }
 
 export function DashboardMap({ points }) {
+  const [tileError, setTileError] = useState(false);
   const tileUrl = import.meta.env.VITE_MAP_TILE_URL;
 
   if (!tileUrl) {
@@ -52,9 +53,9 @@ export function DashboardMap({ points }) {
 
   return (
     <div>
-      <div aria-label={text.dashboard.mapLabel} className="overflow-hidden rounded-xl border border-slate-200">
+      <div aria-label={text.dashboard.mapLabel} className="map-surface overflow-hidden rounded-xl border border-slate-200" role="region">
         <MapContainer center={defaultCenter} className="h-80 w-full" scrollWheelZoom={false} zoom={defaultZoom}>
-          <TileLayer attribution={text.map.attribution} url={tileUrl} />
+          <TileLayer attribution={text.map.attribution} eventHandlers={{ tileerror: () => setTileError(true) }} url={tileUrl} />
           <FitOnFirstPoints points={points} />
           {points.map((point, index) => (
             <CircleMarker
@@ -68,6 +69,7 @@ export function DashboardMap({ points }) {
           ))}
         </MapContainer>
       </div>
+      {tileError && <p className="portal-notice mt-2" role="status">{text.map.tilesUnavailable}</p>}
       <StatusLegend points={points} />
       <p className="mt-2 text-sm text-slate-500">{points.length} {text.dashboard.mapCount}</p>
     </div>

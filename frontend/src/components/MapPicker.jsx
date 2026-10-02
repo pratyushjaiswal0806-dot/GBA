@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { text } from '../i18n/en.js';
@@ -6,10 +6,10 @@ import { text } from '../i18n/en.js';
 const sampleWardCenter = { lat: 12.974, lng: 77.598 };
 const selectedZoom = 16;
 
-function MapClickHandler({ onPositionChange }) {
+function MapClickHandler({ disabled, onPositionChange }) {
   useMapEvents({
     click(event) {
-      onPositionChange(event.latlng);
+      if (!disabled) onPositionChange(event.latlng);
     }
   });
 
@@ -28,7 +28,8 @@ function MapRecenter({ position }) {
   return null;
 }
 
-export function MapPicker({ position, onPositionChange }) {
+export function MapPicker({ position, onPositionChange, disabled = false, describedBy }) {
+  const [tileError, setTileError] = useState(false);
   const tileUrl = import.meta.env.VITE_MAP_TILE_URL;
 
   if (!tileUrl) {
@@ -37,22 +38,22 @@ export function MapPicker({ position, onPositionChange }) {
 
   return (
     <div>
-      <div className="overflow-hidden rounded-xl border border-slate-200" aria-label={text.report.mapLabel}>
+      <div aria-describedby={describedBy} aria-label={text.report.mapLabel} className={`map-surface overflow-hidden rounded-xl border border-slate-200 ${disabled ? 'map-surface--disabled' : ''}`} role="region">
         <MapContainer
           center={position || sampleWardCenter}
           className="h-80 w-full"
           scrollWheelZoom
           zoom={14}
         >
-          <TileLayer attribution={text.map.attribution} url={tileUrl} />
-          <MapClickHandler onPositionChange={onPositionChange} />
+          <TileLayer attribution={text.map.attribution} eventHandlers={{ tileerror: () => setTileError(true) }} url={tileUrl} />
+          <MapClickHandler disabled={disabled} onPositionChange={onPositionChange} />
           <MapRecenter position={position} />
           {position && (
             <Marker
-              draggable
+              draggable={!disabled}
               eventHandlers={{
                 dragend(event) {
-                  onPositionChange(event.target.getLatLng());
+                  if (!disabled) onPositionChange(event.target.getLatLng());
                 }
               }}
               position={position}
@@ -60,6 +61,7 @@ export function MapPicker({ position, onPositionChange }) {
           )}
         </MapContainer>
       </div>
+      {tileError && <p className="portal-notice mt-2" role="status">{text.map.tilesUnavailable}</p>}
       <p className="mt-2 text-sm text-slate-500">{text.report.mapHelp}</p>
     </div>
   );

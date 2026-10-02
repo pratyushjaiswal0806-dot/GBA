@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { requestJson } from '../api/client.js';
 import { SideBySide } from '../components/SideBySide.jsx';
 import { text } from '../i18n/en.js';
+import { AppLink } from '../components/AppLink.jsx';
 import { navigate } from '../routing.js';
 
 const reasonMaxLength = 500;
@@ -9,6 +10,7 @@ const reasonMaxLength = 500;
 export function ComparePage({ ticketId }) {
   const [compare, setCompare] = useState({ state: 'loading', data: null, error: null });
   const [isRejecting, setIsRejecting] = useState(false);
+  const [confirmingApprove, setConfirmingApprove] = useState(false);
   const [reason, setReason] = useState('');
   const [busyAction, setBusyAction] = useState(null);
   const [actionError, setActionError] = useState(null);
@@ -42,7 +44,7 @@ export function ComparePage({ ticketId }) {
 
     try {
       await requestJson(`/api/tickets/${ticketId}/${action}`, options);
-      navigate('/verifier');
+      navigate('/verifier', { replace: true });
     } catch (error) {
       setActionError(error.message || text.verifier.actionError);
       setBusyAction(null);
@@ -65,22 +67,23 @@ export function ComparePage({ ticketId }) {
     });
   }
 
-  const backButton = <button className="text-sm font-semibold text-cyan-200 hover:text-white" onClick={() => navigate('/verifier')} type="button">← {text.verifier.backToQueue}</button>;
+  const backButton = <AppLink className="portal-back-link" href="/verifier">← {text.verifier.backToQueue}</AppLink>;
 
-  if (compare.state === 'loading') return <p className="p-6 text-sm text-slate-600" role="status">{text.verifier.compareLoading}</p>;
-  if (compare.state === 'error') return <main className="min-h-screen bg-slate-950 px-4 py-8 sm:px-6"><section className="mx-auto max-w-5xl">{backButton}<div className="mt-4 rounded-2xl bg-white p-5 shadow-xl sm:p-7"><p className="rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">{compare.error || text.api.networkError}</p><button className="mt-5 rounded-lg bg-cyan-700 px-4 py-3 text-sm font-semibold text-white hover:bg-cyan-800" onClick={() => setReloadKey((current) => current + 1)} type="button">{text.verifier.retry}</button></div></section></main>;
+  if (compare.state === 'loading') return <p className="portal-loading px-6" role="status">{text.verifier.compareLoading}</p>;
+  if (compare.state === 'error') return <main className="portal-page px-4 sm:px-6"><section className="mx-auto max-w-5xl">{backButton}<div className="portal-card portal-card--padded mt-3"><p className="portal-alert" role="alert">{compare.error || text.api.networkError}</p><button className="portal-button mt-5" onClick={() => setReloadKey((current) => current + 1)} type="button">{text.verifier.retry}</button></div></section></main>;
 
   const { original, action, distanceMeters, farWarning } = compare.data;
   const isBusy = busyAction !== null;
 
   return (
-    <main className="min-h-screen bg-slate-950 px-4 py-8 text-slate-900 sm:px-6">
+    <main className="portal-page px-4 sm:px-6">
       <section className="mx-auto max-w-5xl">
         {backButton}
-        <article className="mt-4 rounded-2xl bg-white p-5 shadow-xl sm:p-7">
-          <h1 className="text-2xl font-semibold text-slate-900">{text.verifier.compareTitle}</h1>
+        <article className="portal-card portal-card--padded mt-3">
+          <p className="portal-kicker">{text.verifier.queueTitle}</p>
+          <h1 className="portal-title mt-2">{text.verifier.compareTitle}</h1>
 
-          <div className={`mt-5 rounded-xl px-4 py-3 text-sm ${farWarning ? 'bg-amber-50 text-amber-950' : 'bg-slate-50 text-slate-800'}`} role={farWarning ? 'alert' : undefined}>
+          <div className={`portal-data mt-5 rounded-xl border px-4 py-3 text-sm ${farWarning ? 'border-amber-300 bg-amber-50 text-amber-950' : 'border-slate-200 bg-slate-50 text-slate-800'}`} role={farWarning ? 'alert' : 'status'}>
             <p><span className="font-semibold">{text.verifier.distance}:</span> {distanceMeters === null ? text.verifier.distanceUnknown : `${distanceMeters} ${text.verifier.meters}`}</p>
             {farWarning && <p className="mt-1 font-semibold">{text.verifier.farWarning}</p>}
           </div>
@@ -88,28 +91,40 @@ export function ComparePage({ ticketId }) {
           <div className="mt-5"><SideBySide action={action} original={original} /></div>
 
           <section className="mt-5">
-            <h2 className="text-sm font-semibold text-slate-700">{text.verifier.remarks}</h2>
-            <p className="mt-1 break-words whitespace-pre-wrap text-slate-800">{action.remarks}</p>
+            <h2 className="portal-field-label">{text.verifier.remarks}</h2>
+            <p className="portal-copy mt-1 break-words whitespace-pre-wrap">{action.remarks}</p>
           </section>
 
           {isRejecting ? (
             <form className="mt-6" onSubmit={submitReject}>
-              <label className="block text-sm font-semibold text-slate-800" htmlFor="reject-reason">{text.verifier.rejectReasonLabel}</label>
-              <p className="mt-1 text-xs text-slate-500">{text.verifier.rejectReasonHelp}</p>
-              <textarea className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900" id="reject-reason" maxLength={reasonMaxLength + 100} onChange={(event) => setReason(event.target.value)} rows={3} value={reason} />
-              <p className={`mt-1 text-xs ${reason.length > reasonMaxLength ? 'text-rose-700' : 'text-slate-500'}`}>{reason.length}/{reasonMaxLength} {text.report.characterCount}</p>
+              <label className="portal-field-label" htmlFor="reject-reason">{text.verifier.rejectReasonLabel}</label>
+              <p className="mt-1 text-xs text-slate-500" id="reject-reason-help">{text.verifier.rejectReasonHelp}</p>
+              <textarea aria-describedby="reject-reason-help reject-reason-count" autoComplete="off" className="portal-field mt-2 min-h-24" disabled={isBusy} id="reject-reason" maxLength={reasonMaxLength + 100} name="reason" onChange={(event) => setReason(event.target.value)} rows={3} value={reason} />
+              <p className={`mt-1 text-xs ${reason.length > reasonMaxLength ? 'text-rose-700' : 'text-slate-500'}`} id="reject-reason-count">{reason.length}/{reasonMaxLength} {text.report.characterCount}</p>
               <div className="mt-3 flex flex-wrap gap-3">
-                <button className="rounded-lg bg-rose-700 px-4 py-3 text-sm font-semibold text-white hover:bg-rose-800 disabled:cursor-wait disabled:opacity-70" disabled={isBusy} type="submit">{busyAction === 'reject' ? text.verifier.rejecting : text.verifier.confirmReject}</button>
-                <button className="rounded-lg border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 disabled:opacity-70" disabled={isBusy} onClick={() => { setIsRejecting(false); setActionError(null); }} type="button">{text.verifier.cancel}</button>
+                <button className="portal-button-danger" disabled={isBusy} type="submit">{busyAction === 'reject' ? text.verifier.rejecting : text.verifier.confirmReject}</button>
+                <button className="portal-button-secondary" disabled={isBusy} onClick={() => { setIsRejecting(false); setActionError(null); }} type="button">{text.verifier.cancel}</button>
               </div>
             </form>
           ) : (
             <div className="mt-6 flex flex-wrap gap-3">
-              <button className="rounded-lg bg-emerald-700 px-4 py-3 text-sm font-semibold text-white hover:bg-emerald-800 disabled:cursor-wait disabled:opacity-70" disabled={isBusy} onClick={() => decide('approve', { method: 'POST' })} type="button">{busyAction === 'approve' ? text.verifier.approving : text.verifier.approve}</button>
-              <button className="rounded-lg border border-rose-700 px-4 py-3 text-sm font-semibold text-rose-800 hover:bg-rose-50 disabled:opacity-70" disabled={isBusy} onClick={() => setIsRejecting(true)} type="button">{text.verifier.reject}</button>
+              {confirmingApprove ? (
+                <div className="approval-confirm" role="group" aria-label={text.verifier.approvalConfirmLabel}>
+                  <p className="font-semibold text-slate-900">{text.verifier.approvalConfirmPrompt}</p>
+                  <div className="mt-3 flex flex-wrap gap-3">
+                    <button className="portal-button-success" disabled={isBusy} onClick={() => decide('approve', { method: 'POST' })} type="button">{busyAction === 'approve' ? text.verifier.approving : text.verifier.confirmApprove}</button>
+                    <button className="portal-button-secondary" disabled={isBusy} onClick={() => setConfirmingApprove(false)} type="button">{text.verifier.cancel}</button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <button className="portal-button-success" disabled={isBusy} onClick={() => setConfirmingApprove(true)} type="button">{text.verifier.approve}</button>
+                  <button className="portal-button-danger" disabled={isBusy} onClick={() => setIsRejecting(true)} type="button">{text.verifier.reject}</button>
+                </>
+              )}
             </div>
           )}
-          {actionError && <p className="mt-4 rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">{actionError}</p>}
+          {actionError && <p className="portal-alert mt-4" role="alert">{actionError}</p>}
         </article>
       </section>
     </main>

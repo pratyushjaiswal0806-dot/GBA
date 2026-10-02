@@ -1,13 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { requestJson } from '../api/client.js';
 import { StatusBadge } from '../components/StatusBadge.jsx';
 import { TicketLocationMap } from '../components/TicketLocationMap.jsx';
 import { TicketTimeline } from '../components/TicketTimeline.jsx';
 import { text } from '../i18n/en.js';
-import { navigate } from '../routing.js';
+import { AppLink } from '../components/AppLink.jsx';
 
 function formatValue(value) {
   return value || text.ticket.notAvailable;
+}
+
+function formatDate(value) {
+  return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
 }
 
 export function TicketDetailPage({ ticketId }) {
@@ -15,6 +19,7 @@ export function TicketDetailPage({ ticketId }) {
   const [isStarting, setIsStarting] = useState(false);
   const [actionError, setActionError] = useState(null);
   const [reloadKey, setReloadKey] = useState(0);
+  const startLock = useRef(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -35,6 +40,9 @@ export function TicketDetailPage({ ticketId }) {
   }, [ticketId, reloadKey]);
 
   async function startWork() {
+    if (startLock.current) return;
+
+    startLock.current = true;
     setActionError(null);
     setIsStarting(true);
 
@@ -44,6 +52,7 @@ export function TicketDetailPage({ ticketId }) {
     } catch (error) {
       setActionError(error.message || text.ticket.startError);
     } finally {
+      startLock.current = false;
       setIsStarting(false);
     }
   }
@@ -51,12 +60,12 @@ export function TicketDetailPage({ ticketId }) {
   if (ticket.state === 'loading') return <p className="p-6 text-sm text-slate-600" role="status">{text.ticket.loading}</p>;
   if (ticket.state === 'error') {
     return (
-      <main className="min-h-screen bg-slate-950 px-4 py-8 sm:px-6">
+      <main className="portal-page px-4 sm:px-6">
         <section className="mx-auto max-w-4xl">
-          <button className="text-sm font-semibold text-cyan-200 hover:text-white" onClick={() => navigate('/officer')} type="button">← {text.ticket.backToTickets}</button>
-          <article className="mt-4 rounded-2xl bg-white p-5 shadow-xl sm:p-7">
-            <p className="rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">{ticket.error || text.api.networkError}</p>
-            <button className="mt-5 rounded-lg bg-cyan-700 px-4 py-3 text-sm font-semibold text-white hover:bg-cyan-800" onClick={() => setReloadKey((current) => current + 1)} type="button">{text.ticket.retry}</button>
+          <AppLink className="portal-back-link" href="/officer">← {text.ticket.backToTickets}</AppLink>
+          <article className="portal-card portal-card--padded mt-3">
+            <p className="portal-alert" role="alert">{ticket.error || text.api.networkError}</p>
+            <button className="portal-button mt-5" onClick={() => setReloadKey((current) => current + 1)} type="button">{text.ticket.retry}</button>
           </article>
         </section>
       </main>
@@ -69,68 +78,70 @@ export function TicketDetailPage({ ticketId }) {
   const canSubmitReport = ['OPEN', 'IN_PROGRESS', 'REOPENED'].includes(data.status);
 
   return (
-    <main className="min-h-screen bg-slate-950 px-4 py-8 text-slate-900 sm:px-6">
+    <main className="portal-page px-4 sm:px-6">
       <section className="mx-auto max-w-4xl">
-        <button className="text-sm font-semibold text-cyan-200 hover:text-white" onClick={() => navigate('/officer')} type="button">← {text.ticket.backToTickets}</button>
-        <article className="mt-4 rounded-2xl bg-white p-5 shadow-xl sm:p-7">
+        <AppLink className="portal-back-link" href="/officer">← {text.ticket.backToTickets}</AppLink>
+        <article className="portal-card portal-card--padded mt-3">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <p className="font-mono text-sm font-semibold text-cyan-800">{data.publicCode}</p>
-              <h1 className="mt-2 text-2xl font-semibold text-slate-900">{data.categoryName}</h1>
+              <p className="portal-data font-mono text-sm font-bold text-emerald-800">{data.publicCode}</p>
+              <h1 className="portal-section-title mt-2 text-2xl">{data.categoryName}</h1>
             </div>
             <StatusBadge status={data.status} />
           </div>
 
           {lastRejection && (
-            <div className="mt-5 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900" role="alert">
+            <div className="portal-alert mt-5" role="alert">
               <p className="font-semibold">{text.ticket.reopenedTitle}</p>
               <p className="mt-1">{text.ticket.reopenedHelp}</p>
               {lastRejection.reason && <p className="mt-2 break-words font-semibold">{text.ticket.reason}: {lastRejection.reason}</p>}
             </div>
           )}
 
-          <p className="mt-5 break-words whitespace-pre-wrap text-slate-700">{data.description}</p>
+          <p className="portal-copy mt-5 break-words whitespace-pre-wrap">{data.description}</p>
 
-          <div className="mt-6 grid gap-3 rounded-xl bg-slate-50 p-4 text-sm sm:grid-cols-4">
-            <div><p className="font-semibold text-slate-700">{text.ticket.ward}</p><p className="mt-1 text-slate-900">{data.wardName}</p></div>
-            <div><p className="font-semibold text-slate-700">{text.ticket.street}</p><p className="mt-1 text-slate-900">{formatValue(data.street)}</p></div>
-            <div><p className="font-semibold text-slate-700">{text.ticket.area}</p><p className="mt-1 text-slate-900">{formatValue(data.area)}</p></div>
-            <div><p className="font-semibold text-slate-700">{text.ticket.supportCount}</p><p className="mt-1 text-slate-900">{data.supportCount}</p></div>
-          </div>
+          <dl className="portal-card--inset portal-data mt-6 grid gap-3 p-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
+            <div><dt className="font-semibold text-slate-700">{text.ticket.ward}</dt><dd className="mt-1 break-words text-slate-900">{data.wardName}</dd></div>
+            <div><dt className="font-semibold text-slate-700">{text.ticket.street}</dt><dd className="mt-1 break-words text-slate-900">{formatValue(data.street)}</dd></div>
+            <div><dt className="font-semibold text-slate-700">{text.ticket.area}</dt><dd className="mt-1 break-words text-slate-900">{formatValue(data.area)}</dd></div>
+            <div><dt className="font-semibold text-slate-700">{text.ticket.supportCount}</dt><dd className="mt-1 text-slate-900">{data.supportCount}</dd></div>
+          </dl>
 
-          <section className="mt-7">
-            <h2 className="text-lg font-semibold text-slate-900">{text.ticket.originalPhoto}</h2>
-            {data.original ? <img alt={text.ticket.originalPhoto} className="mt-3 max-h-[32rem] w-full rounded-xl object-contain" src={data.original.url} /> : <p className="mt-3 text-sm text-slate-500">{text.ticket.photoUnavailable}</p>}
+          <section className="mt-7" aria-labelledby="original-photo-heading">
+            <h2 className="portal-section-title" id="original-photo-heading">{text.ticket.originalPhoto}</h2>
+            {data.original ? <img alt={text.ticket.originalPhoto} className="mt-3 max-h-[32rem] w-full rounded-xl bg-slate-100 object-contain" height="1200" src={data.original.url} width="1600" /> : <p className="portal-empty mt-3">{text.ticket.photoUnavailable}</p>}
           </section>
 
-          <section className="mt-7">
-            <h2 className="mb-3 text-lg font-semibold text-slate-900">{text.ticket.mapLabel}</h2>
+          <section className="mt-7" aria-labelledby="ticket-map-heading">
+            <h2 className="portal-section-title mb-3" id="ticket-map-heading">{text.ticket.mapLabel}</h2>
             <TicketLocationMap lat={data.lat} lng={data.lng} />
           </section>
 
-          <section className="mt-7">
-            <h2 className="text-lg font-semibold text-slate-900">{text.actionReport.sectionTitle}</h2>
-            {data.actionReports.length === 0 && <p className="mt-3 text-sm text-slate-500">{text.actionReport.empty}</p>}
+          <section className="mt-7" aria-labelledby="action-reports-heading">
+            <h2 className="portal-section-title" id="action-reports-heading">{text.actionReport.sectionTitle}</h2>
+            {data.actionReports.length === 0 && <p className="portal-empty mt-3">{text.actionReport.empty}</p>}
             {data.actionReports.map((report) => (
               <div className="mt-3 rounded-xl border border-slate-200 p-4" key={report.id}>
                 <p className="break-words whitespace-pre-wrap text-slate-700">{report.remarks}</p>
                 {report.decision && <p className={`mt-2 break-words text-xs font-semibold ${report.decision === 'REJECTED' ? 'text-rose-700' : 'text-emerald-700'}`}>{report.decision === 'REJECTED' ? text.actionReport.rejectedLabel : text.actionReport.approvedLabel}{report.decisionReason ? `: ${report.decisionReason}` : ''}</p>}
-                <p className="mt-2 text-xs text-slate-500">{text.actionReport.submittedBy} {report.officerName}, {new Date(report.submittedAt).toLocaleString()}</p>
+                <p className="mt-2 text-xs text-slate-500">{text.actionReport.submittedBy} {report.officerName}, {formatDate(report.submittedAt)}</p>
                 <div className="mt-3 grid gap-3 sm:grid-cols-3">
-                  {report.photos.map((photo) => <img alt={text.actionReport.photoAlt} className="h-40 w-full rounded-lg object-cover" key={photo.url} src={photo.url} />)}
+                  {report.photos.map((photo) => <img alt={text.actionReport.photoAlt} className="h-40 w-full rounded-lg bg-slate-100 object-cover" height="160" key={photo.url} loading="lazy" src={photo.url} width="240" />)}
                 </div>
               </div>
             ))}
           </section>
 
-          <section className="mt-7">
-            <h2 className="mb-4 text-lg font-semibold text-slate-900">{text.ticket.timeline}</h2>
+          <section className="mt-7" aria-labelledby="ticket-timeline-heading">
+            <h2 className="portal-section-title mb-4" id="ticket-timeline-heading">{text.ticket.timeline}</h2>
             <TicketTimeline entries={data.timeline} showStaffNames />
           </section>
 
-          {canStart && <button className="mt-7 rounded-lg bg-cyan-700 px-4 py-3 text-sm font-semibold text-white hover:bg-cyan-800 disabled:cursor-wait disabled:opacity-70" disabled={isStarting} onClick={startWork} type="button">{isStarting ? text.ticket.starting : text.ticket.startWork}</button>}
-          {canSubmitReport && <button className="mt-7 ml-0 rounded-lg border border-cyan-700 px-4 py-3 text-sm font-semibold text-cyan-800 hover:bg-cyan-50 sm:ml-3" onClick={() => navigate(`/officer/tickets/${ticketId}/action-report`)} type="button">{text.ticket.submitActionReport}</button>}
-          {actionError && <p className="mt-4 rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">{actionError}</p>}
+          <div className="mt-7 flex flex-wrap gap-3">
+            {canStart && <button className="portal-button" disabled={isStarting} onClick={startWork} type="button">{isStarting ? text.ticket.starting : text.ticket.startWork}</button>}
+            {canSubmitReport && <AppLink className="portal-button-secondary" href={`/officer/tickets/${ticketId}/action-report`}>{text.ticket.submitActionReport}</AppLink>}
+          </div>
+          {actionError && <p className="portal-alert mt-4" role="alert">{actionError}</p>}
         </article>
       </section>
     </main>

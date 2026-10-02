@@ -25,7 +25,7 @@ export function WardChart({ wards }) {
       </div>
 
       <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200">
-        <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
+        <table className="portal-table min-w-full divide-y divide-slate-200 text-left text-sm">
           <thead className="bg-slate-50 text-slate-600">
             <tr>
               <th className="px-2 py-2 font-semibold sm:px-4" scope="col">{text.dashboard.wardColumn}</th>

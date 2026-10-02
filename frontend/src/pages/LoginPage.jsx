@@ -61,11 +61,11 @@ export function LoginPage() {
 
   if (session && profileError) {
     return (
-      <main className="min-h-screen bg-slate-950 px-4 py-10 sm:px-6">
-        <section className="mx-auto max-w-lg rounded-2xl bg-white p-6 shadow-xl">
-          <h1 className="text-xl font-semibold text-slate-900">{text.auth.accessTitle}</h1>
-          <p className="mt-2 text-sm text-rose-700" role="alert">{profileError.message || text.auth.accountUnavailable}</p>
-          <button className="mt-5 rounded-lg bg-cyan-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-cyan-800" onClick={() => signOut()} type="button">
+      <main className="portal-page px-4 sm:px-6">
+        <section className="portal-card portal-card--padded mx-auto max-w-lg">
+          <h1 className="portal-section-title">{text.auth.accessTitle}</h1>
+          <p className="portal-alert mt-3" role="alert">{profileError.message || text.auth.accountUnavailable}</p>
+          <button className="portal-button mt-5" onClick={() => signOut()} type="button">
             {text.auth.logOut}
           </button>
         </section>
@@ -74,23 +74,23 @@ export function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 px-4 py-10 sm:px-6">
-      <section className="mx-auto max-w-lg rounded-2xl bg-white p-6 shadow-xl">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-700">{text.app.eyebrow}</p>
-        <h1 className="mt-2 text-2xl font-semibold text-slate-900">{text.auth.title}</h1>
-        <p className="mt-2 text-sm text-slate-600">{text.auth.description}</p>
-        {sessionMessage && <p className="mt-4 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">{sessionMessage}</p>}
+    <main className="portal-page px-4 sm:px-6">
+      <section className="portal-card portal-card--padded mx-auto max-w-lg">
+        <p className="portal-kicker">{text.app.eyebrow}</p>
+        <h1 className="portal-title mt-2">{text.auth.title}</h1>
+        <p className="portal-copy mt-2 text-sm">{text.auth.description}</p>
+        {sessionMessage && <p className="portal-notice mt-4" role="status">{sessionMessage}</p>}
         <form className="mt-6 space-y-5" onSubmit={submit}>
           <div>
-            <label className="block text-sm font-semibold text-slate-800" htmlFor="staff-email">{text.auth.email}</label>
-            <input className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900" id="staff-email" onChange={(event) => setEmail(event.target.value)} type="email" value={email} />
+            <label className="portal-field-label" htmlFor="staff-email">{text.auth.email}</label>
+            <input autoComplete="username" className="portal-field mt-2" disabled={submitting} id="staff-email" name="email" onChange={(event) => setEmail(event.target.value)} required type="email" value={email} />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-slate-800" htmlFor="staff-password">{text.auth.password}</label>
-            <input className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900" id="staff-password" onChange={(event) => setPassword(event.target.value)} type="password" value={password} />
+            <label className="portal-field-label" htmlFor="staff-password">{text.auth.password}</label>
+            <input autoComplete="current-password" className="portal-field mt-2" disabled={submitting} id="staff-password" name="password" onChange={(event) => setPassword(event.target.value)} required type="password" value={password} />
           </div>
-          {error && <p className="rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">{error}</p>}
-          <button className="w-full rounded-lg bg-cyan-700 px-4 py-3 text-sm font-semibold text-white hover:bg-cyan-800 disabled:cursor-wait disabled:opacity-70" disabled={submitting} type="submit">
+          {error && <p className="portal-alert" role="alert">{error}</p>}
+          <button className="portal-button w-full" disabled={submitting} type="submit">
             {submitting ? text.auth.signingIn : text.auth.signIn}
           </button>
         </form>

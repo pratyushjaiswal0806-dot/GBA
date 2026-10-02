@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { requestJson } from '../api/client.js';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { text } from '../i18n/en.js';
-import { navigate } from '../routing.js';
+import { AppLink } from '../components/AppLink.jsx';
+import { StatusBadge } from '../components/StatusBadge.jsx';
 
 const statusOptions = [
   '',
@@ -83,36 +84,36 @@ export function OfficerTicketsPage() {
   const hasNextPage = page * tickets.pageSize < tickets.total;
 
   return (
-    <main className="min-h-screen bg-slate-950 px-4 py-8 text-slate-900 sm:px-6">
-      <section className="mx-auto max-w-4xl">
-        <header className="flex flex-wrap items-start justify-between gap-4 text-white">
+    <main className="portal-page px-4 sm:px-6">
+      <section className="mx-auto max-w-5xl">
+        <header className="portal-page-heading">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-300">{text.app.eyebrow}</p>
-            <h1 className="mt-2 text-3xl font-bold tracking-tight">{text.officer.title}</h1>
-            <p className="mt-2 text-sm text-slate-300">{profile.wardName} · {profile.name}</p>
+            <p className="portal-kicker">{text.app.eyebrow}</p>
+            <h1 className="portal-title mt-2">{text.officer.title}</h1>
+            <p className="portal-copy text-sm">{profile.wardName} · {profile.name}</p>
           </div>
-          <button className="rounded-lg border border-slate-500 px-4 py-2.5 text-sm font-semibold hover:bg-slate-800" onClick={() => signOut()} type="button">
+          <button className="portal-button-secondary" onClick={() => signOut()} type="button">
             {text.auth.logOut}
           </button>
         </header>
 
-        <section className="mt-6 rounded-2xl bg-white p-5 shadow-xl sm:p-7">
+        <section className="portal-card portal-card--padded">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <h2 className="text-xl font-semibold text-slate-900">{text.officer.ticketListTitle}</h2>
-              <p className="mt-1 text-sm text-slate-500">{text.officer.ticketListDescription}</p>
+              <h2 className="portal-section-title">{text.officer.ticketListTitle}</h2>
+              <p className="portal-copy mt-1 text-sm">{text.officer.ticketListDescription}</p>
             </div>
-            <div className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-950" aria-label={text.officer.attentionLabel}>
+            <div className="portal-notice min-w-44" aria-label={text.officer.attentionLabel}>
               <p className="font-semibold">{text.officer.attentionLabel}</p>
-              <p className="mt-1 text-2xl font-bold">{counts.state === 'ready' ? attentionCount : '—'}</p>
+              <p className="portal-data mt-1 text-2xl font-extrabold">{counts.state === 'ready' ? attentionCount : '—'}</p>
               {counts.state === 'ready' && <p className="mt-1 text-xs">{counts.data.open} {text.officer.open}, {counts.data.reopened} {text.officer.reopened}</p>}
-              {counts.state === 'error' && <p className="mt-1 text-xs text-rose-700" role="alert">{counts.error || text.officer.loadError}</p>}
+              {counts.state === 'error' && <p className="mt-1 text-xs" role="alert">{counts.error || text.officer.loadError}</p>}
             </div>
           </div>
 
           <div className="mt-6">
-            <label className="block text-sm font-semibold text-slate-800" htmlFor="ticket-status-filter">{text.officer.filterLabel}</label>
-            <select className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 sm:max-w-xs" id="ticket-status-filter" onChange={(event) => {
+            <label className="portal-field-label" htmlFor="ticket-status-filter">{text.officer.filterLabel}</label>
+            <select className="portal-field mt-2 sm:max-w-xs" id="ticket-status-filter" name="status" onChange={(event) => {
               setStatus(event.target.value);
               setPage(1);
             }} value={status}>
@@ -122,12 +123,13 @@ export function OfficerTicketsPage() {
             </select>
           </div>
 
-          {tickets.state === 'loading' && <p className="mt-6 text-sm text-slate-500" role="status">{text.officer.loading}</p>}
-          {tickets.state === 'error' && <div className="mt-6 rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert"><p>{tickets.error || text.officer.loadError}</p><button className="mt-3 rounded-lg bg-cyan-700 px-3 py-2 text-sm font-semibold text-white hover:bg-cyan-800" onClick={() => setReloadKey((current) => current + 1)} type="button">{text.ticket.retry}</button></div>}
-          {tickets.state === 'ready' && tickets.data.length === 0 && <p className="mt-6 text-sm text-slate-500">{text.officer.empty}</p>}
+          {tickets.state === 'loading' && <p className="portal-loading" role="status">{text.officer.loading}</p>}
+          {tickets.state === 'error' && <div className="portal-alert mt-6" role="alert"><p>{tickets.error || text.officer.loadError}</p><button className="portal-button mt-3" onClick={() => setReloadKey((current) => current + 1)} type="button">{text.ticket.retry}</button></div>}
+          {tickets.state === 'ready' && tickets.data.length === 0 && <p className="portal-empty mt-6">{text.officer.empty}</p>}
           {tickets.state === 'ready' && tickets.data.length > 0 && (
-            <div className="mt-6 overflow-x-auto rounded-xl border border-slate-200">
-              <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
+            <div className="mt-6">
+              <div className="hidden overflow-x-auto rounded-xl border border-slate-200 sm:block">
+              <table className="portal-table min-w-full divide-y divide-slate-200 text-left text-sm">
                 <thead className="bg-slate-50 text-slate-600">
                   <tr>
                     <th className="px-4 py-3 font-semibold">{text.officer.code}</th>
@@ -139,14 +141,29 @@ export function OfficerTicketsPage() {
                 <tbody className="divide-y divide-slate-100">
                   {tickets.data.map((ticket) => (
                     <tr key={ticket.publicCode}>
-                      <td className="whitespace-nowrap px-4 py-3 font-mono font-semibold text-slate-900"><button className="text-left text-cyan-800 underline hover:text-cyan-950" onClick={() => navigate(`/officer/tickets/${ticket.ticketId}`)} type="button">{ticket.publicCode}<span className="sr-only">: {text.officer.view}</span></button></td>
+                      <td className="whitespace-nowrap px-4 py-3 font-mono font-semibold text-slate-900"><AppLink className="text-emerald-800 underline decoration-emerald-300 underline-offset-2 hover:text-emerald-950" href={`/officer/tickets/${ticket.ticketId}`}>{ticket.publicCode}<span className="sr-only">: {text.officer.view}</span></AppLink></td>
                       <td className="px-4 py-3 text-slate-700">{ticket.categoryName}</td>
-                      <td className="px-4 py-3 text-slate-700">{statusLabel(ticket.status)}</td>
+                      <td className="px-4 py-3"><StatusBadge status={ticket.status} /></td>
                       <td className="whitespace-nowrap px-4 py-3 text-slate-700">{formatDate(ticket.createdAt)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+              </div>
+              <ul className="grid gap-3 sm:hidden" aria-label={text.officer.ticketListTitle}>
+                {tickets.data.map((ticket) => (
+                  <li className="portal-card p-4" key={`mobile-${ticket.publicCode}`}>
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <AppLink className="break-all font-mono text-sm font-bold text-emerald-800 underline underline-offset-2" href={`/officer/tickets/${ticket.ticketId}`}>{ticket.publicCode}<span className="sr-only">: {text.officer.view}</span></AppLink>
+                        <p className="mt-2 break-words font-semibold text-slate-900">{ticket.categoryName}</p>
+                      </div>
+                      <StatusBadge status={ticket.status} />
+                    </div>
+                    <p className="mt-3 text-xs text-slate-500">{text.officer.created}: {formatDate(ticket.createdAt)}</p>
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
 
@@ -154,8 +171,8 @@ export function OfficerTicketsPage() {
             <div className="mt-5 flex items-center justify-between gap-4">
               <p className="text-sm text-slate-600">{text.officer.showing} {tickets.total}</p>
               <div className="flex gap-2">
-                <button className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 disabled:opacity-50" disabled={!hasPreviousPage} onClick={() => setPage((current) => current - 1)} type="button">{text.officer.previous}</button>
-                <button className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 disabled:opacity-50" disabled={!hasNextPage} onClick={() => setPage((current) => current + 1)} type="button">{text.officer.next}</button>
+                <button className="portal-button-secondary" disabled={!hasPreviousPage} onClick={() => setPage((current) => current - 1)} type="button">{text.officer.previous}</button>
+                <button className="portal-button-secondary" disabled={!hasNextPage} onClick={() => setPage((current) => current + 1)} type="button">{text.officer.next}</button>
               </div>
             </div>
           )}

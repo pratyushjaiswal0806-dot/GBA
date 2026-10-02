@@ -1,10 +1,14 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { text } from '../i18n/en.js';
 
-export function MultiPhotoPicker({ files, maxFiles, onChange }) {
-  const previews = useMemo(() => files.map((file) => URL.createObjectURL(file)), [files]);
+export function MultiPhotoPicker({ files, maxFiles, onChange, disabled = false, describedBy }) {
+  const [previews, setPreviews] = useState([]);
 
-  useEffect(() => () => previews.forEach((url) => URL.revokeObjectURL(url)), [previews]);
+  useEffect(() => {
+    const nextPreviews = files.map((file) => URL.createObjectURL(file));
+    setPreviews(nextPreviews);
+    return () => nextPreviews.forEach((url) => URL.revokeObjectURL(url));
+  }, [files]);
 
   function addFiles(event) {
     onChange([...files, ...Array.from(event.target.files ?? [])].slice(0, maxFiles));
@@ -17,11 +21,14 @@ export function MultiPhotoPicker({ files, maxFiles, onChange }) {
       <p className="mt-1 text-sm text-slate-500">{text.actionReport.photosHelp}</p>
       <input
         accept="image/jpeg,image/png"
+        aria-describedby={describedBy}
+        aria-invalid={Boolean(describedBy)}
         capture="environment"
-        className="mt-3 block w-full text-sm text-slate-700 file:mr-4 file:rounded-lg file:border-0 file:bg-cyan-100 file:px-4 file:py-2 file:font-semibold file:text-cyan-900 hover:file:bg-cyan-200 disabled:opacity-50"
-        disabled={files.length >= maxFiles}
+        className="photo-input mt-3 block w-full text-sm text-slate-700"
+        disabled={disabled || files.length >= maxFiles}
         id="action-photos"
         multiple
+        name="photos"
         onChange={addFiles}
         type="file"
       />
@@ -29,9 +36,9 @@ export function MultiPhotoPicker({ files, maxFiles, onChange }) {
       <ul className="mt-3 grid gap-3 sm:grid-cols-3">
         {files.map((file, index) => (
           <li className="rounded-xl border border-slate-200 p-2" key={`${file.name}-${index}`}>
-            <img alt={text.actionReport.previewAlt} className="h-32 w-full rounded-lg object-cover" src={previews[index]} />
+            <img alt={text.actionReport.previewAlt} className="h-32 w-full rounded-lg bg-slate-100 object-cover" height="160" loading="lazy" src={previews[index]} width="240" />
             <p className="mt-2 truncate text-xs text-slate-700">{file.name}</p>
-            <button className="mt-1 text-xs font-semibold text-rose-700 hover:underline" onClick={() => onChange(files.filter((_, i) => i !== index))} type="button">{text.actionReport.removePhoto}</button>
+            <button className="mt-2 min-h-9 text-sm font-semibold text-rose-700 underline-offset-2 hover:underline" disabled={disabled} onClick={() => onChange(files.filter((_, i) => i !== index))} type="button">{text.actionReport.removePhoto}<span className="sr-only"> {file.name}</span></button>
           </li>
         ))}
       </ul>

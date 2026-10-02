@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { requestJson } from '../api/client.js';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { text } from '../i18n/en.js';
-import { navigate } from '../routing.js';
+import { AppLink } from '../components/AppLink.jsx';
 
 function formatDate(value) {
   return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
@@ -36,25 +36,26 @@ export function VerifierQueuePage() {
   const hasNextPage = page * queue.pageSize < queue.total;
 
   return (
-    <main className="min-h-screen bg-slate-950 px-4 py-8 text-slate-900 sm:px-6">
-      <section className="mx-auto max-w-4xl">
-        <header className="flex flex-wrap items-start justify-between gap-4 text-white">
+    <main className="portal-page px-4 sm:px-6">
+      <section className="mx-auto max-w-5xl">
+        <header className="portal-page-heading">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-300">{text.app.eyebrow}</p>
-            <h1 className="mt-2 text-3xl font-bold tracking-tight">{text.verifier.queueTitle}</h1>
-            <p className="mt-2 text-sm text-slate-300">{profile.name}</p>
+            <p className="portal-kicker">{text.app.eyebrow}</p>
+            <h1 className="portal-title mt-2">{text.verifier.queueTitle}</h1>
+            <p className="portal-copy text-sm">{profile.name}</p>
           </div>
-          <button className="rounded-lg border border-slate-500 px-4 py-2.5 text-sm font-semibold hover:bg-slate-800" onClick={() => signOut()} type="button">{text.auth.logOut}</button>
+          <button className="portal-button-secondary" onClick={() => signOut()} type="button">{text.auth.logOut}</button>
         </header>
 
-        <section className="mt-6 rounded-2xl bg-white p-5 shadow-xl sm:p-7">
-          <p className="text-sm text-slate-500">{text.verifier.queueDescription}</p>
-          {queue.state === 'loading' && <p className="mt-6 text-sm text-slate-500" role="status">{text.verifier.loading}</p>}
-          {queue.state === 'error' && <div className="mt-6 rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert"><p>{queue.error || text.verifier.loadError}</p><button className="mt-3 rounded-lg bg-cyan-700 px-3 py-2 text-sm font-semibold text-white hover:bg-cyan-800" onClick={() => setReloadKey((current) => current + 1)} type="button">{text.verifier.retry}</button></div>}
-          {queue.state === 'ready' && queue.data.length === 0 && <p className="mt-6 text-sm text-slate-500">{text.verifier.empty}</p>}
+        <section className="portal-card portal-card--padded">
+          <p className="portal-copy text-sm">{text.verifier.queueDescription}</p>
+          {queue.state === 'loading' && <p className="portal-loading" role="status">{text.verifier.loading}</p>}
+          {queue.state === 'error' && <div className="portal-alert mt-6" role="alert"><p>{queue.error || text.verifier.loadError}</p><button className="portal-button mt-3" onClick={() => setReloadKey((current) => current + 1)} type="button">{text.verifier.retry}</button></div>}
+          {queue.state === 'ready' && queue.data.length === 0 && <p className="portal-empty mt-6">{text.verifier.empty}</p>}
           {queue.state === 'ready' && queue.data.length > 0 && (
-            <div className="mt-6 overflow-x-auto rounded-xl border border-slate-200">
-              <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
+            <div className="mt-6">
+              <div className="hidden overflow-x-auto rounded-xl border border-slate-200 sm:block">
+              <table className="portal-table min-w-full divide-y divide-slate-200 text-left text-sm">
                 <thead className="bg-slate-50 text-slate-600">
                   <tr>
                     <th className="px-4 py-3 font-semibold">{text.verifier.code}</th>
@@ -66,7 +67,7 @@ export function VerifierQueuePage() {
                 <tbody className="divide-y divide-slate-100">
                   {queue.data.map((ticket) => (
                     <tr key={ticket.ticketId}>
-                      <td className="whitespace-nowrap px-4 py-3 font-mono font-semibold"><button className="text-left text-cyan-800 underline hover:text-cyan-950" onClick={() => navigate(`/verifier/tickets/${ticket.ticketId}`)} type="button">{ticket.publicCode}<span className="sr-only">: {text.verifier.review}</span></button></td>
+                      <td className="whitespace-nowrap px-4 py-3 font-mono font-semibold"><AppLink className="text-left text-emerald-800 underline decoration-emerald-300 underline-offset-2 hover:text-emerald-950" href={`/verifier/tickets/${ticket.ticketId}`}>{ticket.publicCode}<span className="sr-only">: {text.verifier.review}</span></AppLink></td>
                       <td className="px-4 py-3 text-slate-700">{ticket.categoryName}</td>
                       <td className="px-4 py-3 text-slate-700">{ticket.wardName}</td>
                       <td className="whitespace-nowrap px-4 py-3 text-slate-700">{formatDate(ticket.submittedAt)}</td>
@@ -74,14 +75,29 @@ export function VerifierQueuePage() {
                   ))}
                 </tbody>
               </table>
+              </div>
+              <ul className="grid gap-3 sm:hidden" aria-label={text.verifier.queueTitle}>
+                {queue.data.map((ticket) => (
+                  <li className="portal-card p-4" key={`mobile-${ticket.ticketId}`}>
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <AppLink className="break-all font-mono text-sm font-bold text-emerald-800 underline underline-offset-2" href={`/verifier/tickets/${ticket.ticketId}`}>{ticket.publicCode}<span className="sr-only">: {text.verifier.review}</span></AppLink>
+                        <p className="mt-2 break-words font-semibold text-slate-900">{ticket.categoryName}</p>
+                        <p className="mt-1 break-words text-sm text-slate-600">{ticket.wardName}</p>
+                      </div>
+                    </div>
+                    <p className="mt-3 text-xs text-slate-500">{text.verifier.waitingSince}: {formatDate(ticket.submittedAt)}</p>
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
           {queue.state === 'ready' && queue.total > 0 && (
             <div className="mt-5 flex items-center justify-between gap-4">
               <p className="text-sm text-slate-600">{text.verifier.showing} {queue.total}</p>
               <div className="flex gap-2">
-                <button className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 disabled:opacity-50" disabled={!hasPreviousPage} onClick={() => setPage((current) => current - 1)} type="button">{text.verifier.previous}</button>
-                <button className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 disabled:opacity-50" disabled={!hasNextPage} onClick={() => setPage((current) => current + 1)} type="button">{text.verifier.next}</button>
+                <button className="portal-button-secondary" disabled={!hasPreviousPage} onClick={() => setPage((current) => current - 1)} type="button">{text.verifier.previous}</button>
+                <button className="portal-button-secondary" disabled={!hasNextPage} onClick={() => setPage((current) => current + 1)} type="button">{text.verifier.next}</button>
               </div>
             </div>
           )}

@@ -15,7 +15,7 @@ export function LocationSummary({ location, loading }) {
 
   if (!location.inPilotArea) {
     return (
-      <div className="mt-4 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">
+      <div className="portal-notice mt-4" role="status">
         <p className="font-semibold">{text.report.outsideTitle}</p>
         <p className="mt-1">{text.report.outsideDescription}</p>
       </div>
@@ -25,7 +25,7 @@ export function LocationSummary({ location, loading }) {
   const hasAddress = location.street || location.area;
 
   return (
-    <div className="mt-4 rounded-lg border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-950" role="status">
+    <div className="location-summary mt-4" role="status">
       <dl className="grid gap-2 sm:grid-cols-3">
         <div>
           <dt className="font-medium text-emerald-800">{text.report.ward}</dt>
